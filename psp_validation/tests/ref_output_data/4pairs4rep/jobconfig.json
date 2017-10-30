@@ -1,0 +1,10 @@
+{
+    "pathways"        : ["L5_TTPC-L5_TTPC"],
+    "protocols"       : ["psp_validation/config/protocols/Markram_97.json"],
+    "n_pairs"         : 4,
+    "rndm_seed"       : 48,
+    "n_repetitions"   : 4,
+    "multiprocessing" : true,
+    "output_dir"    : "/nfs4/bbp.epfl.ch/scratch/psp_validations/L5TTPCtoL5TTPC",
+    "blue_config"   : "/bgscratch/bbp/projects/simulations/2013/11.02.13/simulations/SomatosensoryCxS1-v4.SynUpdate.r151/Silberberg/O1/control/BlueConfig"
+}

@@ -1,0 +1,578 @@
+Run Default
+{
+	Date    22:11:12
+	Time    14:27:09
+          svnPath https://bbpteam.epfl.ch/svn/bluebrain
+	Version    1094 
+           Prefix /bgscratch/bbp/release/02.04.12
+  MorphologyPath psp_validation/tests/input_data/circuit_tencell_example1/morphologies
+       METypePath psp_validation/tests/input_data/circuit_tencell_example1/ccells
+
+
+
+      CircuitPath psp_validation/tests/input_data/circuit_tencell_example1/
+          nrnPath psp_validation/tests/input_data/circuit_tencell_example1/ncsFunctionalAllRecipePathways
+  NumSynapseFiles 8192
+
+      CurrentDir psp_validation/tests/input_data/sim_tencell_example1/
+      OutputRoot psp_validation/tests/input_data/sim_tencell_example1/
+      TargetFile psp_validation/tests/input_data/sim_tencell_example1/user.target
+
+      	RunMode LoadBalance
+    CircuitTarget Center
+         Duration 3500
+               Dt 0.025
+
+}
+
+
+Report soma
+{
+        Target Center
+        Type compartment
+        ReportOn v
+        Unit mV
+        Format Bin
+        Dt 0.1
+        StartTime 0
+        EndTime 20000
+}
+
+
+
+Stimulus ThresholdExc
+{
+
+              Mode Current
+           Pattern Noise
+       MeanPercent 120
+          Variance 0.001
+             Delay 0.000000
+          Duration 20000.000000
+}
+
+Stimulus ThresholdInh
+{
+
+              Mode Current
+           Pattern Noise
+       MeanPercent 75
+          Variance 0.001
+             Delay 0.000000
+          Duration 20000.000000
+}
+
+
+
+
+
+StimulusInject ThresholdIntoExc
+{
+        Stimulus ThresholdExc
+        Target Excitatory
+}
+
+StimulusInject ThresholdIntoInh
+{
+        Stimulus ThresholdInh
+        Target Inhibitory
+}
+
+Stimulus ThresholdRemove
+{
+
+              Mode Current
+           Pattern Noise
+       MeanPercent -400.0
+          Variance 0.001
+             Delay 0.000000
+          Duration 20000.000000
+}
+
+#StimulusInject ThresholdRemoveIntoHoldCells
+{
+        Stimulus ThresholdRemove
+        Target HoldCells
+}
+
+
+Stimulus hypamp
+{
+        Mode Current
+  Pattern Hyperpolarizing
+        Delay 0.0
+  Duration 20000.0
+}
+
+StimulusInject hypamp_mosaic
+{
+        Stimulus hypamp
+        Target Mosaic
+}
+
+#Report I_Ca
+{
+        Target AllCompartments_mc2
+          Type Summation
+      ReportOn ica
+          Unit nA
+        Format Bin
+            Dt 0.1
+     StartTime 0
+       EndTime 2000
+}
+
+#Report I_NonSpecific
+{
+        Target AllCompartments_mc2
+          Type Summation
+      ReportOn i_pas ihcn_Ih ihcn_hcn3 icsa_csa
+          Unit nA
+        Format Bin
+            Dt 0.1
+     StartTime 0
+       EndTime 2000
+}
+
+#Report I_NMDA
+{
+       Target AllCompartments_mc2
+         Type Summation
+     ReportOn ProbAMPANMDA_EMS.i_NMDA
+         Unit nA
+       Format Bin
+           Dt 0.1
+    StartTime 0
+      EndTime 2000
+}
+
+#Report I_AMPA
+{
+       Target AllCompartments_mc2
+         Type Summation
+     ReportOn ProbAMPANMDA_EMS.i_AMPA
+         Unit nA
+       Format Bin
+           Dt 0.1
+    StartTime 0
+      EndTime 2000
+}
+
+#Report I_GABA
+{
+       Target AllCompartments_mc2
+         Type Summation
+     ReportOn ProbGABAA_EMS.i
+         Unit nA
+       Format Bin
+           Dt 0.1
+    StartTime 0
+      EndTime 2000
+}
+
+Connection ConL6Exc-Uni
+{
+        Source Excitatory
+        Destination Layer6
+        Weight 2.35
+        SpontMinis 0.04
+}
+
+Connection ConL5Exc-Uni
+{
+        Source Excitatory
+        Destination Layer5
+        Weight 2.35
+        SpontMinis 0.067
+}
+
+Connection ConL4Exc-Uni
+{
+        Source Excitatory
+        Destination Layer4
+        Weight 2.35
+        SpontMinis 0.072
+}
+
+Connection ConL3Exc-Uni
+{
+        Source Excitatory
+        Destination Layer3
+        Weight 2.35
+        SpontMinis 0.122
+}
+
+Connection ConL2Exc-Uni
+{
+        Source Excitatory
+        Destination Layer2
+        Weight 2.35
+        SpontMinis 0.26
+}
+
+Connection ConL1Exc-Uni
+{
+        Source Excitatory
+        Destination Layer1
+        Weight 2.35
+        SpontMinis 0.63
+}
+
+
+
+Connection ConInh_not_LBC_NBC-Uni
+{
+        Source Inh_not_LBC_NBC
+        Destination Mosaic
+        Weight 2.0
+	SpontMinis 0.012
+	SynapseConfigure %s.e_GABAA = -80.0
+}
+
+Connection ConLBC_NBC-Uni
+{
+        Source LBC_NBC
+        Destination Mosaic
+        Weight 0.67
+	SpontMinis 0.012
+	SynapseConfigure %s.e_GABAA = -80.0
+}
+
+Connection scheme_minus2
+{       
+              Source Excitatory
+         Destination Excitatory
+              Weight 1.0
+    SynapseConfigure %s.NMDA_ratio = 0.4
+}
+
+Connection scheme_minus1
+{       
+              Source Excitatory
+         Destination Inhibitory
+              Weight 1.0
+    SynapseConfigure %s.NMDA_ratio = 0.8
+}
+
+Connection scheme5
+{       
+              Source L5_TTPC
+         Destination L5_TTPC
+              Weight 1.0
+    SynapseConfigure %s.NMDA_ratio = 0.71
+}
+
+
+Connection NMDA_Override_L4-L4
+{
+        Source Layer4Excitatory
+        Destination Layer4Excitatory
+        Weight 1.0
+        SynapseConfigure %s.NMDA_ratio = 0.86
+
+}
+
+Connection NMDA_Override_L4-L23
+{
+        Source L4_SS
+        Destination L23_PC
+        Weight 1.0
+        SynapseConfigure %s.NMDA_ratio = 0.5
+
+}
+
+Connection scheme1b
+{       
+              Source Layer1
+         Destination Excitatory
+              Weight 1.0
+    SynapseConfigure %s.GABAB_ratio = 0.75
+}
+
+Connection scheme2b
+{       
+              Source L23_NGC
+         Destination Excitatory
+              Weight 1.0
+    SynapseConfigure %s.GABAB_ratio = 0.75
+}
+
+Connection Weight_Reset
+{
+              Source Mosaic
+         Destination Mosaic
+              Weight 1.0
+}
+
+# Generalized scalings
+
+Connection Scale_EXC_2_EXC
+{       
+              Source Excitatory
+         Destination Excitatory
+              Weight 2.6
+}
+
+# gsyn = 0.39
+Connection Scale_EXC_2_INH
+{       
+              Source Excitatory
+         Destination Inhibitory
+              Weight 1.3
+}
+
+# gsyn = 0.67
+# PV_FS = BC & ChC
+Connection Scale_EXC_2_BC_ChC
+{       
+              Source Excitatory
+         Destination PV_FS
+              Weight 2.22
+}
+
+# gsyn = 0.11
+Connection Scale_EXC_2_MC
+{       
+              Source Excitatory
+         Destination MC
+              Weight 0.37
+}
+
+# I->* 0.651
+
+# Scale I1, I1a, I1b (6,7,8) from 0.3 to 0.651
+Connection Scale_INH_I1
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 2.17
+           SynapseID 6
+}
+Connection Scale_INH_I1a
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 2.17
+           SynapseID 7
+}
+Connection Scale_INH_I1b
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 2.17
+           SynapseID 8
+}
+
+# Scale I2, I2a, I2b from 0.33 to 0.651
+Connection Scale_INH_I2
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 1.97
+           SynapseID 0
+}
+Connection Scale_INH_I2a
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 1.97
+           SynapseID 1
+}
+Connection Scale_INH_I2b
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 1.97
+           SynapseID 2
+}
+
+# Scale I3, I3a, I3b from 0.2 to 0.651
+Connection Scale_INH_I3
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 3.26
+           SynapseID 3
+}
+Connection Scale_INH_I3a
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 3.26
+           SynapseID 4
+}
+Connection Scale_INH_I3b
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 3.26
+           SynapseID 5
+}
+
+# I4 (MC) and I5 (NBC,LBC ->PC) are authoritative cases below
+
+# Scale I6 from 0.33 to 0.651
+Connection Scale_INH_I6
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 1.97
+           SynapseID 11
+}
+
+# I7 not used in circuit
+
+# Scale I1_L6_MC-L6_IPC (34) from 0.33 to 0.651
+Connection Scale_INH_I1_L6_MC
+{       
+              Source Inhibitory
+         Destination Mosaic
+              Weight 1.97
+           SynapseID 34
+}
+
+# Specfic Scalings for pathways with data (override generalizations)
+
+# scale 0.3 to 0.74
+Connection Scale_L4_EXC_2_L4_EXC
+{       
+              Source Layer4Excitatory
+         Destination Layer4Excitatory
+              Weight 2.47
+}
+
+# scale 0.3 to 0.362
+Connection Scale_L4_SS_L23_PC
+{       
+              Source L4_SS
+         Destination L23_PC
+              Weight 1.21
+}
+
+# scale 0.3 to 0.436
+Connection Scale_L23_PC_2_L23_PC
+{       
+              Source L23_PC
+         Destination L23_PC
+              Weight 1.45
+}
+
+# scale 0.3 to 0.87
+Connection Scale_L5_STPC_2_L5_STPC
+{       
+              Source L5_STPC
+         Destination L5_STPC
+              Weight 2.92
+}
+
+# scale 0.3 to 1.5
+Connection Scale_L5_TTPC_2_L5_TTPC
+{       
+              Source L5_TTPC
+         Destination L5_TTPC
+              Weight 5.146
+}
+
+# scale 0.3 to 0.11
+Connection Scale_L5_TTPC_2_MC
+{       
+              Source L5_TTPC
+         Destination L5_MC
+              Weight 0.37
+}
+
+# scale 0.3 to 0.67
+Connection Scale_L5_EXC_2_L5_BC
+{
+Source Layer5Excitatory
+Destination L5_BC
+Weight 2.22
+}
+
+# I4 (MC) and I5 (NBC,LBC ->PC) are authoritative cases below
+
+# I4 (id=9)
+# scale 0.66 to 0.587 nS
+Connection Scale_MC_2_Mosaic
+{   
+              Source MC
+         Destination Mosaic
+              Weight 0.89
+           SynapseID 9
+}
+
+# Generalization Distal targeting BTC/DBC/BP-* have same conductance as MC-*, 0.587nS
+# I1, I2, I3 (6, 0, 3) from (0.3, 0.33, 0.2) to 0.587nS
+Connection Scale_DISTAR_2_Mosaic_I1
+{   
+              Source DISTAR_INH
+         Destination Mosaic
+              Weight 1.96
+           SynapseID 6
+}
+
+Connection Scale_DISTAR_2_Mosaic_I2
+{   
+              Source DISTAR_INH
+         Destination Mosaic
+              Weight 1.78
+           SynapseID 0
+}
+
+Connection Scale_DISTAR_2_Mosaic_I3
+{   
+              Source DISTAR_INH
+         Destination Mosaic
+              Weight 2.93
+           SynapseID 3
+}
+
+
+# I2, I3, I5 (0,3,10) from (0.33, 0.2, 3.6) respectively to 0.714 nS
+Connection Scale_BC_2_Mosaic_I2
+{       
+              Source BC
+         Destination Mosaic
+              Weight 2.16
+           SynapseID 0
+}
+
+# Include ChC in *BC/ChC - * generalization to 0.714 nS
+# ChC is only I2
+Connection Scale_ChC_2_Mosaic_I2
+{       
+              Source ChC
+         Destination Mosaic
+              Weight 2.16
+           SynapseID 0
+}
+# 0.2 to 0.714
+Connection Scale_BC_2_Mosaic_I3
+{       
+              Source BC
+         Destination Mosaic
+              Weight 3.57
+           SynapseID 3
+}
+# 3.6 to 0.714
+Connection Scale_BC_2_Mosaic_I5
+{       
+              Source BC
+         Destination Mosaic
+              Weight 0.2
+           SynapseID 10
+}
+
+# SBC pathways: I1 (6) scale 0.3 to 0.714
+Connection Scale_BC_2_Mosaic_I1
+{       
+              Source BC
+         Destination Mosaic
+              Weight 2.38
+           SynapseID 6
+}
+
+
+
+
+

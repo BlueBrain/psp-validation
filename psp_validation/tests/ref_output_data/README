@@ -1,0 +1,1 @@
+This directory contains reference data and configuration files to be used for unit, functional and integration tests. DO NOT MODIFY ANYTHING IN THIS DIRECTORY. Any modification can break all the tests, many of which are very strict regressions. If you need diferent reference data samples, you can add new files, after consulting with your favourite expert.

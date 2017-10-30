@@ -1,0 +1,9 @@
+{
+    "pathways"      : ["L5_TTPC-L5_TTPC (Markram 97)"],
+    "n_pairs"       : 3,
+    "rndm_seed"     : 42,
+    "n_simulations" : 5,
+    "t_stim"        : 800.0,
+    "output_dir"    : "./scratch",
+    "blue_config"   : "psp_validation/tests/input_data/sim_tencell_example1/RefBlueConfig_Scaling"
+}
