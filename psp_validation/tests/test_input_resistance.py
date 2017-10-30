@@ -11,6 +11,7 @@ if '.' not in _path :
 
 from nose import tools as ntools
 import numpy as np
+import numpy.testing as npt
 import bluepy
 from psp_validation import input_resistance as ir
 import os
@@ -23,7 +24,7 @@ class ResistanceCalculatorMgr(object) :
 
     def __init__(self) :
         self._rc = None
-    
+
     def get_ResistanceCalculator(self) :
         if self._rc is None :
             self._rc = ir.ResistanceCalculator(1, circuit_path, -0.05, 0.05, 3)
@@ -33,23 +34,29 @@ _rc = ResistanceCalculatorMgr()
 
 def test_ResistanceCalculator_instantiate() :
 
-    rc = _rc.get_ResistanceCalculator() 
+    rc = _rc.get_ResistanceCalculator()
 
 
 def test_ResistanceCalculator_voltages() :
 
-    rc = _rc.get_ResistanceCalculator() 
+    rc = _rc.get_ResistanceCalculator()
     v = rc.voltages()
-    ntools.assert_equal(len(v), 3)
-    ntools.assert_equal(v, [-77.423632352051087, -75.086162733631937, -72.710321876448788])
+    npt.assert_allclose(v, [
+        -77.418705,
+        -75.084293,
+        -72.713352,
+    ])
 
 
 def test_ResistanceCalculator_resistance_function() :
 
-    rc = _rc.get_ResistanceCalculator() 
+    rc = _rc.get_ResistanceCalculator()
     rf = rc.resistance_function()
-    ntools.assert_equal(rf, 'R(v) = 0.488451477291v + 107.369356749')
-    ntools.assert_equal(rc.rmp, -73.899937216430445)
-    ntools.assert_equal(len(rc.resistances()), 3)
-    ntools.assert_equal(rc.resistances(), [69.54851997111551, 70.699657134034908, 71.850794296954319])
+    #ntools.assert_equal(rf, 'R(v) = 0.465787123057v + 105.547908683')
+    npt.assert_allclose(rc.rmp, -73.898660)
+    npt.assert_allclose(rc.resistances(), [
+        69.484415,
+        70.580283,
+        71.676152,
+    ])
 

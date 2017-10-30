@@ -29,8 +29,8 @@ class ResistanceCalculator:
 
     def __init__(self, neuron_gid, circuit_config_path, initial_current, final_current, num_data_points, multiproc = False):
         # initialize circuit and gid
-        bc = bluepy.load_circuit(circuit_config_path)
-        self.gid = neuron_gid 
+        bc = bluepy.Circuit(circuit_config_path)
+        self.gid = neuron_gid
 
         # set default params for current
         initial_current = initial_current
@@ -39,20 +39,20 @@ class ResistanceCalculator:
         increment = (abs(initial_current) + abs(final_current))/float(num_points)
         self.multiproc = multiproc
         self.currents = [initial_current+ i*increment for i in xrange(0, num_points) if not initial_current+ i*increment == 0]
-        
+
         self._voltages = None
         self._resistances = None
 
         # get template and morphology of gid
         m = bc.mvddb
         neuron = list(m.get_gids([self.gid]))[0]
-        self.template = str(os.path.join(bc.RUN.CONTENTS.METypePath, neuron.METype+'.hoc'))
-        self.morphology = os.path.join(os.path.split(bc.RUN.CONTENTS.MorphologyPath)[0], 'ascii/')
+        self.template = str(os.path.join(bc.config.Run.METypePath, neuron.METype+'.hoc'))
+        self.morphology = os.path.join(os.path.split(bc.config.Run.MorphologyPath)[0], 'ascii/')
 
 
     def resistance_function(self):
         import numpy
-        (m, b) = pylab.polyfit(self.voltages(), self.resistances(), 1)
+        (m, b) = np.polyfit(self.voltages(), self.resistances(), 1)
         return "R(v) = " + str(m) + "v + " + str(b)
 
 
@@ -69,7 +69,7 @@ class ResistanceCalculator:
 
 
     def _init_voltages(self) :
-        LOGGER.info('_init_voltages: gid=%d, # of items = %s', self.gid, len(self.currents+[0]))       
+        LOGGER.info('_init_voltages: gid=%d, # of items = %s', self.gid, len(self.currents+[0]))
         v = None
         if self.multiproc :
             pool = mp.Pool()
@@ -95,9 +95,9 @@ class ResistanceCalculator:
         LOGGER.debug('_init_resistances: gid=%d, resistances=%s', self.gid, self._resistances)
 
     def holding_current(self, v_hold, xtol=0.001):
-        """ use input resistance to compute approximate holding current, then bisect to get it more accurate 
+        """ use input resistance to compute approximate holding current, then bisect to get it more accurate
         rtol is relative tolerance in root
-        
+
         v_hold is in mV
         current is in nA
 
@@ -110,9 +110,9 @@ class ResistanceCalculator:
         # positive for right
 
         def iv(i):
-            v = bglibpy.calculate_SS_voltage_subprocess(self.template, 
-                                                        self.morphology, 
-                                                        i, 
+            v = bglibpy.calculate_SS_voltage_subprocess(self.template,
+                                                        self.morphology,
+                                                        i,
                                                         check_for_spiking=True)
             # v will be None if the cell spiked,
             # and return large diference above v_holding
