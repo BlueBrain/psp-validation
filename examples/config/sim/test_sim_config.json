@@ -1,0 +1,10 @@
+{
+    "pathways"        : ["SP_PC-SP_PVBC"],
+    "protocols"       : ["examples/config/protocols/test_protocol_config.json"],
+    "n_pairs"         : 2,
+    "rndm_seed"       : 1234,
+    "n_repetitions"   : 2,
+    "multiprocessing" : false,
+    "output_dir"      : "./scratch",
+    "blue_config"     : "Ref_BlueConfig"
+}

@@ -1,0 +1,10 @@
+{
+    "holding_I" : null,
+    "holding_V" : -70.0,
+    "t_stim"    : 800.0,
+    "t_stop"    : 900.0,
+    "g_factor"  : 1.0,
+    "record_dt" : 0.1,
+    "post_ttx"  : false,
+    "clamp_V"   : null
+}

@@ -5,7 +5,7 @@
 INSTALL_MODULES=.
 
 # Ignore directories for pep8 and pylint (on top of tests and doc)
-IGNORE_LINT=apps|psp_validation
+IGNORE_LINT=apps|examples|psp_validation
 
 #packages to cover
 COVER_PACKAGES=psp_validation

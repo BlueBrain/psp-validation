@@ -31,23 +31,12 @@ def setup_logging(args):
     return logging.getLogger(__name__)
 
 
-# This needs to be factored out. The script has no business knowing
-# about this filtering.
-def pairFilter(hyper_column, minicols_per_hypercolumn, step) :
-
-    from bluepy.targets.mvddb import Neuron
-    import sqlalchemy as sqla
-    minicolumns = range(minicols_per_hypercolumn*hyper_column,
-                        minicols_per_hypercolumn*(hyper_column + 1),
-                        step)
-    return sqla.or_(*(Neuron.miniColumn==mc_id for mc_id in minicolumns))
-
 def main(args):
     print args
     import os
     import h5py
     import numpy as np
-    #import bluepy
+    import bluepy
     from psp_validation import pathways
     from psp_validation import simpathways as sim
     from psp_validation import configutils as cu
@@ -68,8 +57,7 @@ def main(args):
 
     protocols = [cu.json2protocol(open(p)) for p in sim_config.protocols]
 
-    pair_select =  sim.PairSelection(pair_filter =  pairFilter(2, 310, 5),
-                                     d_cut = 100.)
+    circuit = bluepy.Circuit(sim_config.blue_config).v2
 
     LOGGER.info('Starting job with configuration file %s', configfile)
     out_dir = pu.mkjobdir(sim_config.output_dir)
@@ -79,12 +67,18 @@ def main(args):
     shutil.copyfile(configfile, os.path.join(out_dir, 'jobconfig.json'))
 
     for pathway, protocol in zip(pways, protocols) :
-        LOGGER.info('Processing PATHWAY=%s, PROTOCOL=%s', pathway, str(protocol))
-        pway = pathways.get_pathway(pathway)
-        eps = sim.PathwayEPhys(pway, protocol, sim_config, pair_select)
+        title = pathway['title']
+        LOGGER.info('Processing PATHWAY=%s, PROTOCOL=%s', title, str(protocol))
+        pairs = pathways.get_pairs(
+            circuit, sim_config.n_pairs,
+            query=pathway['query'],
+            constraints=pathway.get('constraints')
+        )
+        LOGGER.info('Selected pairs: %s', str(pairs))
+        eps = sim.PathwayEPhys(pairs, protocol, sim_config, pair_selection=None)
         psp_traces = eps.traces()
         hfile = h5py.File(out_filename, 'w')
-        pu.dump_raw_traces_to_HDF5(hfile, pathway, psp_traces)
+        pu.dump_raw_traces_to_HDF5(hfile, title, psp_traces)
 
         hfile.close()
 

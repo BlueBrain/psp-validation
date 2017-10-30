@@ -138,6 +138,10 @@ class PathwayEPhys(object):
     def _set_pairs(self):
         """Get the list of cell pairs for this pathway.
         """
+        if isinstance(self.pathway, list):
+            import numpy as np
+            self._pairs = np.array(self.pathway)
+            return
         n_pairs = self.sim_config.n_pairs
         pair_filter = self.pair_select.pair_filter
         c = self.circuit
@@ -181,7 +185,7 @@ class PathwayEPhys(object):
         and re-compute v_holding.
         Otherwise set holding_currents to list of None.
         """
-       
+
         LOGGER.info('_compute_holdings: cpu count = %s', mp.cpu_count())
         if self.protocol.holding_V is None:
             self._holding_iv = None

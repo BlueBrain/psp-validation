@@ -1,0 +1,24 @@
+{
+    "pathways"        : [
+        {
+            "title": "SP_PC-SP_PVBC",
+            "query": {
+                "pre": "SP_PC",
+                "post": "SP_PVBC",
+                "shuffle": true
+            },
+            "constraints": {
+                "max_dist_x": 200.0,
+                "max_dist_y": 200.0,
+                "max_dist_z": 100.0
+            }
+        }
+    ],
+    "protocols"       : ["examples/config/protocols/test_protocol_config.json"],
+    "n_pairs"         : 2,
+    "rndm_seed"       : 1234,
+    "n_repetitions"   : 2,
+    "multiprocessing" : false,
+    "output_dir"      : "./scratch",
+    "blue_config"     : "Ref_BlueConfig"
+}
