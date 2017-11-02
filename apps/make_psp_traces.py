@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
-import sys
-if '.' not in sys.path :
-    sys.path.append('.')
+import logging
+
+from bluepy.utils import gid2str
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def get_parser():
@@ -20,7 +23,6 @@ def get_parser():
 
 def setup_logging(args):
     '''set the level of verbosity to INFO or DEBUG'''
-    import logging
     if args.verbose > 0:  # turns on logging to console
         if args.verbose > 2:
             sys.exit("can't be more verbose than -vv")
@@ -28,7 +30,38 @@ def setup_logging(args):
                                    logging.INFO,
                                    logging.DEBUG)[args.verbose],
                             filename = args.log_file)
-    return logging.getLogger(__name__)
+
+
+def get_traces(sim_config, pre_gid, post_gid, protocol):
+    from psp_validation.psp import run_pair_trace_simulations
+
+    blue_config = sim_config.blue_config
+
+    if protocol.holding_V is None:
+        hold_I = None
+    else:
+        from psp_validation.holding_current import holding_current
+        LOGGER.info("Calculating %s holding current", gid2str(post_gid))
+        hold_I, _ = holding_current(protocol.holding_V, post_gid, blue_config, xtol=0.0001)
+
+    LOGGER.info("Running simulation(s) for %s -> %s pair", gid2str(pre_gid), gid2str(post_gid))
+    return run_pair_trace_simulations(
+        blue_config=blue_config,
+        pre_gid=pre_gid,
+        post_gid=post_gid,
+        hold_I=hold_I,
+        hold_V=protocol.holding_V,
+        t_stim=protocol.t_stim,
+        t_stop=protocol.t_stop,
+        g_factor=protocol.g_factor,
+        record_dt=protocol.record_dt,
+        post_ttx=protocol.post_ttx,
+        v_clamp=protocol.clamp_V,
+        spikes=None,
+        rndm_seed=sim_config.rndm_seed,
+        repetitions=sim_config.n_repetitions,
+        use_multiprocessing=sim_config.multiprocessing
+    )
 
 
 def main(args):
@@ -38,7 +71,6 @@ def main(args):
     import numpy as np
     import bluepy
     from psp_validation import pathways
-    from psp_validation import simpathways as sim
     from psp_validation import configutils as cu
     from psp_validation import persistencyutils as pu
     import json
@@ -47,7 +79,7 @@ def main(args):
 
     configfile = args.config
 
-    LOGGER = setup_logging(args)
+    setup_logging(args)
 
     amplitudes = []
 
@@ -74,9 +106,11 @@ def main(args):
             query=pathway['query'],
             constraints=pathway.get('constraints')
         )
-        LOGGER.info('Selected pairs: %s', str(pairs))
-        eps = sim.PathwayEPhys(pairs, protocol, sim_config, pair_selection=None)
-        psp_traces = eps.traces()
+        psp_traces = [
+            get_traces(sim_config, pre_gid, post_gid, protocol)
+            for pre_gid, post_gid in pairs
+        ]
+
         hfile = h5py.File(out_filename, 'w')
         pu.dump_raw_traces_to_HDF5(hfile, title, psp_traces)
 
