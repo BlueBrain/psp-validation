@@ -24,9 +24,9 @@ def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed):
     if hold_V is None:
         hold_I = None
     else:
-        from psp_validation.holding_current import holding_current
+        from bglibpy import holding_current
         LOGGER.info("Calculating a%d holding current", post_gid)
-        hold_I, _ = holding_current(hold_V, post_gid, blue_config, xtol=0.0001)
+        hold_I, _ = holding_current(hold_V, post_gid, blue_config)
 
     LOGGER.info("Running simulation(s) for a%d -> a%d pair (base_seed=%d)", pre_gid, post_gid, seed)
     return run_pair_trace_simulations(

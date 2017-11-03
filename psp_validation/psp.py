@@ -79,13 +79,7 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
     ssim.instantiate_gids([post_gid], synapse_detail=0)
 
     if post_ttx:
-        cell = ssim.cells[post_gid]
-        for sec in cell.axonal:
-            for seg in sec:
-                seg.NaTa_t.gNaTa_tbar = 0.0
-        for sec in cell.apical + cell.basal + cell.somatic:
-            for seg in sec:
-                seg.NaTs2_t.gNaTs2_tbar = 0.0
+        ssim.cells[post_gid].enable_ttx()
 
     # add the synapses between pre and post cells
     pre_datas = bluepy.Circuit(blue_config).get_presynaptic_data(post_gid)
