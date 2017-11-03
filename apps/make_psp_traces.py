@@ -9,6 +9,7 @@ import numpy as np
 
 import bluepy
 
+from psp_validation.config import load_config
 from psp_validation.pathways import get_pairs
 from psp_validation.persistencyutils import dump_raw_traces_to_HDF5
 
@@ -47,11 +48,6 @@ def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed):
     )
 
 
-def load_yaml(filepath):
-    with open(filepath, 'r') as f:
-        return yaml.load(f)
-
-
 def main(args):
     logging.basicConfig(level=logging.WARNING)
     LOGGER.setLevel({
@@ -73,13 +69,12 @@ def main(args):
         os.makedirs(args.output_dir)
 
     for input_path in args.input:
-        basename = os.path.splitext(os.path.basename(input_path))[0]
-        output_path = os.path.join(args.output_dir, basename + ".h5")
+        title, config = load_config(input_path)
+
+        output_path = os.path.join(args.output_dir, title + "_traces.h5")
         LOGGER.info("%s -> %s", input_path, output_path)
 
-        job_config = load_yaml(input_path)
-
-        pathway = job_config['pathway']
+        pathway = config['pathway']
         if isinstance(pathway, list):
             for item in pathway:
                 assert isinstance(item, list) and len(item) == 2
@@ -88,8 +83,8 @@ def main(args):
             LOGGER.info("Querying pathway pairs...")
             pairs = get_pairs(circuit, **pathway)
 
-        protocol = job_config['protocol']
-        n_repetitions = job_config['n_repetitions']
+        protocol = config['protocol']
+        n_repetitions = config['n_repetitions']
 
         LOGGER.info("Obtaining PSP traces...")
         psp_traces = [
@@ -98,7 +93,7 @@ def main(args):
         ]
 
         with h5py.File(output_path, 'w') as hfile:
-            dump_raw_traces_to_HDF5(hfile, basename, psp_traces)
+            dump_raw_traces_to_HDF5(hfile, title, psp_traces)
 
 
 if __name__ == "__main__" :

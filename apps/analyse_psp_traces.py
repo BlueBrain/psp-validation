@@ -1,63 +1,76 @@
-
-import sys
-if '.' not in sys.path :
-    sys.path.append('.')
+#!/usr/bin/env python
 
 import os
+import logging
+
 import h5py
 import numpy as np
+
 from psp_validation import psp
-from psp_validation import configutils as cu
-import json
-from collections import defaultdict
+from psp_validation.config import load_config
 
-if __name__ == "__main__" :
 
-    if len(sys.argv) == 2:
-        dirname = sys.argv[1]
+LOGGER = logging.getLogger(__name__)
+
+
+def main(args):
+    logging.basicConfig(level=logging.WARNING)
+    LOGGER.setLevel(logging.INFO)
+
+    if args.output_dir is None:
+        output_dir = args.traces_dir
     else:
-        print "This script needs one argument, the traces directory path"
-        exit(1)
+        if not os.path.exists(args.output_dir):
+            os.makedirs(args.output_dir)
 
-    configname = os.path.join(dirname, 'jobconfig.json')
-    f = open(configname)
-    cfg = cu.json2simconfig(f)
-    f.close()
+    for input_path in args.input:
+        title, config = load_config(input_path)
 
-    bconfig = cfg.blue_config
-    pways = cfg.pathways
-    protocols = [cu.json2protocol(open(p)) for p in cfg.protocols]
+        traces_path = os.path.join(args.traces_dir, title + "_traces.h5")
+        if not os.path.exists(traces_path):
+            LOGGER.warn("No PSP traces found for %s", basename)
+            continue
 
-    h5file = os.path.join(dirname, 'psp_traces.hdf5')
-    f = open(h5file)
-    h5data = h5py.File(h5file, 'r')
-
-    class Summary(object) :
-        pass
-
-    summary = defaultdict(Summary)
-
-    for pathwayname, protocol in zip(pways, protocols) :
-    #for pathwayname in h5data['pathways/'].keys() :
-        t_stim = protocol.t_stim
+        t_stim = config['protocol']['t_stim']
         t_start = t_stim - 10.
         spike_filter = psp.default_spike_filter(t_start)
 
-        summary[pathwayname].amplitudes = list()
-        summary[pathwayname].v = list()
-        summary[pathwayname].t = list()
-        pairs = h5data['pathways/%s/pairs' % (pathwayname)]
-        for p in pairs.values() :
-            pre_gid = p.attrs['gid_pre']
-            post_gid = p.attrs['gid_post']
-            syn_type = psp.synapse_type(bconfig, pre_gid)
-            v_mean, t, vts, _ = psp.mean_pair_voltage_from_traces(p, spike_filter)
-            ampl = psp.get_peak_amplitude(t,
-                                          v_mean,
-                                          t_start,
-                                          t_stim,
-                                          syn_type)
-            summary[pathwayname].amplitudes.append(ampl)
-            summary[pathwayname].v.append(v_mean)
-            summary[pathwayname].t.append(t)
-        np.savetxt('%s.csv' % (pathwayname), summary[pathwayname].amplitudes)
+        output_path = os.path.join(output_dir, title + "_amplitudes.csv")
+        LOGGER.info("%s -> %s", traces_path, output_path)
+
+        amplitudes = []
+        with h5py.File(traces_path, 'r') as h5f:
+            assert len(h5f['/pathways']) == 1
+            data = h5f['/pathways'].values()[0]['pairs']
+            for p in data.itervalues():
+                pre_gid = p.attrs['gid_pre']
+                syn_type = psp.synapse_type(args.circuit, pre_gid)
+                v_mean, t, vts, _ = psp.mean_pair_voltage_from_traces(p, spike_filter)
+                ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, syn_type)
+                amplitudes.append(ampl)
+        np.savetxt(output_path, amplitudes)
+
+
+if __name__ == "__main__" :
+    import argparse
+    parser = argparse.ArgumentParser(description="Extract PSP amplitudes")
+    parser.add_argument(
+        "-c", "--circuit",
+        required=True,
+        help="Path to BlueConfig"
+    )
+    parser.add_argument(
+        "-t", "--traces-dir",
+        required=True,
+        help="Path folder with PSP traces"
+    )
+    parser.add_argument(
+        "-o", "--output-dir",
+        help="Path to output folder (if not defined, same as traces folder)"
+    )
+    parser.add_argument(
+        "input",
+        nargs="*",
+        help="YAML job config(s)"
+    )
+    main(parser.parse_args())
