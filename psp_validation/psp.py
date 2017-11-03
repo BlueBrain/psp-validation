@@ -88,7 +88,7 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
                 seg.NaTs2_t.gNaTs2_tbar = 0.0
 
     # add the synapses between pre and post cells
-    pre_datas = ssim.bc_simulation.circuit.get_presynaptic_data(post_gid)
+    pre_datas = bluepy.Circuit(blue_config).get_presynaptic_data(post_gid)
     used_SIDs = []
     used_weights = []
     used_delays = []
@@ -155,7 +155,7 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
         recording.record(v_clamp_object._ref_i, record_dt)
         post_cell.recordings["v_clamp"] = recording
 
-    ssim.run(t_stop=t_sim, v_init=v_init)
+    ssim.run(t_stop=t_sim, v_init=v_init, dt=0.025)
     t = ssim.get_time()
     v = ssim.get_voltage_traces()[post_gid]
 

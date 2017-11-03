@@ -47,7 +47,7 @@ class ResistanceCalculator:
         m = bc.mvddb
         neuron = list(m.get_gids([self.gid]))[0]
         self.template = str(os.path.join(bc.config.Run.METypePath, neuron.METype+'.hoc'))
-        self.morphology = os.path.join(os.path.split(bc.config.Run.MorphologyPath)[0], 'ascii/')
+        self.morphology = os.path.join(bc.config.Run.MorphologyPath, 'ascii/')
 
 
     def resistance_function(self):
