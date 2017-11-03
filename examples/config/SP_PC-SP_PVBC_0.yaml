@@ -1,0 +1,13 @@
+pathway:
+    - [389164, 375400]
+    - [439304, 375400]
+
+protocol:
+    record_dt: 0.1
+    hold_V: -70.0
+    t_stim: 800.0
+    t_stop: 900.0
+    post_ttx: false
+    v_clamp: null
+
+n_repetitions: 2

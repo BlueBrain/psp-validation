@@ -1,126 +1,133 @@
 #!/usr/bin/env python
 
+import os
+import yaml
 import logging
 
-from bluepy.utils import gid2str
+import h5py
+import numpy as np
+
+import bluepy
+
+from psp_validation.pathways import get_pairs
+from psp_validation.persistencyutils import dump_raw_traces_to_HDF5
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-def get_parser():
-    '''Set up the arguments parser'''
-    import argparse
-    parser = argparse.ArgumentParser(description='PSP trace maker',
-            epilog='./make_psp_traces job_config.json --verbose --log=psp.log')
-    parser.add_argument('config', help='json configuration file')
-    parser.add_argument('-v', '--verbose', action='count', dest='verbose',
-                        default=0, help='-v for INFO, -vv for DEBUG')
-    parser.add_argument('-l', '--log', dest='log_file',
-                        default="", help="File to log to")
-    return parser
-
-
-def setup_logging(args):
-    '''set the level of verbosity to INFO or DEBUG'''
-    if args.verbose > 0:  # turns on logging to console
-        if args.verbose > 2:
-            sys.exit("can't be more verbose than -vv")
-        logging.basicConfig(level=(logging.WARNING,
-                                   logging.INFO,
-                                   logging.DEBUG)[args.verbose],
-                            filename = args.log_file)
-
-
-def get_traces(sim_config, pre_gid, post_gid, protocol):
+def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed):
     from psp_validation.psp import run_pair_trace_simulations
 
-    blue_config = sim_config.blue_config
-
-    if protocol.holding_V is None:
+    hold_V = protocol['hold_V']
+    if hold_V is None:
         hold_I = None
     else:
         from psp_validation.holding_current import holding_current
-        LOGGER.info("Calculating %s holding current", gid2str(post_gid))
-        hold_I, _ = holding_current(protocol.holding_V, post_gid, blue_config, xtol=0.0001)
+        LOGGER.info("Calculating a%d holding current", post_gid)
+        hold_I, _ = holding_current(hold_V, post_gid, blue_config, xtol=0.0001)
 
-    LOGGER.info("Running simulation(s) for %s -> %s pair", gid2str(pre_gid), gid2str(post_gid))
+    LOGGER.info("Running simulation(s) for a%d -> a%d pair (base_seed=%d)", pre_gid, post_gid, seed)
     return run_pair_trace_simulations(
         blue_config=blue_config,
         pre_gid=pre_gid,
         post_gid=post_gid,
         hold_I=hold_I,
-        hold_V=protocol.holding_V,
-        t_stim=protocol.t_stim,
-        t_stop=protocol.t_stop,
-        g_factor=protocol.g_factor,
-        record_dt=protocol.record_dt,
-        post_ttx=protocol.post_ttx,
-        v_clamp=protocol.clamp_V,
+        hold_V=hold_V,
+        t_stim=protocol['t_stim'],
+        t_stop=protocol['t_stop'],
+        g_factor=1.0,
+        record_dt=protocol['record_dt'],
+        post_ttx=protocol['post_ttx'],
+        v_clamp=protocol['v_clamp'],
         spikes=None,
-        rndm_seed=sim_config.rndm_seed,
-        repetitions=sim_config.n_repetitions,
-        use_multiprocessing=sim_config.multiprocessing
+        repetitions=n_repetitions,
+        rndm_seed=seed,
+        use_multiprocessing=True
     )
 
 
+def load_yaml(filepath):
+    with open(filepath, 'r') as f:
+        return yaml.load(f)
+
+
 def main(args):
-    print args
-    import os
-    import h5py
-    import numpy as np
-    import bluepy
-    from psp_validation import pathways
-    from psp_validation import configutils as cu
-    from psp_validation import persistencyutils as pu
-    import json
-    import shutil
+    logging.basicConfig(level=logging.WARNING)
+    LOGGER.setLevel({
+        0: logging.WARNING,
+        1: logging.INFO,
+        2: logging.DEBUG
+    }[args.verbose])
 
+    if args.seed is None:
+        seed = np.random.randint(1e9)
+    else:
+        seed = args.seed
 
-    configfile = args.config
+    np.random.seed(seed)
 
-    setup_logging(args)
+    circuit = bluepy.Circuit(args.circuit).v2
 
-    amplitudes = []
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
 
-    sim_config = cu.json2simconfig(open(configfile))
+    for input_path in args.input:
+        basename = os.path.splitext(os.path.basename(input_path))[0]
+        output_path = os.path.join(args.output_dir, basename + ".h5")
+        LOGGER.info("%s -> %s", input_path, output_path)
 
-    pways = sim_config.pathways
+        job_config = load_yaml(input_path)
 
-    protocols = [cu.json2protocol(open(p)) for p in sim_config.protocols]
+        pathway = job_config['pathway']
+        if isinstance(pathway, list):
+            for item in pathway:
+                assert isinstance(item, list) and len(item) == 2
+            pairs = pathway
+        else:
+            LOGGER.info("Querying pathway pairs...")
+            pairs = get_pairs(circuit, **pathway)
 
-    circuit = bluepy.Circuit(sim_config.blue_config).v2
+        protocol = job_config['protocol']
+        n_repetitions = job_config['n_repetitions']
 
-    LOGGER.info('Starting job with configuration file %s', configfile)
-    out_dir = pu.mkjobdir(sim_config.output_dir)
-    LOGGER.info('Output will be written to %s', out_dir)
-    out_filename = os.path.join(out_dir, 'psp_traces.hdf5')
-    #hfile = h5py.File(out_filename, 'w')
-    shutil.copyfile(configfile, os.path.join(out_dir, 'jobconfig.json'))
-
-    for pathway, protocol in zip(pways, protocols) :
-        title = pathway['title']
-        LOGGER.info('Processing PATHWAY=%s, PROTOCOL=%s', title, str(protocol))
-        pairs = pathways.get_pairs(
-            circuit, sim_config.n_pairs,
-            query=pathway['query'],
-            constraints=pathway.get('constraints')
-        )
+        LOGGER.info("Obtaining PSP traces...")
         psp_traces = [
-            get_traces(sim_config, pre_gid, post_gid, protocol)
+            get_traces(args.circuit, pre_gid, post_gid, protocol, n_repetitions, seed=seed)
             for pre_gid, post_gid in pairs
         ]
 
-        hfile = h5py.File(out_filename, 'w')
-        pu.dump_raw_traces_to_HDF5(hfile, title, psp_traces)
-
-        hfile.close()
-
-    #hfile.close()
+        with h5py.File(output_path, 'w') as hfile:
+            dump_raw_traces_to_HDF5(hfile, basename, psp_traces)
 
 
 if __name__ == "__main__" :
-
-    PARSER = get_parser()
-    args = PARSER.parse_args()
-    main(args)
+    import argparse
+    parser = argparse.ArgumentParser(description="PSP trace maker")
+    parser.add_argument(
+        "-c", "--circuit",
+        required=True,
+        help="Path to BlueConfig"
+    )
+    parser.add_argument(
+        "-o", "--output-dir",
+        required=True,
+        help="Path to output folder"
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        help="Pseudo-random generator seed"
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="count",
+        default=0,
+        help="-v for INFO, -vv for DEBUG"
+    )
+    parser.add_argument(
+        "input",
+        nargs="*",
+        help="YAML job config(s)"
+    )
+    main(parser.parse_args())

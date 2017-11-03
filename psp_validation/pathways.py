@@ -190,20 +190,21 @@ class ConnectionFilter(object):
         return True
 
 
-def get_pairs(circuit, n_pairs, query, constraints=None):
+def get_pairs(circuit, pre, post, n_pairs, constraints=None):
     """
     Get 'n_pairs' connected pairs specified by `query` and optional `constraints`.
 
     Args:
         circuit: bluepy.v2.Circuit instance
+        pre: presynaptic cell group
+        post: postsynaptic cell group
         n_pairs: number of pairs to return
-        query: dict passed as kwargs to `circuit.connectome.iter_connections()`
         constraints: dict passed as kwargs to `ConnectionFilter`
 
     Returns:
         List of `n` (pre_gid, post_gid) pairs (or fewer if could not find enough)
     """
-    iter_connections = circuit.connectome.iter_pathway_pairs(**query)
+    iter_connections = circuit.connectome.iter_pathway_pairs(pre=pre, post=post, shuffle=True)
     if constraints is not None:
         iter_connections = itertools.ifilter(
             ConnectionFilter(circuit, **constraints),
