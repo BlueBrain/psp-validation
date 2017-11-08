@@ -12,7 +12,7 @@ setup(
     install_requires=[
         'numpy>=1.10',
         'h5py>=2.7',
-        'bglibpy>=3.1,<4.0',
+        'bglibpy>=3.2.2,<4.0',
         'bluepy>=0.11,<0.12',
         'nose>=1.3',
     ],

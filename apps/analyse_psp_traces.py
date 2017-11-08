@@ -28,7 +28,7 @@ def main(args):
 
         traces_path = os.path.join(args.traces_dir, title + "_traces.h5")
         if not os.path.exists(traces_path):
-            LOGGER.warn("No PSP traces found for %s", basename)
+            LOGGER.warn("No PSP traces found for %s", title)
             continue
 
         t_stim = config['protocol']['t_stim']
@@ -48,7 +48,7 @@ def main(args):
                 v_mean, t, vts, _ = psp.mean_pair_voltage_from_traces(p, spike_filter)
                 ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, syn_type)
                 amplitudes.append(ampl)
-        np.savetxt(output_path, amplitudes)
+        np.savetxt(output_path, amplitudes, fmt="%.6f")
 
 
 if __name__ == "__main__" :

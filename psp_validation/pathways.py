@@ -204,7 +204,7 @@ def get_pairs(circuit, pre, post, n_pairs, constraints=None):
     Returns:
         List of `n` (pre_gid, post_gid) pairs (or fewer if could not find enough)
     """
-    iter_connections = circuit.connectome.iter_pathway_pairs(pre=pre, post=post, shuffle=True)
+    iter_connections = circuit.connectome.iter_connections(pre=pre, post=post, shuffle=True)
     if constraints is not None:
         iter_connections = itertools.ifilter(
             ConnectionFilter(circuit, **constraints),
