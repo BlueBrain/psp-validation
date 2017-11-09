@@ -9,12 +9,20 @@ import numpy as np
 
 import bluepy
 
-from psp_validation.config import load_config
+from psp_validation import psp
 from psp_validation.pathways import get_pairs
 from psp_validation.persistencyutils import dump_raw_traces_to_HDF5
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+def load_config(filepath):
+    """ Load YAML b config. """
+    title = os.path.splitext(os.path.basename(filepath))[0]
+    with open(filepath, 'r') as f:
+        config = yaml.load(f)
+    return title, config
 
 
 def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed):
@@ -68,11 +76,9 @@ def main(args):
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    for input_path in args.input:
-        title, config = load_config(input_path)
-
-        output_path = os.path.join(args.output_dir, title + "_traces.h5")
-        LOGGER.info("%s -> %s", input_path, output_path)
+    for config_path in args.task_config:
+        title, config = load_config(config_path)
+        LOGGER.info("Processing '%s' task...", title)
 
         pathway = config['pathway']
         if isinstance(pathway, list):
@@ -86,19 +92,34 @@ def main(args):
         protocol = config['protocol']
         n_repetitions = config['n_repetitions']
 
-        LOGGER.info("Obtaining PSP traces...")
-        psp_traces = [
-            get_traces(args.circuit, pre_gid, post_gid, protocol, n_repetitions, seed=seed)
-            for pre_gid, post_gid in pairs
-        ]
+        t_stim = config['protocol']['t_stim']
+        t_start = t_stim - 10.
+        spike_filter = psp.default_spike_filter(t_start)
 
-        with h5py.File(output_path, 'w') as hfile:
-            dump_raw_traces_to_HDF5(hfile, title, psp_traces)
+        all_traces = []
+        all_amplitudes = []
+        for pre_gid, post_gid in pairs:
+            traces = get_traces(args.circuit, pre_gid, post_gid, protocol, n_repetitions, seed=seed)
+            syn_type = psp.synapse_type(args.circuit, pre_gid)
+            vts = np.array([tr[:2] for tr in traces])
+            v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(vts, spike_filter)
+            ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, syn_type)
+            all_amplitudes.append(ampl)
+            if args.dump_traces:
+                all_traces.append(traces)
+
+        output_path = os.path.join(args.output_dir, title + "_amplitudes.csv")
+        np.savetxt(output_path, all_amplitudes, fmt="%.9f")
+
+        if args.dump_traces:
+            traces_path = os.path.join(args.output_dir, title + "_traces.h5")
+            with h5py.File(traces_path, 'w') as h5f:
+                dump_raw_traces_to_HDF5(h5f, title, all_traces)
 
 
 if __name__ == "__main__" :
     import argparse
-    parser = argparse.ArgumentParser(description="PSP trace maker")
+    parser = argparse.ArgumentParser(description="Obtain PSP amplitudes")
     parser.add_argument(
         "-c", "--circuit",
         required=True,
@@ -110,8 +131,14 @@ if __name__ == "__main__" :
         help="Path to output folder"
     )
     parser.add_argument(
+        "--dump-traces",
+        action="store_true",
+        help="Dump PSP traces"
+    )
+    parser.add_argument(
         "--seed",
         type=int,
+        default=None,
         help="Pseudo-random generator seed"
     )
     parser.add_argument(
@@ -121,8 +148,8 @@ if __name__ == "__main__" :
         help="-v for INFO, -vv for DEBUG"
     )
     parser.add_argument(
-        "input",
+        "task_config",
         nargs="*",
-        help="YAML job config(s)"
+        help="YAML task config(s)"
     )
     main(parser.parse_args())

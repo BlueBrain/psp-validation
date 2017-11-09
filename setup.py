@@ -24,8 +24,7 @@ setup(
     description="PSP analysis tools",
     license="BBP-internal-confidential",
     scripts=[
-        'apps/analyse_psp_traces.py',
-        'apps/make_psp_traces.py',
+        'apps/psp',
     ],
     url="https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
     download_url="ssh://bbpcode.epfl.ch/nse/psp-validation",
