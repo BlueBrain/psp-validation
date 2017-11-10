@@ -190,15 +190,16 @@ class ConnectionFilter(object):
         return True
 
 
-def get_pairs(circuit, targets, pre, post, n_pairs, constraints=None):
+def get_pairs(circuit, targets, n_pairs, pre, post, constraints=None):
     """
     Get 'n_pairs' connected pairs specified by `query` and optional `constraints`.
 
     Args:
         circuit: bluepy.v2.Circuit instance
+        targets: dictionary with neuron group definitions (as BluePy.v2 queries)
+        n_pairs: number of pairs to return
         pre: presynaptic cell group defined in `targets`
         post: postsynaptic cell group defined in `targets`
-        n_pairs: number of pairs to return
         constraints: dict passed as kwargs to `ConnectionFilter`
 
     Returns:

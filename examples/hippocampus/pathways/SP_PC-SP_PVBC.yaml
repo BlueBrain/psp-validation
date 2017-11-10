@@ -5,7 +5,6 @@ pathway:
         max_dist_x: 200.0
         max_dist_y: 200.0
         max_dist_z: 100.0
-    n_pairs: 10
 
 protocol:
     record_dt: 0.1
@@ -14,5 +13,3 @@ protocol:
     t_stop: 900.0
     post_ttx: false
     v_clamp: null
-
-n_repetitions: 2

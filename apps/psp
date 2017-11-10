@@ -92,10 +92,9 @@ def main(args):
             pairs = pathway
         else:
             LOGGER.info("Querying pathway pairs...")
-            pairs = get_pairs(circuit, targets=targets, **pathway)
+            pairs = get_pairs(circuit, targets=targets, n_pairs=args.num_pairs, **pathway)
 
         protocol = config['protocol']
-        n_repetitions = config['n_repetitions']
 
         t_stim = config['protocol']['t_stim']
         t_start = t_stim - 10.
@@ -104,7 +103,7 @@ def main(args):
         all_traces = []
         all_amplitudes = []
         for pre_gid, post_gid in pairs:
-            traces = get_traces(args.circuit, pre_gid, post_gid, protocol, n_repetitions, seed=seed)
+            traces = get_traces(args.circuit, pre_gid, post_gid, protocol, args.num_trials, seed=seed)
             syn_type = psp.synapse_type(args.circuit, pre_gid)
             vts = np.array([tr[:2] for tr in traces])
             v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(vts, spike_filter)
@@ -136,6 +135,18 @@ if __name__ == "__main__" :
         help="Path to neuron groups definitions (YAML)"
     )
     parser.add_argument(
+        "-n", "--num-pairs",
+        type=int,
+        required=True,
+        help="Sample NUM_PAIRS pairs from each pathway"
+    )
+    parser.add_argument(
+        "-r", "--num-trials",
+        type=int,
+        required=True,
+        help="Run NUM_TRIALS simulations for each pair"
+    )
+    parser.add_argument(
         "-o", "--output-dir",
         required=True,
         help="Path to output folder"
@@ -143,7 +154,7 @@ if __name__ == "__main__" :
     parser.add_argument(
         "--dump-traces",
         action="store_true",
-        help="Dump PSP traces"
+        help="Dump PSP traces [default: %(default)s]"
     )
     parser.add_argument(
         "--seed",

@@ -9,5 +9,3 @@ protocol:
     t_stop: 900.0
     post_ttx: false
     v_clamp: null
-
-n_repetitions: 2
