@@ -1,0 +1,18 @@
+pathway:
+    pre: L5_MC
+    post: L5_TTPC
+    constraints:
+        unique_gids: true
+        max_dist_x: 100.0
+        max_dist_z: 100.0
+    n_pairs: 10
+
+protocol:
+    record_dt: 0.1
+    hold_V: -57.3
+    t_stim: 800.0
+    t_stop: 900.0
+    post_ttx: true
+    v_clamp: null
+
+n_repetitions: 10

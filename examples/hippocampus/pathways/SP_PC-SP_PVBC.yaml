@@ -1,6 +1,6 @@
 pathway:
-    pre: {"mtype": "SP_PC"}
-    post: {"mtype": "SP_PVBC"}
+    pre: SP_PC
+    post: SP_PVBC
     constraints:
         max_dist_x: 200.0
         max_dist_y: 200.0

@@ -1,0 +1,33 @@
+# General
+EXC:
+  synapse_class: EXC
+INH:
+  synapse_class: INH
+
+# Specific
+SLM_PPA:
+  mtype: SLM_PPA
+SO_BP:
+  mtype: SO_BP
+SO_BS:
+  mtype: SO_BS
+SO_OLM:
+  mtype: SO_OLM
+SO_Tri:
+  mtype: SO_Tri
+SP_AA:
+  mtype: SP_AA
+SP_BS:
+  mtype: SP_BS
+SP_CCKBC:
+  mtype: SP_CCKBC
+SP_Ivy:
+  mtype: SP_Ivy
+SP_PC:
+  mtype: SP_PC
+SP_PVBC:
+  mtype: SP_PVBC
+SR_IS1:
+  mtype: SR_IS1
+SR_SCA:
+  mtype: SR_SCA
