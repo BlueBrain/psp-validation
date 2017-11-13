@@ -1,0 +1,25 @@
+reference:
+    author: "Silberberg"
+    psp_amplitude:
+        mean: 0.28
+        std: 0.3
+    synapse_count:
+        mean: 8.6
+        std: 2.1
+
+pathway:
+    pre: L5_TTPC
+    post: L5_MC
+    constraints:
+        unique_gids: true
+        max_dist_x: 100.0
+        max_dist_z: 100.0
+
+protocol:
+    record_dt: 0.1
+    hold_V: -70.0
+    t_stim: 800.0
+    t_stop: 900.0
+    post_ttx: false
+    v_clamp: null
+    E_rev: 0.0

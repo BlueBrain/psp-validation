@@ -1,0 +1,25 @@
+reference:
+    author: "Angulo 99"
+    psp_amplitude:
+        mean: 2.1
+        std: 1.3
+    synapse_count:
+        mean: null
+        std: null
+
+pathway:
+    pre: L5_PC
+    post: L5_BC
+    constraints:
+        unique_gids: true
+        max_dist_x: 100.0
+        max_dist_z: 100.0
+
+protocol:
+    record_dt: 0.1
+    hold_V: -72.0
+    t_stim: 800.0
+    t_stop: 900.0
+    post_ttx: true
+    v_clamp: null
+    E_rev: 0.0

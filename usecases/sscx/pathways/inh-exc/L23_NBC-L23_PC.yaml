@@ -1,0 +1,25 @@
+reference:
+    author: null
+    psp_amplitude:
+        mean: 1.21
+        std: 1.18
+    synapse_count:
+        mean: 15.8
+        std: 4.1
+
+pathway:
+    pre: L23_NBC
+    post: L23_PC
+    constraints:
+        unique_gids: true
+        max_dist_x: 100.0
+        max_dist_z: 100.0
+
+protocol:
+    record_dt: 0.1
+    hold_V: -66.0
+    t_stim: 800.0
+    t_stop: 900.0
+    post_ttx: false
+    v_clamp: null
+    E_rev: -80.0

@@ -1,0 +1,25 @@
+reference:
+    author: null
+    psp_amplitude:
+        mean: 0.5
+        std: 0.4
+    synapse_count:
+        mean: 12.0
+        std: 3.0
+
+pathway:
+    pre: MC
+    post: EXC
+    constraints:
+        unique_gids: true
+        max_dist_x: 100.0
+        max_dist_z: 100.0
+
+protocol:
+    record_dt: 0.1
+    hold_V: -66.0
+    t_stim: 800.0
+    t_stop: 900.0
+    post_ttx: false
+    v_clamp: null
+    E_rev: -80.0
