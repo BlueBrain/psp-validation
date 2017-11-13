@@ -4,6 +4,8 @@ import itertools
 
 from bluepy.v2.enums import Cell
 
+from psp_validation import PSPError
+
 
 class Pathway(object):
     """Class wolding the queries necessary to obtain pre- and \
@@ -173,15 +175,15 @@ class ConnectionFilter(object):
             if conn[2] < self.min_nsyn:
                 return False
         if self.max_dist_x is not None:
-            x1, x2 = self.circuit.cells([pre_gid, post_gid])[Cell.X]
+            x1, x2 = self.circuit.cells.get([pre_gid, post_gid])[Cell.X]
             if abs(x1 - x2) > self.max_dist_x:
                 return False
         if self.max_dist_y is not None:
-            y1, y2 = self.circuit.cells([pre_gid, post_gid])[Cell.Y]
+            y1, y2 = self.circuit.cells.get([pre_gid, post_gid])[Cell.Y]
             if abs(y1 - y2) > self.max_dist_y:
                 return False
         if self.max_dist_z is not None:
-            z1, z2 = self.circuit.cells([pre_gid, post_gid])[Cell.Z]
+            z1, z2 = self.circuit.cells.get([pre_gid, post_gid])[Cell.Z]
             if abs(z1 - z2) > self.max_dist_z:
                 return False
         if self.used_gids is not None:
@@ -190,25 +192,40 @@ class ConnectionFilter(object):
         return True
 
 
-def get_pairs(circuit, targets, n_pairs, pre, post, constraints=None):
+def get_pairs(circuit, pre, post, n_pairs, constraints=None):
     """
     Get 'n_pairs' connected pairs specified by `query` and optional `constraints`.
 
     Args:
         circuit: bluepy.v2.Circuit instance
-        targets: dictionary with neuron group definitions (as BluePy.v2 queries)
+        pre: presynaptic cell group (BluePy.v2 query)
+        post: postsynaptic cell group (BluePy.v2 query)
         n_pairs: number of pairs to return
-        pre: presynaptic cell group defined in `targets`
-        post: postsynaptic cell group defined in `targets`
         constraints: dict passed as kwargs to `ConnectionFilter`
 
     Returns:
         List of `n` (pre_gid, post_gid) pairs (or fewer if could not find enough)
     """
-    iter_connections = circuit.connectome.iter_connections(pre=targets[pre], post=targets[post], shuffle=True)
+    iter_connections = circuit.connectome.iter_connections(pre=pre, post=post, shuffle=True)
     if constraints is not None:
         iter_connections = itertools.ifilter(
             ConnectionFilter(circuit, **constraints),
             iter_connections
         )
     return [conn[:2] for conn in itertools.islice(iter_connections, n_pairs)]
+
+
+def get_synapse_type(circuit, cell_group):
+    """
+    Get synapse type for `cell_group` cells.
+
+    Raise an Exception if there are cells of more than one synapse type.
+    """
+    syn_types = circuit.cells.get(cell_group, Cell.SYNAPSE_CLASS).unique()
+    if len(syn_types) != 1:
+        raise PSPError(
+            "Cell group should consist of cells with same synapse type, found: [{}]".format(
+                ",".join(syn_types)
+            )
+        )
+    return syn_types[0]

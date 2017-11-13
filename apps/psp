@@ -11,7 +11,7 @@ import numpy as np
 import bluepy
 
 from psp_validation import psp
-from psp_validation.pathways import get_pairs
+from psp_validation.pathways import get_pairs, get_synapse_type
 from psp_validation.persistencyutils import dump_raw_traces_to_HDF5
 
 
@@ -93,7 +93,13 @@ def main(args):
             pairs = pathway
         else:
             LOGGER.info("Querying pathway pairs...")
-            pairs = get_pairs(circuit, targets=targets, n_pairs=args.num_pairs, **pathway)
+            pre = targets[pathway['pre']]
+            post = targets[pathway['post']]
+            pairs = get_pairs(
+                circuit, pre, post, args.num_pairs, constraints=pathway.get('constraints')
+            )
+
+        pre_syn_type = get_synapse_type(circuit, [p[0] for p in pairs])
 
         protocol = config['protocol']
 
@@ -105,10 +111,9 @@ def main(args):
         all_amplitudes = []
         for pre_gid, post_gid in pairs:
             traces = get_traces(args.circuit, pre_gid, post_gid, protocol, args.num_trials, seed=seed)
-            syn_type = psp.synapse_type(args.circuit, pre_gid)
             vts = np.array([tr[:2] for tr in traces])
             v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(vts, spike_filter)
-            ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, syn_type)
+            ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, pre_syn_type)
             all_amplitudes.append(ampl)
             if args.dump_traces:
                 all_traces.append(traces)

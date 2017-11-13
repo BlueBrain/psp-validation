@@ -20,20 +20,6 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-def synapse_type(bconfig_path, gid):
-    """ Return the first synapse type of neuron gid
-    """
-    try:
-        circuit = bluepy.Simulation(bconfig_path).circuit
-        stype = [x.mtype.synapse_class
-                 for x in circuit.mvddb.get_gids([gid])][0]
-    except:
-        raise ValueError('Invalid parameter passed to synapse_type: %s, %s'
-                         % (bconfig_path, gid))
-    assert(stype in ('INH', 'EXC'))
-    return stype
-
-
 def calculate_amplitude(traces,
                         syn_type,
                         trace_filter,
