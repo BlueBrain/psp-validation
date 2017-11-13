@@ -116,7 +116,7 @@ def test_numpy_ndarray_checker_raises3() :
 def test_get_peak_amplitude_EXC() :
     t = np.linspace(1, 10, 10)
     v = np.linspace(-10, 9, 10)
-    ntools.assert_almost_equal(17.94444444444444, 
+    ntools.assert_almost_equal(17.94444444444444,
                                psp.get_peak_amplitude(t, v, 0., 2.5, 'EXC'),
                                places = 14)
 
@@ -124,7 +124,7 @@ def test_get_peak_amplitude_EXC() :
 def test_get_peak_amplitude_INH() :
     t = np.linspace(1, 10, 10)
     v = np.linspace(-10, 9, 10)
-    ntools.assert_almost_equal(3.166666666666666, 
+    ntools.assert_almost_equal(3.166666666666666,
                                psp.get_peak_amplitude(t, v, 0., 2.5, 'INH'),
                                places = 14)
 
@@ -258,18 +258,3 @@ def test_amplitude_from_traces_filter_all_returns_nan() :
     traces = zip(v, repeat(t))
     amplitude = psp.calculate_amplitude(traces, 'EXC', trace_filter, t_stim)
     ntools.assert_true(np.isnan(amplitude))
-
-
-def test_SynapseTypeEXC() :
-    for i in xrange(1, 11) :
-        ntools.assert_equal(psp.synapse_type(_bconfig, i), 'EXC')
-
-@ntools.raises(ValueError)
-def test_synapse_type_raises_for_bad_config() :
-    psp.synapse_type('foobar', 1)
-
-@ntools.raises(ValueError)
-def test_synapse_type_raises_for_bad_gid() :
-    psp.synapse_type(_bconfig, 100) # test circuit only has 10 cells
-
-

@@ -1,11 +1,11 @@
 #modules that have tests
-#TEST_MODULES=.
+TEST_MODULES=.
 
 #modules that are installable (ie: ones w/ setup.py)
 INSTALL_MODULES=.
 
 # Ignore directories for pep8 and pylint (on top of tests and doc)
-IGNORE_LINT=apps|examples|psp_validation
+IGNORE_LINT=examples
 
 #packages to cover
 COVER_PACKAGES=psp_validation

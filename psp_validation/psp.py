@@ -7,11 +7,10 @@ No current injection other than the current to achieve the holding potential
 are included. (no HypAmp for instance)
 """
 
+#pylint: skip-file
 
 import numpy as np
 import bluepy
-import bglibpy
-import bglibpy.ssim
 import multiprocessing
 import sys
 import traceback
@@ -51,6 +50,9 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
     pre_spike_times is float (single spike) or list
 
     """
+    import bglibpy
+    import bglibpy.ssim
+
     LOGGER.debug('sim_pair params: %s', locals())
     LOGGER.info('sim_pair: pre_gid=%d, post_gid=%d, seed=%d', pre_gid, post_gid, base_seed)
 
@@ -97,8 +99,9 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
             used_delays.append(syn_description[1])
 
     if len(used_SIDs) == 0:
-        LOGGER.warning("sim_pair: pre_gid=%d does not form a synapse on post_gid=%d",
-                pre_gid, post_gid)
+        LOGGER.warning(
+            "sim_pair: pre_gid=%d does not form a synapse on post_gid=%d", pre_gid, post_gid
+        )
 
     # connect the synapses
     if type(t_stim) == float:
@@ -143,7 +146,9 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
         i = ssim.cells[post_gid].get_recording("v_clamp")
         return v, t, i
 
-    LOGGER.info('sim_pair: finished run for pre_gid=%d, post_gid=%d, seed=%d', pre_gid, post_gid, base_seed)
+    LOGGER.info(
+        'sim_pair: finished run for pre_gid=%d, post_gid=%d, seed=%d', pre_gid, post_gid, base_seed
+    )
     return v, t, (pre_gid, post_gid)
 
 
@@ -156,8 +161,7 @@ def mp_sim_pair(all_args):
     try:
         return sim_pair(*args, **kwargs)
     except:
-        LOGGER.error("mp_sim_pair: caught Exception for pre_gid=%d, post_gid=%d",
-                args[1], args[2])
+        LOGGER.error("mp_sim_pair: caught Exception for pre_gid=%d, post_gid=%d", args[1], args[2])
         raise Exception("".join(traceback.format_exception(*sys.exc_info())))
 
 
@@ -179,8 +183,10 @@ def run_pair_trace_simulations(blue_config,
     """Launch a series of simulations of PSP traces
     """
     LOGGER.debug('run_pair_trace_simulations params: %s', locals())
-    LOGGER.info('run_pair_trace_simulations: pre_gid=%d, post_gid=%d, repetitions=%d',
-            pre_gid, post_gid, repetitions)
+    LOGGER.info(
+        'run_pair_trace_simulations: pre_gid=%d, post_gid=%d, repetitions=%d',
+        pre_gid, post_gid, repetitions
+    )
 
     if spikes is None:
         spikes = [t_stim]
@@ -336,5 +342,5 @@ def _check_numpy_ndarrays(*args):
 
 
 def compute_scaling(psp1, psp2, v_holding, E_rev):
-    d = np.abs(E_rev-v_holding)
-    return (psp2 * (1 - (psp1/d))) / (psp1 * (1- (psp2/d)))
+    d = np.abs(E_rev - v_holding)
+    return (psp2 * (1 - (psp1 / d))) / (psp1 * (1 - (psp2 / d)))

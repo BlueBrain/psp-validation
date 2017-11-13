@@ -24,7 +24,10 @@ class ConnectionFilter(object):
         * using `unique_gids` makes ConnectionFilter stateful
         * using `min_syn` requires (pre_gid, post_gid, nsyn) input tuples
     """
-    def __init__(self, circuit, unique_gids=False, min_nsyn=None, max_dist_x=None, max_dist_y=None, max_dist_z=None):
+    def __init__(
+        self, circuit, unique_gids=False, min_nsyn=None,
+        max_dist_x=None, max_dist_y=None, max_dist_z=None
+    ):
         self.circuit = circuit
         self.min_nsyn = min_nsyn
         self.max_dist_x = max_dist_x

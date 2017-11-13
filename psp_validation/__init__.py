@@ -1,3 +1,5 @@
+""" PSP analysis tools. """
+
 
 class PSPError(Exception):
     """ Base `psp_validation` exception """
