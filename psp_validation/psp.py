@@ -347,3 +347,8 @@ def _check_numpy_ndarrays(*args):
     for arg in args:
         if not isinstance(arg, np.ndarray):
             raise ValueError("Argument must be numpy.ndarray")
+
+
+def compute_scaling(psp1, psp2, v_holding, E_rev):
+    d = np.abs(E_rev-v_holding)
+    return (psp2 * (1 - (psp1/d))) / (psp1 * (1- (psp2/d)))

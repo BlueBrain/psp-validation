@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import os
 import yaml
@@ -83,7 +84,7 @@ def main(args):
 
     for config_path in args.task_config:
         title, config = load_config(config_path)
-        LOGGER.info("Processing '%s' task...", title)
+        LOGGER.info("Processing '%s' pathway...", title)
 
         pathway = config['pathway']
         if isinstance(pathway, list):
@@ -112,18 +113,52 @@ def main(args):
             if args.dump_traces:
                 all_traces.append(traces)
 
-        output_path = os.path.join(args.output_dir, title + "_amplitudes.csv")
-        np.savetxt(output_path, all_amplitudes, fmt="%.9f")
-
         if args.dump_traces:
-            traces_path = os.path.join(args.output_dir, title + "_traces.h5")
+            traces_path = os.path.join(args.output_dir, title + ".traces.h5")
             with h5py.File(traces_path, 'w') as h5f:
                 dump_raw_traces_to_HDF5(h5f, title, all_traces)
+
+        if args.dump_amplitudes:
+            amplitudes_path = os.path.join(args.output_dir, title + ".amplitudes.txt")
+            np.savetxt(amplitudes_path, all_amplitudes, fmt="%.9f")
+
+        model_mean = np.mean(all_amplitudes)
+        model_std = np.std(all_amplitudes)
+
+        if 'reference' in config:
+            reference = config['reference']['psp_amplitude']
+            v_holding = config['protocol']['hold_V']
+            E_rev = config['protocol']['E_rev']
+            scaling = psp.compute_scaling(model_mean, reference['mean'], v_holding, E_rev)
+        else:
+            reference = {'mean': None, 'std': None}
+            scaling = None
+
+        summary_path = os.path.join(args.output_dir, title + ".summary.yaml")
+        with open(summary_path, 'w') as f:
+            print(
+                "pathway: {pathway}\n"
+                "model:\n"
+                "    mean: {model_mean}\n"
+                "    std:  {model_std}\n"
+                "reference:\n"
+                "    mean: {ref_mean}\n"
+                "    std:  {ref_std}\n"
+                "scaling: {scaling}".format(
+                    pathway=title,
+                    model_mean=model_mean,
+                    model_std=model_std,
+                    ref_mean=reference['mean'],
+                    ref_std=reference['std'],
+                    scaling=scaling
+                ),
+                file=f
+            )
 
 
 if __name__ == "__main__" :
     import argparse
-    parser = argparse.ArgumentParser(description="Obtain PSP amplitudes")
+    parser = argparse.ArgumentParser(description="Analyze PSP amplitudes")
     parser.add_argument(
         "-c", "--circuit",
         required=True,
@@ -150,6 +185,11 @@ if __name__ == "__main__" :
         "-o", "--output-dir",
         required=True,
         help="Path to output folder"
+    )
+    parser.add_argument(
+        "--dump-amplitudes",
+        action="store_true",
+        help="Dump PSP amplitudes [default: %(default)s]"
     )
     parser.add_argument(
         "--dump-traces",
