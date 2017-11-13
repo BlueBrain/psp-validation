@@ -1,24 +1,7 @@
 """Bundle of tools to help with persistifying data
 """
 
-import os
-import uuid
 import numpy
-import datetime
-
-
-def jobdirname(trunk='.'):
-    """Return a unique name for a job directory. Can be used as job ID.
-    """
-    return os.path.join(trunk, str(uuid.uuid4())+"_"+datetime.datetime.now().isoformat())
-
-
-def mkjobdir(trunk='.'):
-    """Make an output directory with a "unique" name
-    """
-    name = jobdirname(trunk)
-    os.makedirs(name)
-    return name
 
 
 def dump_raw_traces_to_HDF5(h5file, pathway, data):
@@ -55,28 +38,3 @@ def dump_raw_traces_to_HDF5(h5file, pathway, data):
         h5file[group_name] = numpy.array(traces)
         h5file[group_name].attrs['gid_pre'] = gids[0]
         h5file[group_name].attrs['gid_post'] = gids[1]
-
-
-def rotated_name(name):
-    """Check if name exists as a file and rotate existing versions.
-
-    Examples: given existing file.txt:
-
-    Original file name   new file name
-    ----------------------------------
-    file.txt              file.txt.1
-    file.txt.1            file.txt.2
-    file.txt.2            file.txt.3
-
-    """
-
-    if not os.path.exists(name):
-        return name
-
-    base, ext = os.path.splitext(name)
-    ext = ext[1:]
-    if ext.isdigit():
-        ext = str(int(ext) + 1)
-    else:
-        ext = '1'
-    return rotated_name(base + '.' + ext)
