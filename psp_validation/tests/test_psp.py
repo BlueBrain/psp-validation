@@ -1,12 +1,9 @@
-from sys import path as _path
-if '.' not in _path :
-    _path.append('.')
-
 from nose import tools as ntools
 import numpy as np
 import math
 from itertools import repeat
 from psp_validation import psp
+
 
 _bconfig = "psp_validation/tests/input_data/sim_tencell_example1/RefBlueConfig_Scaling"
 
@@ -258,3 +255,17 @@ def test_amplitude_from_traces_filter_all_returns_nan() :
     traces = zip(v, repeat(t))
     amplitude = psp.calculate_amplitude(traces, 'EXC', trace_filter, t_stim)
     ntools.assert_true(np.isnan(amplitude))
+
+
+def test_compute_scaling_EXC():
+    result = psp.compute_scaling(1.0, 2.0, -70.0, 'EXC')
+    ntools.assert_almost_equal(result, 2.029411764)
+
+
+def test_compute_scaling_INH():
+    result = psp.compute_scaling(1.0, 2.0, -70.0, 'INH')
+    ntools.assert_almost_equal(result, 2.25)
+
+
+def test_compute_scaling_invalid():
+    ntools.assert_raises(KeyError, psp.compute_scaling, 1.0, 2.0, -70, 'err')

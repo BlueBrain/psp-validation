@@ -168,8 +168,7 @@ def run(
         if 'reference' in config:
             reference = config['reference']['psp_amplitude']
             v_holding = config['protocol']['hold_V']
-            E_rev = config['protocol']['E_rev']
-            scaling = psp.compute_scaling(model_mean, reference['mean'], v_holding, E_rev)
+            scaling = psp.compute_scaling(model_mean, reference['mean'], v_holding, pre_syn_type)
         else:
             reference = {'mean': None, 'std': None}
             scaling = None

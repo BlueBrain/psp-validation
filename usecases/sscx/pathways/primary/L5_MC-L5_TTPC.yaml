@@ -22,4 +22,3 @@ protocol:
     t_stop: 900.0
     post_ttx: true
     v_clamp: null
-    E_rev: -80.0

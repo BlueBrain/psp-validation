@@ -349,6 +349,10 @@ def _check_numpy_ndarrays(*args):
             raise ValueError("Argument must be numpy.ndarray")
 
 
-def compute_scaling(psp1, psp2, v_holding, E_rev):
+def compute_scaling(psp1, psp2, v_holding, syn_type):
+    E_rev = {
+        'EXC': 0.0,
+        'INH': -80.0,
+    }[syn_type]
     d = np.abs(E_rev - v_holding)
     return (psp2 * (1 - (psp1 / d))) / (psp1 * (1 - (psp2 / d)))
