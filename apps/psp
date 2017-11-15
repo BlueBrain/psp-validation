@@ -33,7 +33,7 @@ def load_config(filepath):
     return title, load_yaml(filepath)
 
 
-def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed):
+def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed, jobs):
     from psp_validation.psp import run_pair_trace_simulations
 
     hold_V = protocol['hold_V']
@@ -60,7 +60,7 @@ def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed):
         spikes=None,
         repetitions=n_repetitions,
         rndm_seed=seed,
-        use_multiprocessing=True
+        jobs=jobs
     )
 
 
@@ -114,7 +114,8 @@ def main(args):
         all_amplitudes = []
         for pre_gid, post_gid in pairs:
             traces = get_traces(
-                args.circuit, pre_gid, post_gid, protocol, args.num_trials, seed=seed
+                args.circuit, pre_gid, post_gid, protocol, args.num_trials,
+                seed=seed, jobs=args.jobs
             )
             vts = np.array([tr[:2] for tr in traces])
             v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(vts, spike_filter)
@@ -195,6 +196,15 @@ if __name__ == "__main__":
         "-o", "--output-dir",
         required=True,
         help="Path to output folder"
+    )
+    parser.add_argument(
+        "-j", "--jobs",
+        type=int,
+        help=(
+            "Number of trials to run in parallel "
+            "(if not specified, trials are run sequentially; "
+            "setting to 0 would use all available CPUs)"
+        )
     )
     parser.add_argument(
         "--dump-amplitudes",

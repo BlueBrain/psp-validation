@@ -179,7 +179,7 @@ def run_pair_trace_simulations(blue_config,
                                v_clamp,
                                repetitions,
                                rndm_seed,
-                               use_multiprocessing):
+                               jobs=None):
     """Launch a series of simulations of PSP traces
     """
     LOGGER.debug('run_pair_trace_simulations params: %s', locals())
@@ -200,13 +200,21 @@ def run_pair_trace_simulations(blue_config,
                  for base_seed in range(repetitions)[::-1]]
 
     LOGGER.debug('run_pair_trace_simulations run_args: %s', run_args)
-    if use_multiprocessing:
-        pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    if jobs is None:
+        return map(mp_sim_pair, run_args)
+    else:
+        max_jobs = multiprocessing.cpu_count()
+        if jobs <= 0:
+            jobs = max_jobs
+        else:
+            # spawning too many jobs would be inefficient
+            jobs = min(jobs, max_jobs)
+        # no need to spawn more jobs than tasks to run
+        jobs = min(jobs, repetitions)
+        pool = multiprocessing.Pool(jobs)
         res = pool.map(mp_sim_pair, run_args)
         pool.close()
         return res
-    else:
-        return map(mp_sim_pair, run_args)
 
 
 class SpikeFilter(object):
