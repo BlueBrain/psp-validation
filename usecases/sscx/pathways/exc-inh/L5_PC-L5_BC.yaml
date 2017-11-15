@@ -20,6 +20,6 @@ protocol:
     hold_V: -72.0
     t_stim: 800.0
     t_stop: 900.0
-    post_ttx: true
+    post_ttx: false
     v_clamp: null
     E_rev: 0.0
