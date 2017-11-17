@@ -193,5 +193,42 @@ def run(
             )
 
 
+@app.command()
+@click.argument("output-dir")
+@click.option("--with-scaling", is_flag=True, help="Include 'scaling' column")
+def summary(output_dir, with_scaling=False):
+    """ Print table with `psp run` output summary """
+    import glob
+
+    def _format_value(value):
+        if value is None:
+            return "N/A"
+        else:
+            return "%.6g" % value
+
+    def _format_value_mean_std(value):
+        if value is None:
+            return "N/A"
+        else:
+            return "%.6g±%.6g" % (value['mean'], value['std'])
+
+    headers = ['pathway', 'reference', 'model']
+    if with_scaling:
+        headers.append('scaling')
+    print(*headers, sep="\t")
+    for filepath in sorted(glob.glob(os.path.join(output_dir, "*.summary.yaml"))):
+        data = load_yaml(filepath)
+        row = [
+            data['pathway'],
+            _format_value_mean_std(data.get('reference')),
+            _format_value_mean_std(data.get('model'))
+        ]
+        if with_scaling:
+            row.append(
+                _format_value(data.get('scaling'))
+            )
+        print(*row, sep="\t")
+
+
 if __name__ == "__main__":
     app()
