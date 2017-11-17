@@ -70,7 +70,7 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
         ssim.cells[post_gid].enable_ttx()
 
     # add the synapses between pre and post cells
-    pre_datas = bluepy.Circuit(blue_config).get_presynaptic_data(post_gid)
+    pre_datas = ssim.get_syn_descriptions(post_gid)
     used_SIDs = []
     used_weights = []
     used_delays = []
