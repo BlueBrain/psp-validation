@@ -146,9 +146,15 @@ def run(
             traces = get_traces(
                 blueconfig, pre_gid, post_gid, protocol, num_trials, seed=seed, jobs=jobs
             )
-            vts = np.array([tr[:2] for tr in traces])
-            v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(vts, spike_filter)
-            ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, pre_syn_type)
+            try:
+                vts = np.array([tr[:2] for tr in traces])
+                v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(vts, spike_filter)
+                ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, pre_syn_type)
+            except:
+                LOGGER.warning(
+                    "Could not extract PSP amplitude for a%d-a%d simulation", pre_gid, post_gid
+                )
+                ampl = np.nan
             all_amplitudes.append(ampl)
             if dump_traces:
                 all_traces.append(traces)
@@ -162,8 +168,8 @@ def run(
             amplitudes_path = os.path.join(output_dir, title + ".amplitudes.txt")
             np.savetxt(amplitudes_path, all_amplitudes, fmt="%.9f")
 
-        model_mean = np.mean(all_amplitudes)
-        model_std = np.std(all_amplitudes)
+        model_mean = np.nanmean(all_amplitudes)
+        model_std = np.nanstd(all_amplitudes)
 
         if 'reference' in config:
             reference = config['reference']['psp_amplitude']
