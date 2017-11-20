@@ -198,8 +198,9 @@ def run(
 
 @app.command()
 @click.argument("output-dir")
+@click.option("-s", "--style", type=click.Choice(['default', 'jira']), help="Table style")
 @click.option("--with-scaling", is_flag=True, help="Include 'scaling' column")
-def summary(output_dir, with_scaling=False):
+def summary(output_dir, with_scaling=False, style='default'):
     """ Print table with `psp run` output summary """
     import glob
 
@@ -215,10 +216,16 @@ def summary(output_dir, with_scaling=False):
         else:
             return "%.6g±%.6g" % (value['mean'], value['std'])
 
+    def _add_borders(values):
+        return [''] + values + ['']
+
     headers = ['pathway', 'reference', 'model']
     if with_scaling:
         headers.append('scaling')
-    print(*headers, sep="\t")
+    if style == 'jira':
+        print(*_add_borders(headers), sep="||")
+    else:
+        print(*headers, sep="\t")
     for filepath in sorted(glob.glob(os.path.join(output_dir, "*.summary.yaml"))):
         data = load_yaml(filepath)
         row = [
@@ -230,7 +237,10 @@ def summary(output_dir, with_scaling=False):
             row.append(
                 _format_value(data.get('scaling'))
             )
-        print(*row, sep="\t")
+        if style == 'jira':
+            print(*_add_borders(row), sep="|")
+        else:
+            print(*row, sep="\t")
 
 
 if __name__ == "__main__":
