@@ -242,5 +242,51 @@ def summary(output_dir, with_scaling=False, style='default'):
             print(*row, sep="\t")
 
 
+@app.command()
+@click.argument("traces")
+@click.option("-o", "--output-dir", required=True, help="Path to output folder")
+def plot(traces, output_dir):
+    """ Plot voltage traces stored in .h5 dump """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from tqdm import tqdm
+
+    basename = os.path.basename(traces).split(".", 1)[0]
+    pathway_output_dir = os.path.join(output_dir, basename)
+    if not os.path.exists(pathway_output_dir):
+        os.makedirs(pathway_output_dir)
+
+    with h5py.File(traces, 'r') as h5f:
+        if len(h5f) != 1:
+            raise RuntimeError("Unexpected HDF5 layout")
+        root = next(h5f.itervalues())
+        if root.name == "/traces":
+            pass
+        elif root.name == '/pathways':
+            root = next(root.itervalues())['pairs']
+        else:
+            raise RuntimeError("Unexpected HDF5 layout")
+        for dset in tqdm(root.itervalues(), total=len(root)):
+            title = "a{pre}-a{post}".format(
+                pre=dset.attrs['gid_pre'], post=dset.attrs['gid_post']
+            )
+            figure = plt.figure()
+            ax = figure.gca()
+            for k, trial in enumerate(dset):
+                label = 'trials' if (k == 0) else None  # show 'trials' only once in the legend
+                v, t = trial
+                ax.plot(t, v, color='gray', lw=1, ls=':', alpha=0.7, label=label)
+            v_mean, ts, _, _ = psp.mean_pair_voltage_from_traces(dset)
+            ax.plot(ts[0], v_mean, lw=2, label="mean")
+            ax.grid()
+            ax.set_xlabel('t [ms]')
+            ax.set_ylabel('V [mV]')
+            ax.legend()
+            ax.set_title(title)
+            figure.savefig(os.path.join(pathway_output_dir, title + ".png"), dpi=300)
+            plt.close(figure)
+
+
 if __name__ == "__main__":
     app()

@@ -11,6 +11,7 @@ setup(
     version=__version__,
     install_requires=[
         'click>=6.0',
+        'tqdm>=4.0',
         'numpy>=1.10',
         'h5py>=2.7',
         'bglibpy>=3.2.6,<4.0',
