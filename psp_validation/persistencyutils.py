@@ -4,17 +4,16 @@
 import numpy
 
 
-def dump_raw_traces_to_HDF5(h5file, pathway, data):
+def dump_raw_traces_to_HDF5(h5file, data):
     """Dump a set of simulated psp traces to an HDF5 file.
 
     Parameters:
-    hf: an h5py.File writable object
-    pathway: string containing the pathway name
+    h5file: an h5py.File writable object
     data: array containing all the trace raw data
 
     The data format is:
 
-    /pathways/<pathway names>/pairs/<pair id>
+    /traces/<pair>
 
     Each data corresponds to a synaptic pair and sample contains an array of \
     shape (nsim, 2, npoints) where nsim is the number of simulations run for \
@@ -24,17 +23,17 @@ def dump_raw_traces_to_HDF5(h5file, pathway, data):
 
     Access example:
 
-    pair0_rep1 = hf['pathways/SomePathway/pairs/0'][1]
-    pair_0_rep0_v = hf['pathways/SomePathway/pairs/0'][0][0]
-    pair_0_rep0_t = hf['pathways/SomePathway/pairs/0'][0][1]
-    pair_0_pre_gid = hf['pathways/SomePathway/pairs/0'].attrs['gid_pre']
-    pair_0_post_gid = hf['pathways/SomePathway/pairs/0'].attrs['gid_post']
+    pair0_rep1 = hf['/traces/a42-a43'][1]
+    pair_0_rep0_v = hf['/traces/a42-a43'][0][0]
+    pair_0_rep0_t = hf['/traces/a42-a43'][0][1]
+    pair_0_pre_gid = hf['/traces/a42-a43'].attrs['gid_pre']
+    pair_0_post_gid = hf['/traces/a42-a43'].attrs['gid_post']
 
     """
-    for i, pair in enumerate(data):
+    for pair in data:
         traces = [(t[0], t[1]) for t in pair] # strip out gids
-        gids = pair[0][2]                     # (pre_gid, post_gid)
-        group_name = 'pathways/%s/pairs/%i' % (pathway, i)
+        pre_gid, post_gid = pair[0][2]
+        group_name = '/traces/a%d-a%d' % (pre_gid, post_gid)
         h5file[group_name] = numpy.array(traces)
-        h5file[group_name].attrs['gid_pre'] = gids[0]
-        h5file[group_name].attrs['gid_post'] = gids[1]
+        h5file[group_name].attrs['gid_pre'] = pre_gid
+        h5file[group_name].attrs['gid_post'] = post_gid
