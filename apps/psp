@@ -17,7 +17,7 @@ import bluepy
 
 from psp_validation import psp
 from psp_validation.pathways import get_pairs, get_synapse_type
-from psp_validation.persistencyutils import dump_raw_traces_to_HDF5
+from psp_validation.persistencyutils import dump_pair_traces
 from psp_validation.version import VERSION
 
 
@@ -140,29 +140,34 @@ def run(
         t_start = t_stim - 10.
         spike_filter = psp.default_spike_filter(t_start)
 
+        if dump_traces:
+            traces_path = os.path.join(output_dir, title + ".traces.h5")
+            with h5py.File(traces_path, 'w') as h5f:
+                # create empty H5 dump or overwrite existing one
+                pass
+
         all_traces = []
         all_amplitudes = []
         for pre_gid, post_gid in pairs:
             traces = get_traces(
                 blueconfig, pre_gid, post_gid, protocol, num_trials, seed=seed, jobs=jobs
             )
-            try:
-                vts = np.array([tr[:2] for tr in traces])
-                v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(vts, spike_filter)
-                ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, pre_syn_type)
-            except:
+            trials = np.array([tr[:2] for tr in traces])
+            v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(trials, spike_filter)
+            if v_mean is None:
                 LOGGER.warning(
-                    "Could not extract PSP amplitude for a%d-a%d simulation", pre_gid, post_gid
+                    "All traces filtered out for a%d-a%d simulation(s)", pre_gid, post_gid
                 )
+                average = None
                 ampl = np.nan
+            else:
+                average = np.stack([v_mean, t])
+                ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, pre_syn_type)
             all_amplitudes.append(ampl)
             if dump_traces:
+                with h5py.File(traces_path, 'a') as h5f:
+                    dump_pair_traces(h5f, trials, average, pre_gid, post_gid)
                 all_traces.append(traces)
-
-        if dump_traces:
-            traces_path = os.path.join(output_dir, title + ".traces.h5")
-            with h5py.File(traces_path, 'w') as h5f:
-                dump_raw_traces_to_HDF5(h5f, title, all_traces)
 
         if dump_amplitudes:
             amplitudes_path = os.path.join(output_dir, title + ".amplitudes.txt")
@@ -270,24 +275,21 @@ def plot(traces_files, output_dir):
             if len(h5f) != 1:
                 raise RuntimeError("Unexpected HDF5 layout")
             root = next(h5f.itervalues())
-            if root.name == "/traces":
-                pass
-            elif root.name == '/pathways':
-                root = next(root.itervalues())['pairs']
-            else:
+            if root.name != "/traces":
                 raise RuntimeError("Unexpected HDF5 layout")
-            for dset in tqdm(root.itervalues(), total=len(root), desc=pathway):
+            for pair in tqdm(root.itervalues(), total=len(root), desc=pathway):
                 title = "a{pre}-a{post}".format(
-                    pre=dset.attrs['gid_pre'], post=dset.attrs['gid_post']
+                    pre=pair.attrs['pre_gid'], post=pair.attrs['post_gid']
                 )
                 figure = plt.figure()
                 ax = figure.gca()
-                for k, trial in enumerate(dset):
+                for k, trial in enumerate(pair['trials']):
                     label = 'trials' if (k == 0) else None  # show 'trials' only once in the legend
-                    v, t = trial
-                    ax.plot(t, v, color='gray', lw=1, ls=':', alpha=0.7, label=label)
-                v_mean, ts, _, _ = psp.mean_pair_voltage_from_traces(dset)
-                ax.plot(ts[0], v_mean, lw=2, label="mean")
+                    v_k, t_k = trial
+                    ax.plot(t_k, v_k, color='gray', lw=1, ls=':', alpha=0.7, label=label)
+                if 'average' in pair:
+                    v_avg, t_avg = pair['average']
+                    ax.plot(t_avg, v_avg, lw=2, label="average")
                 ax.grid()
                 ax.set_xlabel('t [ms]')
                 ax.set_ylabel('V [mV]')

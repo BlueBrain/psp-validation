@@ -33,7 +33,7 @@ def calculate_amplitude(traces,
     v, t, vs, curr = mean_pair_voltage_from_traces(traces, trace_filter)
 
     # catch case where all traces were filtered due to spiking
-    if np.all(np.isnan(v)):
+    if v is None:
         LOGGER.info("calculate_amplitude: removed from avg due to spiking")
         return np.nan
 
@@ -263,6 +263,8 @@ def mean_pair_voltage_from_traces(vts,
     """
 
     vs, time = trace_filter(vts)
+    if len(vs) == 0:
+        return None, None, None, None
 
     # calc element-wise mean v (over reps)
     v_mean = np.mean(vs, axis=0)
