@@ -11,6 +11,7 @@ are included. (no HypAmp for instance)
 
 import numpy as np
 import bluepy
+import collections
 import multiprocessing
 import sys
 import traceback
@@ -41,6 +42,14 @@ def calculate_amplitude(traces,
     return get_peak_amplitude(t, v, t_start, t_stim, syn_type)
 
 
+def ensure_list(v):
+    """ Convert iterable / wrap scalar into list. """
+    if isinstance(v, collections.Iterable):
+        return list(v)
+    else:
+        return [v]
+
+
 def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
              t_stim, g_factor, record_dt, base_seed,
              post_ttx, v_clamp):
@@ -50,87 +59,35 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
     pre_spike_times is float (single spike) or list
 
     """
+    if not np.isclose(g_factor, 1.0):
+        raise NotImplementedError
+
     import bglibpy
-    import bglibpy.ssim
 
     LOGGER.debug('sim_pair params: %s', locals())
     LOGGER.info('sim_pair: pre_gid=%d, post_gid=%d, seed=%d', pre_gid, post_gid, base_seed)
 
-    v_init = hold_V
-
-    ssim = bglibpy.ssim.SSim(blue_config, record_dt=record_dt)
-
-    # execute base_seed override if specified
-    if base_seed is not None:
-        ssim.base_seed = base_seed
-
-    ssim.instantiate_gids([post_gid], synapse_detail=0)
+    ssim = bglibpy.ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed)
+    ssim.instantiate_gids(
+        [post_gid],
+        add_replay=False,
+        add_minis=False,
+        add_stimuli=False,
+        add_synapses=True,
+        pre_spike_trains={pre_gid: ensure_list(t_stim)},
+        intersect_pre_gids=[pre_gid]
+    )
+    post_cell = ssim.cells[post_gid]
 
     if post_ttx:
-        ssim.cells[post_gid].enable_ttx()
-
-    # add the synapses between pre and post cells
-    pre_datas = ssim.get_syn_descriptions(post_gid)
-    used_SIDs = []
-    used_weights = []
-    used_delays = []
-
-    for SID, syn_description in enumerate(pre_datas):
-        if int(syn_description[0]) == pre_gid:
-            # minis will not be added
-            syn_type = syn_description[13]
-            syn_parameters = ssim._evaluate_connection_parameters(pre_gid,
-                                                                  post_gid,
-                                                                  syn_type)
-            success = ssim.add_single_synapse(post_gid,
-                                              SID,
-                                              syn_description,
-                                              syn_parameters)
-
-            if not success:
-                continue
-            if 'Weight' in syn_parameters:
-                weight = syn_parameters['Weight']
-            else:
-                weight = 1.0
-
-            used_SIDs.append(SID)
-            used_weights.append(syn_description[8] * weight)
-            used_delays.append(syn_description[1])
-
-    if len(used_SIDs) == 0:
-        LOGGER.warning(
-            "sim_pair: pre_gid=%d does not form a synapse on post_gid=%d", pre_gid, post_gid
-        )
-
-    # connect the synapses
-    if type(t_stim) == float:
-        ns = bglibpy.neuron.h.NetStim()
-        ns.interval = 10000
-        ns.number = 1
-        ns.start = t_stim
-        ns.noise = 0
-    elif type(t_stim) == list:
-        t_vec = bglibpy.neuron.h.Vector(t_stim)
-        ns = bglibpy.neuron.h.VecStim()
-        ns.play(t_vec, 0.025)
-
-    ncs = []
-    for tSID, delay, gsyn in zip(used_SIDs, used_delays, used_weights):
-        nc = bglibpy.neuron.h.NetCon(ns,
-                                     ssim.cells[post_gid].hsynapses[tSID],
-                                     -30,
-                                     delay,
-                                     gsyn * g_factor)
-        ncs.append(nc)
+        post_cell.enable_ttx()
 
     # add the current to reach the holding potential
     if hold_I is not None:
-        ssim.cells[post_gid].add_ramp(0, 10000, hold_I, hold_I, dt=0.025)
+        post_cell.add_ramp(0, 10000, hold_I, hold_I, dt=0.025)
 
     if v_clamp:
         from neuron import h
-        post_cell = ssim.cells[post_gid]
         post_cell.addVClamp(t_sim, v_clamp)
         # manually add recording for vclamp so it has a sane name.
         v_clamp_object = post_cell.persistent[-1]
@@ -138,12 +95,13 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
         recording.record(v_clamp_object._ref_i, record_dt)
         post_cell.recordings["v_clamp"] = recording
 
-    ssim.run(t_stop=t_sim, v_init=v_init, dt=0.025)
-    t = ssim.get_time()
-    v = ssim.get_voltage_traces()[post_gid]
+    ssim.run(t_stop=t_sim, v_init=hold_V, dt=0.025)
+
+    t = post_cell.get_time()
+    v = post_cell.get_soma_voltage()
 
     if v_clamp:
-        i = ssim.cells[post_gid].get_recording("v_clamp")
+        i = post_cell.get_recording("v_clamp")
         return v, t, i
 
     LOGGER.info(
