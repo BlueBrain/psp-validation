@@ -17,6 +17,7 @@ import sys
 import traceback
 import logging
 
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -52,7 +53,7 @@ def ensure_list(v):
 
 def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
              t_stim, g_factor, record_dt, base_seed,
-             post_ttx, v_clamp):
+             post_ttx, v_clamp, projection):
     """ returns voltage trace for post_gid for evoking pre_spike_times \
             for synapses from pre_gid->post_gid
 
@@ -75,7 +76,8 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
         add_stimuli=False,
         add_synapses=True,
         pre_spike_trains={pre_gid: ensure_list(t_stim)},
-        intersect_pre_gids=[pre_gid]
+        intersect_pre_gids=[pre_gid],
+        projection=projection
     )
     post_cell = ssim.cells[post_gid]
 
@@ -95,7 +97,10 @@ def sim_pair(blue_config, pre_gid, post_gid, hold_I, t_sim, hold_V,
         recording.record(v_clamp_object._ref_i, record_dt)
         post_cell.recordings["v_clamp"] = recording
 
-    ssim.run(t_stop=t_sim, v_init=hold_V, dt=0.025)
+    run_args = {}
+    if hold_V is not None:
+        run_args['v_init'] = hold_V
+    ssim.run(t_stop=t_sim, dt=0.025, **run_args)
 
     t = post_cell.get_time()
     v = post_cell.get_soma_voltage()
@@ -137,6 +142,7 @@ def run_pair_trace_simulations(blue_config,
                                v_clamp,
                                repetitions,
                                rndm_seed,
+                               projection=None,
                                jobs=None):
     """Launch a series of simulations of PSP traces
     """
@@ -154,7 +160,8 @@ def run_pair_trace_simulations(blue_config,
                       g_factor=g_factor, record_dt=record_dt,
                       base_seed=base_seed + rndm_seed,
                       post_ttx=post_ttx,
-                      v_clamp=v_clamp))
+                      v_clamp=v_clamp,
+                      projection=projection))
                  for base_seed in range(repetitions)[::-1]]
 
     LOGGER.debug('run_pair_trace_simulations run_args: %s', run_args)

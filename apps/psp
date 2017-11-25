@@ -36,7 +36,7 @@ def load_config(filepath):
     return title, load_yaml(filepath)
 
 
-def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed, jobs):
+def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed, projection, jobs):
     from psp_validation.psp import run_pair_trace_simulations
 
     hold_V = protocol['hold_V']
@@ -63,6 +63,7 @@ def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed, jo
         spikes=None,
         repetitions=n_repetitions,
         rndm_seed=seed,
+        projection=projection,
         jobs=jobs
     )
 
@@ -120,6 +121,7 @@ def run(
         LOGGER.info("Processing '%s' pathway...", title)
 
         pathway = config['pathway']
+        projection = pathway.get('projection')
         if 'pairs' in pathway:
             for item in pathway['pairs']:
                 assert isinstance(item, list) and len(item) == 2
@@ -130,10 +132,15 @@ def run(
             pre = get_target(pathway['pre'])
             post = get_target(pathway['post'])
             pairs = get_pairs(
-                circuit, pre, post, num_pairs, constraints=pathway.get('constraints')
+                circuit, pre, post, num_pairs,
+                constraints=pathway.get('constraints'),
+                projection=projection
             )
 
-        pre_syn_type = get_synapse_type(circuit, [p[0] for p in pairs])
+        if projection is None:
+            pre_syn_type = get_synapse_type(circuit, [p[0] for p in pairs])
+        else:
+            pre_syn_type = "EXC"
 
         protocol = config['protocol']
 
@@ -151,7 +158,8 @@ def run(
         all_amplitudes = []
         for pre_gid, post_gid in pairs:
             traces = get_traces(
-                blueconfig, pre_gid, post_gid, protocol, num_trials, seed=seed, jobs=jobs
+                blueconfig, pre_gid, post_gid, protocol, num_trials,
+                seed=seed, projection=projection, jobs=jobs
             )
             trials = np.array([tr[:2] for tr in traces])
             v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(trials, spike_filter)
