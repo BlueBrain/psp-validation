@@ -120,14 +120,15 @@ def run(
         LOGGER.info("Processing '%s' pathway...", title)
 
         pathway = config['pathway']
-        if isinstance(pathway, list):
-            for item in pathway:
+        if 'pairs' in pathway:
+            for item in pathway['pairs']:
                 assert isinstance(item, list) and len(item) == 2
-            pairs = pathway
+            pairs = pathway['pairs']
         else:
             LOGGER.info("Querying pathway pairs...")
-            pre = targets[pathway['pre']]
-            post = targets[pathway['post']]
+            get_target = lambda name: targets.get(name, name)
+            pre = get_target(pathway['pre'])
+            post = get_target(pathway['post'])
             pairs = get_pairs(
                 circuit, pre, post, num_pairs, constraints=pathway.get('constraints')
             )
