@@ -190,29 +190,21 @@ def run(
             v_holding = config['protocol']['hold_V']
             scaling = psp.compute_scaling(model_mean, reference['mean'], v_holding, pre_syn_type)
         else:
-            reference = {'mean': None, 'std': None}
+            reference = None
             scaling = None
 
         summary_path = os.path.join(output_dir, title + ".summary.yaml")
         with open(summary_path, 'w') as f:
-            print(
-                "pathway: {pathway}\n"
-                "model:\n"
-                "    mean: {model_mean}\n"
-                "    std:  {model_std}\n"
-                "reference:\n"
-                "    mean: {ref_mean}\n"
-                "    std:  {ref_std}\n"
-                "scaling: {scaling}".format(
-                    pathway=title,
-                    model_mean=model_mean,
-                    model_std=model_std,
-                    ref_mean=reference['mean'],
-                    ref_std=reference['std'],
-                    scaling=scaling
-                ),
-                file=f
-            )
+            f.write("pathway: {}\n".format(title))
+            f.write("model:\n")
+            f.write("    mean: {}\n".format(model_mean))
+            f.write("    std: {}\n".format(model_std))
+            if reference is not None:
+                f.write("reference:\n")
+                f.write("    mean: {}\n".format(reference['mean']))
+                f.write("    std: {}\n".format(reference['std']))
+            if scaling is not None:
+                f.write("scaling: {}\n".format(scaling))
 
 
 @app.command()
