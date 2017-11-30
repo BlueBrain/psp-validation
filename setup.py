@@ -7,7 +7,7 @@ from psp_validation.version import __version__
 
 
 setup(
-    name="psp_validation",
+    name="psp-validation",
     version=__version__,
     install_requires=[
         'click>=6.0',

@@ -11,3 +11,4 @@ ci_dep.txt
 *.req_make
 test-reports
 dist
+doc/build
