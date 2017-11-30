@@ -36,38 +36,6 @@ def load_config(filepath):
     return title, load_yaml(filepath)
 
 
-def get_traces(blue_config, pre_gid, post_gid, protocol, n_repetitions, seed, projection, jobs):
-    from psp_validation.psp import run_pair_trace_simulations
-
-    hold_V = protocol['hold_V']
-    if hold_V is None:
-        hold_I = None
-    else:
-        from bglibpy import holding_current
-        LOGGER.info("Calculating a%d holding current", post_gid)
-        hold_I, _ = holding_current(hold_V, post_gid, blue_config)
-
-    LOGGER.info("Running simulation(s) for a%d -> a%d pair (base_seed=%d)", pre_gid, post_gid, seed)
-    return run_pair_trace_simulations(
-        blue_config=blue_config,
-        pre_gid=pre_gid,
-        post_gid=post_gid,
-        hold_I=hold_I,
-        hold_V=hold_V,
-        t_stim=protocol['t_stim'],
-        t_stop=protocol['t_stop'],
-        g_factor=1.0,
-        record_dt=protocol['record_dt'],
-        post_ttx=protocol['post_ttx'],
-        v_clamp=protocol['v_clamp'],
-        spikes=None,
-        repetitions=n_repetitions,
-        rndm_seed=seed,
-        projection=projection,
-        jobs=jobs
-    )
-
-
 @click.group()
 @click.version_option(version=VERSION)
 @click.option("-v", "--verbose", count=True, help="-v for INFO, -vv for DEBUG")
@@ -106,6 +74,8 @@ def run(
     dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
+    from psp_validation.simulation import run_pair_simulation_suite
+
     if seed is None:
         seed = np.random.randint(1e9)
     np.random.seed(seed)
@@ -154,15 +124,17 @@ def run(
                 # create empty H5 dump or overwrite existing one
                 pass
 
-        all_traces = []
         all_amplitudes = []
         for pre_gid, post_gid in pairs:
-            traces = get_traces(
-                blueconfig, pre_gid, post_gid, protocol, num_trials,
-                seed=seed, projection=projection, jobs=jobs
+            traces = run_pair_simulation_suite(
+                blueconfig, pre_gid, post_gid,
+                base_seed=seed,
+                n_trials=num_trials,
+                n_jobs=jobs,
+                projection=projection,
+                **protocol
             )
-            trials = np.array([tr[:2] for tr in traces])
-            v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(trials, spike_filter)
+            v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(traces, spike_filter)
             if v_mean is None:
                 LOGGER.warning(
                     "All traces filtered out for a%d-a%d simulation(s)", pre_gid, post_gid
@@ -175,8 +147,7 @@ def run(
             all_amplitudes.append(ampl)
             if dump_traces:
                 with h5py.File(traces_path, 'a') as h5f:
-                    dump_pair_traces(h5f, trials, average, pre_gid, post_gid)
-                all_traces.append(traces)
+                    dump_pair_traces(h5f, traces, average, pre_gid, post_gid)
 
         if dump_amplitudes:
             amplitudes_path = os.path.join(output_dir, title + ".amplitudes.txt")
