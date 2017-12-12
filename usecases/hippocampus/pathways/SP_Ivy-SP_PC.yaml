@@ -1,15 +1,15 @@
 reference:
-    author: Ali and Thomson 1998 (orig 1.4 +/- 1.05 at -66mV -> but some values were excluded...)
+    author: Fuentealba 2008
     psp_amplitude:
-        mean: 1.0
+        mean: 0.8
         std: 0.4
     synapse_count:
         mean: null
         std: null
 
 pathway:
-    pre: SP_PC
-    post: SP_PVBC
+    pre: SP_Ivy
+    post: SP_PC
     constraints:
         max_dist_x: 100.0
         max_dist_y: 100.0
@@ -17,7 +17,7 @@ pathway:
 
 protocol:
     record_dt: 0.1
-    hold_V: -70.0
+    hold_V: -57.0
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false

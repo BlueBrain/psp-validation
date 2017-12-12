@@ -1,5 +1,5 @@
 reference:
-    author: Ali and Thomson 1998 (orig 1.4 +/- 1.05 at -66mV -> but some values were excluded...)
+    author: Ali and Thomson 1998 (orig: 1.4 +/- 1.05 at -66mV -> but some values were excluded...)
     psp_amplitude:
         mean: 1.0
         std: 0.4

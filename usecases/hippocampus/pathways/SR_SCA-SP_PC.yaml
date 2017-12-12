@@ -1,0 +1,24 @@
+reference:
+    author: Pawelzik 2002 (syn Vida 1998)
+    psp_amplitude:
+        mean: 0.38
+        std: 0.0
+    synapse_count:
+        mean: 5.3
+        std: 1.15
+
+pathway:
+    pre: SR_SCA
+    post: SP_PC
+    constraints:
+        max_dist_x: 200.0
+        max_dist_y: 200.0
+        max_dist_z: 100.0
+
+protocol:
+    record_dt: 0.1
+    hold_V: -58.5
+    t_stim: 800.0
+    t_stop: 900.0
+    post_ttx: false
+    v_clamp: null
