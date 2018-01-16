@@ -31,7 +31,7 @@ def dump_raw_traces_to_HDF5(h5file, data):
 
     """
     for pair in data:
-        traces = [(t[0], t[1]) for t in pair] # strip out gids
+        traces = [(t[0], t[1]) for t in pair]  # strip out gids
         pre_gid, post_gid = pair[0][2]
         group_name = '/traces/a%d-a%d' % (pre_gid, post_gid)
         h5file[group_name] = numpy.array(traces)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#pylint: skip-file
+# pylint: skip-file
 
 from __future__ import print_function
 
@@ -63,7 +63,9 @@ def app(verbose=0):
 @click.option("--dump-traces", is_flag=True, help="Dump PSP traces", show_default=True)
 @click.option("--dump-amplitudes", is_flag=True, help="Dump PSP amplitudes", show_default=True)
 @click.option("--seed", type=int, help="Pseudo-random generator seed")
-@click.option("-j", "--jobs", type=int, help=(
+@click.option(
+    "-j", "--jobs", type=int,
+    help=(
         "Number of trials to run in parallel"
         "(if not specified, trials are run sequentially; "
         "setting to 0 would use all available CPUs)"

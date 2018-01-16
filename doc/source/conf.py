@@ -163,4 +163,3 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
 ]
-

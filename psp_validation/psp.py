@@ -7,15 +7,9 @@ No current injection other than the current to achieve the holding potential
 are included. (no HypAmp for instance)
 """
 
-#pylint: skip-file
+import logging
 
 import numpy as np
-import bluepy
-import collections
-import multiprocessing
-import sys
-import traceback
-import logging
 
 
 LOGGER = logging.getLogger(__name__)
@@ -32,7 +26,7 @@ def calculate_amplitude(traces,
     Returns nan if filtering removes all traces.
     """
 
-    v, t, vs, curr = mean_pair_voltage_from_traces(traces, trace_filter)
+    v, t, _, _ = mean_pair_voltage_from_traces(traces, trace_filter)
 
     # catch case where all traces were filtered due to spiking
     if v is None:
@@ -57,8 +51,7 @@ class SpikeFilter(object):
         t = []
         for trace_ in traces:
             v_, t_ = trace_[0], trace_[1]
-            if (v_ is None or
-                  get_peak_voltage(t_, v_, self.t0, 'EXC') > self.v_max):
+            if (v_ is None or get_peak_voltage(t_, v_, self.t0, 'EXC') > self.v_max):
                 continue
             else:
                 vs_filtered.append(v_)
@@ -178,6 +171,7 @@ def _check_numpy_ndarrays(*args):
 
 
 def compute_scaling(psp1, psp2, v_holding, syn_type):
+    """ Compute conductance scaling factor. """
     E_rev = {
         'EXC': 0.0,
         'INH': -80.0,
