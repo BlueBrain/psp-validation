@@ -1,5 +1,6 @@
 from nose import tools as ntools
 import numpy as np
+
 import math
 from itertools import repeat
 from psp_validation import psp
@@ -126,6 +127,9 @@ def test_get_peak_amplitude_INH() :
                                places = 14)
 
 
+def _make_traces(vss, ts):
+    return list(zip(vss, repeat(ts)))
+
 
 def test_SpikeFilter_members() :
     sf = psp.SpikeFilter(4321, 1234)
@@ -136,7 +140,7 @@ def test_SpikeFilter_members() :
 def test_SpikeFilter_no_filter() :
     t = np.linspace(1, 10, 100)
     v = np.linspace(-10, 9, 100)
-    traces = zip(repeat(v, 5), repeat(t, 5))
+    traces = _make_traces(repeat(v, 5), t)
     sf = psp.SpikeFilter(0, 10)
     filtered = sf(traces)
     vs = [x[0] for x in traces]
@@ -146,10 +150,10 @@ def test_SpikeFilter_no_filter() :
 
 def test_SpikeFilter_filter_all() :
     t = np.linspace(1, 10, 100)
-    v = [np.empty(100) for i in xrange(5)]
+    v = [np.empty(100) for i in range(5)]
     for i, x in enumerate(v) :
         x.fill(10*i)
-    traces = zip(v, repeat(t))
+    traces = _make_traces(v, t)
     sf = psp.SpikeFilter(0, -5)
     filtered = sf(traces)
     vs = [x[0] for x in traces]
@@ -159,10 +163,10 @@ def test_SpikeFilter_filter_all() :
 
 def test_SpikeFilter_filter() :
     t = np.linspace(1, 10, 100)
-    v = [np.empty(100) for i in xrange(5)]
+    v = [np.empty(100) for i in range(5)]
     for i, x in enumerate(v) :
         x.fill(10*i)
-    traces = zip(v, repeat(t))
+    traces = _make_traces(v, t)
     sf = psp.SpikeFilter(0, 25)
     filtered = sf(traces)
     vs = [x[0] for x in traces]
@@ -179,10 +183,10 @@ def test_defaultSpikeFilter() :
 
 def test_mean_pair_voltage_from_traces_no_filter() :
     t = np.linspace(1, 10, 100)
-    v = [np.empty(100) for i in xrange(5)]
+    v = [np.empty(100) for i in range(5)]
     for i, x in enumerate(v) :
         x.fill(10*i) # 0, 10, 20, 30, 40 : mean is 20
-    traces = zip(v, repeat(t))
+    traces = _make_traces(v, t)
     mean = psp.mean_pair_voltage_from_traces(traces)
     ntools.assert_true(np.all(mean[0] == 20.))
     ntools.assert_true(np.all(mean[1] == t))
@@ -191,10 +195,10 @@ def test_mean_pair_voltage_from_traces_no_filter() :
 
 def test_mean_pair_voltage_from_traces_filter() :
     t = np.linspace(1, 10, 100)
-    v = [np.empty(100) for i in xrange(5)]
+    v = [np.empty(100) for i in range(5)]
     for i, x in enumerate(v) :
         x.fill(10*i) # 0, 10, 20, 30, 40 : mean is 20
-    traces = zip(v, repeat(t))
+    traces = _make_traces(v, t)
     sf = psp.SpikeFilter(0, 25)
     mean = psp.mean_pair_voltage_from_traces(traces, sf)
     ntools.assert_true(np.all(mean[0] == 10.))
@@ -204,10 +208,10 @@ def test_mean_pair_voltage_from_traces_filter() :
 
 def test_mean_pair_voltage_from_traces_filter_all_returns_nan() :
     t = np.linspace(1, 10, 100)
-    v = [np.empty(100) for i in xrange(5)]
+    v = [np.empty(100) for i in range(5)]
     for i, x in enumerate(v) :
         x.fill(10*i) # 0, 10, 20, 30, 40 : mean is 20
-    traces = zip(v, repeat(t))
+    traces = _make_traces(v, t)
     sf = psp.SpikeFilter(0, -5)
     mean = psp.mean_pair_voltage_from_traces(traces, sf)
     ntools.assert_equal(mean, (None, None, None, None))
@@ -215,7 +219,7 @@ def test_mean_pair_voltage_from_traces_filter_all_returns_nan() :
 
 def test_amplitude_from_traces() :
     t = np.linspace(1, 900., 100)
-    v = [np.empty(100) for i in xrange(5)]
+    v = [np.empty(100) for i in range(5)]
     # create a "trace" with baseline -80mV and peak -46mV
     # Amplitude is |-80mV - -46mV| = 34mV
     for i, x in enumerate(v) :
@@ -229,14 +233,14 @@ def test_amplitude_from_traces() :
     t_start = t_stim - 10
     trace_filter = psp.SpikeFilter(t_start, v_max = 0)
 
-    traces = zip(v, repeat(t))
+    traces = _make_traces(v, t)
     amplitude = psp.calculate_amplitude(traces, 'EXC', trace_filter, t_stim)
     ntools.assert_equal(amplitude, 34.0)
 
 
 def test_amplitude_from_traces_filter_all_returns_nan() :
     t = np.linspace(1, 900., 100)
-    v = [np.empty(100) for i in xrange(5)]
+    v = [np.empty(100) for i in range(5)]
     # create a "trace" with baseline -80mV and peak -46mV
     # Amplitude is |-80mV - -46mV| = 34mV
     for i, x in enumerate(v) :
@@ -250,7 +254,7 @@ def test_amplitude_from_traces_filter_all_returns_nan() :
     t_start = t_stim - 10
     trace_filter = psp.SpikeFilter(t_start, v_max = -100)
 
-    traces = zip(v, repeat(t))
+    traces = _make_traces(v, t)
     amplitude = psp.calculate_amplitude(traces, 'EXC', trace_filter, t_stim)
     ntools.assert_true(np.isnan(amplitude))
 

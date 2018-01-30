@@ -71,7 +71,7 @@ def unzip_traces(traces):
     """ Unzip a tuple of pairs into two lists
     This can be used as a "do nothing" trace filter.
     """
-    data = zip(*traces)
+    data = tuple(zip(*traces))
     return list(data[0]), list(data[1])
 
 
