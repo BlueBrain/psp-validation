@@ -21,8 +21,8 @@ setup(
     packages=[
         'psp_validation',
     ],
-    author="Eilif Muller, Arseny V. Povolotsky",
-    author_email="arseny.povolotsky@epfl.ch",
+    author="BlueBrain NSE",
+    author_email="bbp-ou-nse@groupes.epfl.ch",
     description="PSP analysis tools",
     license="BBP-internal-confidential",
     scripts=[

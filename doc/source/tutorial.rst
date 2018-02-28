@@ -1,7 +1,7 @@
 Tutorial
 ========
 
-`psp` command available after installing ``psp_validation``, is the main interface for running pair simulations and analyzing their output.
+`psp` command available after installing ``psp-validation``, is the main interface for running pair simulations and analyzing their output.
 
 Please refer to
 

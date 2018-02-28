@@ -22,7 +22,10 @@ To process multiple pathway configs in parallel, it could be handy to combine Sl
     #SBATCH --cpus-per-task=16
     #SBATCH --exclusive
 
-    source /gpfs/bbp.cscs.ch/scratch/gss/nse/psp-validation/setenv_sscx.sh
+    module purge
+    module load nix/hpc/neuron
+    module load nix/hpc/neurodamus
+    module load nix/nse/psp-validation
 
     # --delay 0.2 prevents overloading the controlling node
     parallel="parallel --delay 0.2 -j $SLURM_NTASKS --joblog %LOGS_DIR%/runtask.log"

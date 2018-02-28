@@ -52,9 +52,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'psp_validation'
+project = u'psp-validation'
 copyright = u'2017, Blue Brain Project'
-author = u''
+author = u'BlueBrain NSE'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

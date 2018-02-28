@@ -4,7 +4,7 @@ Installation
 module load
 -----------
 
-The easiest way to get ``psp_validation`` package might be with a *module*:
+The easiest way to get ``psp-validation`` package might be with a *module*:
 
 .. code-block:: console
 
@@ -30,11 +30,11 @@ To ensure the result is reproducible, please consider using a specific `BBP arch
 pip install
 -----------
 
-Alternatively, ``psp_validation`` is also distributed as a Python package available at BBP devpi server:
+Alternatively, ``psp-validation`` is also distributed as a Python package available at BBP devpi server:
 
 .. code-block:: console
 
-    $ pip install -i https://bbpteam.epfl.ch/repository/devpi/simple/ psp_validation
+    $ pip install -i https://bbpteam.epfl.ch/repository/devpi/simple/ psp-validation
 
 Only Python 2.7 / Python 3.5+ is supported at the moment.
 
