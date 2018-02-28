@@ -18,3 +18,17 @@ It relies on `BluePy <https://bbpcode.epfl.ch/documentation/bluepy-0.11.9/>`_ fo
    tutorial
    files
    cookbook
+
+
+Acknowledgments
+===============
+
+``psp-validation`` is a refactored subset of ``ValidationFramework`` toolset originally developed by `Eilif Muller <mailto:eilif.mueller@epfl.ch>`_.
+
+
+Reporting issues
+================
+
+``psp-validation`` is maintained by BlueBrain NSE team at the moment.
+
+Should you face any issue with using it, please submit a ticket to our `issue tracker <https://bbpteam.epfl.ch/project/issues/browse/NSETM>`_; or drop us an `email <mailto: bbp-ou-nse@groupes.epfl.ch>`_.
