@@ -50,7 +50,7 @@ def app(verbose=0):
 
 
 @app.command()
-@click.argument("pathway_files", nargs=-1)
+@click.argument("pathway_files", nargs=-1, required=True)
 @click.option("-c", "--blueconfig", required=True, help="Path to BlueConfig")
 @click.option("-t", "--targets", required=True, help="Path to neuron groups definitions (YAML)")
 @click.option("-o", "--output-dir", required=True, help="Path to output folder")
@@ -62,7 +62,7 @@ def app(verbose=0):
 )
 @click.option("--dump-traces", is_flag=True, help="Dump PSP traces", show_default=True)
 @click.option("--dump-amplitudes", is_flag=True, help="Dump PSP amplitudes", show_default=True)
-@click.option("--seed", type=int, help="Pseudo-random generator seed")
+@click.option("--seed", type=int, help="Pseudo-random generator seed", default=0, show_default=True)
 @click.option(
     "-j", "--jobs", type=int,
     help=(
@@ -78,8 +78,6 @@ def run(
     """ Obtain PSP amplitudes; derive scaling factors """
     from psp_validation.simulation import run_pair_simulation_suite
 
-    if seed is None:
-        seed = np.random.randint(1e9)
     np.random.seed(seed)
 
     circuit = bluepy.Circuit(blueconfig).v2
