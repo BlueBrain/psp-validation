@@ -1,12 +1,13 @@
 """ Running pair simulations. """
 
 import collections
-import logging
 
 import numpy as np
 
+from psp_validation import get_logger
 
-LOGGER = logging.getLogger(__name__)
+
+LOGGER = get_logger('simulation')
 
 
 def _ensure_list(v):
@@ -45,7 +46,7 @@ def run_pair_simulation(
     # pylint: disable=too-many-arguments,too-many-locals
     import bglibpy
 
-    LOGGER.info('run_trial: pre_gid=%d, post_gid=%d, seed=%d', pre_gid, post_gid, base_seed)
+    LOGGER.info('sim_pair: a%d -> a%d (seed=%d)...', pre_gid, post_gid, base_seed)
 
     ssim = bglibpy.ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed)
     ssim.instantiate_gids(
@@ -88,9 +89,8 @@ def run_pair_simulation(
         i = post_cell.get_recording("v_clamp")
         return v, t, i
 
-    LOGGER.info(
-        'sim_pair: finished run for pre_gid=%d, post_gid=%d, seed=%d', pre_gid, post_gid, base_seed
-    )
+    LOGGER.info('sim_pair: a%d -> a%d (seed=%d)... done', pre_gid, post_gid, base_seed)
+
     return v, t
 
 
@@ -132,12 +132,8 @@ def run_pair_simulation_suite(
     # pylint: disable=too-many-arguments,too-many-locals
     if hold_I is None and hold_V is not None:
         import bglibpy
-        LOGGER.info("Calculating a%d holding current", post_gid)
+        LOGGER.info("Calculating a%d holding current...", post_gid)
         hold_I, _ = bglibpy.holding_current(hold_V, post_gid, blue_config)
-
-    LOGGER.info(
-        "Running simulation(s) for a%d -> a%d pair (base_seed=%d)", pre_gid, post_gid, base_seed
-    )
 
     common_args = dict(
         blue_config=blue_config,

@@ -7,12 +7,12 @@ No current injection other than the current to achieve the holding potential
 are included. (no HypAmp for instance)
 """
 
-import logging
-
 import numpy as np
 
+from psp_validation import get_logger
 
-LOGGER = logging.getLogger(__name__)
+
+LOGGER = get_logger('lib')
 
 
 def calculate_amplitude(traces,
