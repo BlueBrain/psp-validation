@@ -2,7 +2,7 @@
 
 #SBATCH --job-name="psp"
 #SBATCH --time=8:00:00
-#SBATCH --mem=64000
+#SBATCH --mem=64G
 #SBATCH --output=%LOGS_DIR%/stdout.log
 #SBATCH --error=%LOGS_DIR%/stderr.log
 #SBATCH --partition=prod
@@ -12,7 +12,11 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --exclusive
 
-source /gpfs/bbp.cscs.ch/scratch/gss/nse/psp-validation/setenv_sscx.sh
+module purge
+module load nix/hpc/neuron
+module load nix/hpc/neurodamus
+export BGLIBPY_MOD_LIBRARY_PATH=$BBP_HOME/lib/libnrnmech.so
+module load nix/nse/psp-validation
 
 # --delay 0.2 prevents overloading the controlling node
 parallel="parallel --delay 0.2 -j $SLURM_NTASKS --joblog %LOGS_DIR%/runtask.log"

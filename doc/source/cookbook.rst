@@ -4,41 +4,42 @@ Cookbook
 Batch processing
 ----------------
 
-To process multiple pathway configs in parallel, it could be handy to combine Slurm with `GNU Parallel <https://www.gnu.org/software/parallel/>`_ with `sbatch` script like:
+One-node allocation
+~~~~~~~~~~~~~~~~~~~
+
+Using `sbatch` script like:
+
+.. literalinclude:: ../../sbatch/run-psp.sbatch
+   :language: bash
+
+one can schedule a run for a single pathway like:
 
 .. code-block:: bash
 
-    #!/bin/sh
+    $ sbatch run.sbatch -c %CIRCUIT% -t %TARGETS% -o %OUTPUT_DIR% -n %NUM_PAIRS% -r %NUM_TRIALS% --dump-traces --dump-amplitudes %PATHWAY%
 
-    #SBATCH --job-name="psp"
-    #SBATCH --time=8:00:00
-    #SBATCH --mem=64000
-    #SBATCH --output=%LOGS_DIR%/stdout.log
-    #SBATCH --error=%LOGS_DIR%/stderr.log
-    #SBATCH --partition=prod
-    #SBATCH --account=proj64
-    #SBATCH --nodes=8
-    #SBATCH --ntasks-per-node=1
-    #SBATCH --cpus-per-task=16
-    #SBATCH --exclusive
+.. note::
 
-    module purge
-    module load nix/hpc/neuron
-    module load nix/hpc/neurodamus
-    module load nix/nse/psp-validation
+    Please don't forget to use custom ``neurodamus`` version if needed (e.g., ``neurodamus-hippocampus``).
 
-    # --delay 0.2 prevents overloading the controlling node
-    parallel="parallel --delay 0.2 -j $SLURM_NTASKS --joblog %LOGS_DIR%/runtask.log"
+To schedule all pathways from %PATHWAY_DIR%, make use of shell loop:
 
-    EXEC_CMD="psp -vv run \
-        -c %CircuitConfig% \
-        -t %TARGETS% \
-        -o %OUTPUT_DIR% \
-        -n %NUM_PAIRS% \
-        -r %NUM_TRIALS% \
-        --dump-traces \
-        --dump-amplitudes \
-        --seed %SEED% \
-        --jobs $SLURM_CPUS_PER_TASK"
+.. code-block:: bash
 
-    $parallel "srun --exclusive -N1 -n1 $EXEC_CMD {1} >& %LOGS_DIR%/job-{#}.log" ::: %PATHWAYS%
+    for p in $(find %PATHWAY_DIR% -name "*.yaml")
+    do
+       sbatch run.sbatch ... $p
+    done
+
+
+Multi-node allocation
+~~~~~~~~~~~~~~~~~~~~~
+
+One way to execute set of pathways on multi-node allocation, is to combine Slurm with `GNU Parallel <https://www.gnu.org/software/parallel/>`_ using `sbatch` script like:
+
+.. literalinclude:: ../../sbatch/run-psp-parallel.sbatch.template
+   :language: bash
+
+.. note::
+
+    Please ensure you should have ``parallel`` tool somewhere in ``$PATH``.
