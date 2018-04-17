@@ -115,6 +115,10 @@ def run(
         protocol = config['protocol']
 
         t_stim = config['protocol']['t_stim']
+        if isinstance(t_stim, list):
+            # in case of input spike train, use first spike time as split point
+            t_stim = min(t_stim)
+
         t_start = t_stim - 10.
         spike_filter = psp.default_spike_filter(t_start)
 
