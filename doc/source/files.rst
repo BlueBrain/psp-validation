@@ -72,21 +72,22 @@ Simulation parameters
 
 `protocol` group consisting of the following keys:
 
-+-----------+-------+-------------------------------------------+
-| key       | type  | meaning                                   |
-+===========+=======+===========================================+
-| record_dt | float | voltage trace recording step, ms          |
-+-----------+-------+-------------------------------------------+
-| t_stop    | float | simulation duration, ms                   |
-+-----------+-------+-------------------------------------------+
-| t_stim    | float | time(s) when presynaptic cell fires, [ms] |
-+-----------+-------+-------------------------------------------+
-| hold_V    | float | holding voltage, mV                       |
-|           |       | (optional; None if omitted)               |
-+-----------+-------+-------------------------------------------+
-| post_ttx  | bool  | block Na channels of postsynaptic cell    |
-|           |       | (optional; False if omitted)              |
-+-----------+-------+-------------------------------------------+
++-----------+----------+-------------------------------------------+
+| key       | type     | meaning                                   |
++===========+==========+===========================================+
+| record_dt | float    | voltage trace recording step [ms]         |
++-----------+----------+-------------------------------------------+
+| t_stop    | float    | simulation duration [ms]                  |
++-----------+----------+-------------------------------------------+
+| t_stim    | float    | time(s) when presynaptic cell fires [ms]  |
+|           | OR list  |                                           |
++-----------+----------+-------------------------------------------+
+| hold_V    | float    | holding voltage [mV]                      |
+|           |          | (optional; None if omitted)               |
++-----------+----------+-------------------------------------------+
+| post_ttx  | bool     | block Na channels of postsynaptic cell    |
+|           |          | (optional; False if omitted)              |
++-----------+----------+-------------------------------------------+
 
 Reference biological data
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -130,7 +131,7 @@ Putting it all together:
     protocol:
         record_dt: 0.1
         hold_V: -67.0
-        t_stim: 800.0
+        t_stim: [700.0, 800.0]
         t_stop: 900.0
         post_ttx: false
 
