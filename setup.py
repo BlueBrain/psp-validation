@@ -14,7 +14,7 @@ setup(
         'tqdm>=4.0',
         'numpy>=1.10',
         'h5py>=2.7',
-        'bglibpy>=3.2.14,<4.0',
+        'bglibpy>=3.2.47,<4.0',
         'bluepy>=0.11',
         'nose>=1.3',
     ],

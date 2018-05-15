@@ -133,7 +133,7 @@ def run_pair_simulation_suite(
     if hold_I is None and hold_V is not None:
         import bglibpy
         LOGGER.info("Calculating a%d holding current...", post_gid)
-        hold_I, _ = bglibpy.holding_current(hold_V, post_gid, blue_config)
+        hold_I, _ = bglibpy.holding_current(hold_V, post_gid, blue_config, enable_ttx=post_ttx)
 
     common_args = dict(
         blue_config=blue_config,
