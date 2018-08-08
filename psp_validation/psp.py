@@ -83,7 +83,7 @@ def mean_pair_voltage_from_traces(vts,
 
     vs, time = trace_filter(vts)
     if len(vs) == 0:
-        return None, None, None, None
+        return None, None, [], None
 
     # calc element-wise mean v (over reps)
     v_mean = np.mean(vs, axis=0)

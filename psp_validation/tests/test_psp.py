@@ -214,7 +214,7 @@ def test_mean_pair_voltage_from_traces_filter_all_returns_nan() :
     traces = _make_traces(v, t)
     sf = psp.SpikeFilter(0, -5)
     mean = psp.mean_pair_voltage_from_traces(traces, sf)
-    ntools.assert_equal(mean, (None, None, None, None))
+    ntools.assert_equal(mean, (None, None, [], None))
 
 
 def test_amplitude_from_traces() :

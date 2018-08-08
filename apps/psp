@@ -138,11 +138,15 @@ def run(
                 projection=projection,
                 **protocol
             )
-            v_mean, t, _, _ = psp.mean_pair_voltage_from_traces(traces, spike_filter)
-            if v_mean is None:
+            v_mean, t, v_used, _ = psp.mean_pair_voltage_from_traces(traces, spike_filter)
+            if len(v_used) < len(traces):
+                filtered_count = len(traces) - len(v_used)
                 LOGGER.warning(
-                    "All traces filtered out for a%d-a%d simulation(s)", pre_gid, post_gid
+                    "%d out of %d traces filtered out for a%d-a%d simulation(s) due to spiking",
+                    filtered_count, len(traces),
+                    pre_gid, post_gid
                 )
+            if v_mean is None:
                 average = None
                 ampl = np.nan
             else:
@@ -159,6 +163,13 @@ def run(
 
         model_mean = np.nanmean(all_amplitudes)
         model_std = np.nanstd(all_amplitudes)
+
+        nan_ampl = np.count_nonzero(np.isnan(all_amplitudes))
+        if nan_ampl > 0:
+            LOGGER.warning(
+                "Could not extract PSP amplitude for %d out of %d pair(s) due to spiking",
+                nan_ampl, len(all_amplitudes)
+            )
 
         if 'reference' in config:
             reference = config['reference']['psp_amplitude']
