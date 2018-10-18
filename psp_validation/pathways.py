@@ -83,7 +83,11 @@ def get_pairs(circuit, pre, post, n_pairs, constraints=None, projection=None):
         connectome = circuit.connectome
     else:
         connectome = circuit.projection(projection)
-    iter_connections = connectome.iter_connections(pre=pre, post=post, shuffle=True)
+    iter_connections = connectome.iter_connections(
+        pre=pre, post=post,
+        shuffle=True,
+        return_synapse_count=('min_nsyn' in constraints)
+    )
     if constraints is not None:
         iter_connections = itertools.ifilter(
             ConnectionFilter(circuit, **constraints),
