@@ -16,20 +16,22 @@ class ConnectionFilter(object):
 
         unique_gids: use GIDs only once
         min_nsyn: min synapse count for connection
+        max_nsyn: max synapse count for connection
         max_dist_x: max distance along X axis between pre- and post- synaptic soma
         max_dist_y: max distance along Y axis between pre- and post- synaptic soma
         max_dist_z: max distance along Z axis between pre- and post- synaptic soma
 
     NB:
         * using `unique_gids` makes ConnectionFilter stateful
-        * using `min_syn` requires (pre_gid, post_gid, nsyn) input tuples
+        * using `min_syn` or `max_syn` requires (pre_gid, post_gid, nsyn) input tuples
     """
     def __init__(
-        self, circuit, unique_gids=False, min_nsyn=None,
+        self, circuit, unique_gids=False, min_nsyn=None, max_nsyn=None,
         max_dist_x=None, max_dist_y=None, max_dist_z=None
     ):
         self.circuit = circuit
         self.min_nsyn = min_nsyn
+        self.max_nsyn = max_nsyn
         self.max_dist_x = max_dist_x
         self.max_dist_y = max_dist_y
         self.max_dist_z = max_dist_z
@@ -39,12 +41,16 @@ class ConnectionFilter(object):
             self.used_gids = None
 
     def __call__(self, conn):
+        # pylint: disable=too-many-return-statements,too-many-branches
         pre_gid, post_gid = conn[:2]
         if self.used_gids is not None:
             if (pre_gid in self.used_gids) or (post_gid in self.used_gids):
                 return False
         if self.min_nsyn is not None:
             if conn[2] < self.min_nsyn:
+                return False
+        if self.max_nsyn is not None:
+            if conn[2] > self.max_nsyn:
                 return False
         if self.max_dist_x is not None:
             x1, x2 = self.circuit.cells.get([pre_gid, post_gid])[Cell.X]
@@ -86,7 +92,9 @@ def get_pairs(circuit, pre, post, n_pairs, constraints=None, projection=None):
     iter_connections = connectome.iter_connections(
         pre=pre, post=post,
         shuffle=True,
-        return_synapse_count=('min_nsyn' in constraints)
+        return_synapse_count=('min_nsyn' in constraints or
+                              'max_nsyn' in constraints
+                              )
     )
     if constraints is not None:
         iter_connections = itertools.ifilter(
