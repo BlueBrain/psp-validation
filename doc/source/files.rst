@@ -48,6 +48,8 @@ For example,
 +-------------+-------+---------------------------------------+
 | min_nsyn    | int   | min number of synapses per connection |
 +-------------+-------+---------------------------------------+
+| max_nsyn    | int   | max number of synapses per connection |
++-------------+-------+---------------------------------------+
 | max_dist_x  | float | max distance along X axis             |
 +-------------+-------+---------------------------------------+
 | max_dist_y  | float | max distance along Y axis             |
