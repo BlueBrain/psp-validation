@@ -69,6 +69,11 @@ class ConnectionFilter(object):
             self.used_gids.add(post_gid)
         return True
 
+    @property
+    def requires_synapse_count(self):
+        """ If filter uses synapse count. """
+        return (self.min_nsyn is not None) or (self.max_nsyn is not None)
+
 
 def get_pairs(circuit, pre, post, n_pairs, constraints=None, projection=None):
     """
@@ -89,18 +94,20 @@ def get_pairs(circuit, pre, post, n_pairs, constraints=None, projection=None):
         connectome = circuit.connectome
     else:
         connectome = circuit.projection(projection)
+
+    filt, return_synapse_count = None, False
+    if constraints is not None:
+        filt = ConnectionFilter(circuit, **constraints)
+        return_synapse_count = filt.requires_synapse_count
+
     iter_connections = connectome.iter_connections(
         pre=pre, post=post,
         shuffle=True,
-        return_synapse_count=('min_nsyn' in constraints or
-                              'max_nsyn' in constraints
-                              )
+        return_synapse_count=return_synapse_count
     )
-    if constraints is not None:
-        iter_connections = itertools.ifilter(
-            ConnectionFilter(circuit, **constraints),
-            iter_connections
-        )
+    if filt is not None:
+        iter_connections = itertools.ifilter(filt, iter_connections)
+
     return [conn[:2] for conn in itertools.islice(iter_connections, n_pairs)]
 
 

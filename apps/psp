@@ -62,7 +62,7 @@ def app(verbose=0):
 )
 @click.option(
     "-m", "--clamp", type=click.Choice(['current', 'voltage']),
-    help="Clamp type used", show_default=True
+    help="Clamp type used", default='current', show_default=True
 )
 @click.option("--dump-traces", is_flag=True, help="Dump PSP traces", show_default=True)
 @click.option("--dump-amplitudes", is_flag=True, help="Dump PSP amplitudes", show_default=True)
