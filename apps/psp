@@ -122,6 +122,21 @@ def run(
             pre_syn_type = "EXC"
 
         protocol = config['protocol']
+        if 'hold_I' in protocol:
+            LOGGER.warn(
+                "`hold_I` parameter in protocol is deprecated and will be ignored; "
+                "please remove it from '%s' pathway config",
+                config_path
+            )
+            del protocol['hold_I']
+        if 'v_clamp' in protocol:
+            LOGGER.warn(
+                "`v_clamp` parameter in protocol is deprecated and will be ignored; "
+                "please remove it from '%s' pathway config.\n"
+                "For emulating voltage clamp, pass `--clamp voltage` to `psp run`.",
+                config_path
+            )
+            del protocol['v_clamp']
 
         t_stim = config['protocol']['t_stim']
         if isinstance(t_stim, list):
@@ -133,10 +148,14 @@ def run(
 
         if dump_traces:
             traces_path = os.path.join(output_dir, title + ".traces.h5")
+            # create empty H5 dump or overwrite existing one
             with h5py.File(traces_path, 'w') as h5f:
-                # create empty H5 dump or overwrite existing one
                 h5f.attrs['version'] = u'1.1'
-                h5f.attrs['clamp'] = clamp
+                # we store voltage traces for current clamp and vice-versa
+                h5f.attrs['data'] = {
+                    'current': 'voltage',
+                    'voltage': 'current',
+                }[clamp]
 
         all_amplitudes = []
         for pre_gid, post_gid in pairs:
@@ -172,6 +191,9 @@ def run(
             if dump_traces:
                 with h5py.File(traces_path, 'a') as h5f:
                     dump_pair_traces(h5f, traces, average, pre_gid, post_gid)
+
+        if clamp != 'current':
+            continue
 
         if dump_amplitudes:
             amplitudes_path = os.path.join(output_dir, title + ".amplitudes.txt")
@@ -281,11 +303,11 @@ def plot(traces_files, output_dir):
             root = next(h5f.itervalues())
             if root.name != "/traces":
                 raise RuntimeError("Unexpected HDF5 layout")
-            clamp = root.attrs.get('clamp', 'voltage')
+            content = h5f.attrs.get('data', 'voltage')
             y_label = {
-                'current': 'V [mV]',  # we store voltage traces for current clamp and vice-versa
-                'voltage': 'I [nA]',
-            }[clamp]
+                'current': 'I [nA]',
+                'voltage': 'V [mV]',
+            }[content]
             for pair in tqdm(root.itervalues(), total=len(root), desc=pathway):
                 title = "a{pre}-a{post}".format(
                     pre=pair.attrs['pre_gid'], post=pair.attrs['post_gid']
