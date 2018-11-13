@@ -85,7 +85,6 @@ Simulation parameters
 |           | OR list  |                                           |
 +-----------+----------+-------------------------------------------+
 | hold_V    | float    | holding voltage [mV]                      |
-|           |          | (optional; None if omitted)               |
 +-----------+----------+-------------------------------------------+
 | post_ttx  | bool     | block Na channels of postsynaptic cell    |
 |           |          | (optional; False if omitted)              |
@@ -178,17 +177,18 @@ If source pathway config specifies reference PSP amplitude data, it is repeated 
         std:  1.1
     scaling: 0.94519076506
 
-Voltage traces
---------------
+Trace dump
+----------
 
-On-request output of `\`psp run\``; HDF5 file storing voltage traces, as well as their filtered average, for each simulated pair.
+On-request output of `\`psp run\``; HDF5 file storing voltage / current traces for each trial, as well as their average, for each simulated pair.
+For voltage, spiking trials are filtered out when calculating average.
 
 .. code-block:: none
 
     /traces
         /<pair1>
-           /trials   [N x 2 x T]  # (v, t) for each of N trials
-           /average  [2 x T]      # "averaged" (v, t)
+           /trials   [N x 2 x T]  # (v / i, t) for each of N trials
+           /average  [2 x T]      # "averaged" (v / i, t)
         /<pair2>
             ...
 

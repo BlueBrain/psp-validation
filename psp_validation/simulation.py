@@ -21,7 +21,7 @@ def _ensure_list(v):
 def run_pair_simulation(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
-    hold_I=None, hold_V=None, post_ttx=False, v_clamp=None, projection=None
+    hold_I=None, hold_V=None, post_ttx=False, projection=None
 ):
     """
     Run single pair simulation trial.
@@ -34,14 +34,13 @@ def run_pair_simulation(
         t_stim: pre_gid spike time(s) [single float or list of floats]
         record_dt: timestep of the simulation
         base_seed: simulation base seed
-        hold_I: holding current (mA)
-        hold_V: holding voltage (mV)
+        hold_I: holding current [nA] (if None, voltage clamp is applied)
+        hold_V: holding voltage [mV]
         post_ttx: emulate TTX effect on postsynaptic cell (i.e. block Na channels)
-        v_clamp: ??
         projection: projection name (None for main connectome)
 
     Returns:
-        postsynaptic cell soma voltage trace [(v, t) tuple]
+        postsynaptic cell soma voltage / injected current trace [(Y, t) tuple]
     """
     # pylint: disable=too-many-arguments,too-many-locals
     import bglibpy
@@ -64,34 +63,29 @@ def run_pair_simulation(
     if post_ttx:
         post_cell.enable_ttx()
 
-    # add the current to reach the holding potential
-    if hold_I is not None:
+    if hold_I is None:
+        # voltage clamp
+        post_cell.add_voltage_clamp(
+            stop_time=t_stop, level=hold_V, rs=0.001,
+            current_record_name='clamp_i'
+        )
+    else:
+        # current clamp
+        # add pre-calculated current to set the holding potential
         post_cell.add_ramp(0, 10000, hold_I, hold_I, dt=0.025)
 
-    if v_clamp:
-        from neuron import h  # pylint: disable=import-error
-        post_cell.addVClamp(t_stop, v_clamp)
-        # manually add recording for vclamp so it has a sane name.
-        v_clamp_object = post_cell.persistent[-1]
-        recording = h.Vector()
-        recording.record(v_clamp_object._ref_i, record_dt)  # pylint: disable=protected-access
-        post_cell.recordings["v_clamp"] = recording
-
-    run_args = {}
-    if hold_V is not None:
-        run_args['v_init'] = hold_V
-    ssim.run(t_stop=t_stop, dt=0.025, **run_args)
+    ssim.run(t_stop=t_stop, dt=0.025, v_init=hold_V)
 
     t = post_cell.get_time()
-    v = post_cell.get_soma_voltage()
 
-    if v_clamp:
-        i = post_cell.get_recording("v_clamp")
-        return v, t, i
+    if hold_I is None:
+        y = post_cell.get_recording('clamp_i')
+    else:
+        y = post_cell.get_soma_voltage()
 
     LOGGER.info('sim_pair: a%d -> a%d (seed=%d)... done', pre_gid, post_gid, base_seed)
 
-    return v, t
+    return y, t
 
 
 def mp_run_pair_simulation(kwargs):
@@ -102,7 +96,7 @@ def mp_run_pair_simulation(kwargs):
 def run_pair_simulation_suite(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
-    hold_I=None, hold_V=None, post_ttx=False, v_clamp=None, projection=None,
+    hold_V=None, post_ttx=False, clamp='current', projection=None,
     n_trials=1, n_jobs=None
 ):
     """
@@ -116,10 +110,9 @@ def run_pair_simulation_suite(
         t_stim: pre_gid spike time(s) [single float or list of floats]
         record_dt: timestep of the simulation
         base_seed: simulation base seed
-        hold_I: holding current (mA)
         hold_V: holding voltage (mV)
         post_ttx: emulate TTX effect on postsynaptic cell (i.e. block Na channels)
-        v_clamp: ??
+        clamp: type of the clamp used ['current' | 'voltage']
         projection: projection name (None for main connectome)
         n_trials: number of trials to run
         n_jobs: number of jobs to run in parallel (None for sequential runs)
@@ -127,13 +120,17 @@ def run_pair_simulation_suite(
     k-th trial would use (`base_seed` + k) as base seed; k=0..N-1.
 
     Returns:
-        N x 2 x T numpy array with trials voltage traces (V_k, t_k)
+        N x 2 x T numpy array with trials voltage / current traces (Y_k, t_k)
     """
     # pylint: disable=too-many-arguments,too-many-locals
-    if hold_I is None and hold_V is not None:
+    assert clamp in ('current', 'voltage')
+    if clamp == 'current':
         import bglibpy
         LOGGER.info("Calculating a%d holding current...", post_gid)
         hold_I, _ = bglibpy.holding_current(hold_V, post_gid, blue_config, enable_ttx=post_ttx)
+        LOGGER.info("a%d holding current: %.3f nA", post_gid, hold_I)
+    else:
+        hold_I = None
 
     common_args = dict(
         blue_config=blue_config,
@@ -145,7 +142,6 @@ def run_pair_simulation_suite(
         hold_I=hold_I,
         hold_V=hold_V,
         post_ttx=post_ttx,
-        v_clamp=v_clamp,
         projection=projection
     )
     run_args = [dict(base_seed=(base_seed + k), **common_args) for k in range(n_trials)]

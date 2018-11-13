@@ -60,6 +60,10 @@ def app(verbose=0):
 @click.option(
     "-r", "--num-trials", type=int, required=True, help="Run NUM_TRIALS simulations for each pair"
 )
+@click.option(
+    "-m", "--clamp", type=click.Choice(['current', 'voltage']),
+    help="Clamp type used", show_default=True
+)
 @click.option("--dump-traces", is_flag=True, help="Dump PSP traces", show_default=True)
 @click.option("--dump-amplitudes", is_flag=True, help="Dump PSP amplitudes", show_default=True)
 @click.option("--seed", type=int, help="Pseudo-random generator seed", default=0, show_default=True)
@@ -73,10 +77,15 @@ def app(verbose=0):
 )
 def run(
     pathway_files, blueconfig, targets, output_dir, num_pairs, num_trials,
-    dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
+    clamp='current', dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
     from psp_validation.simulation import run_pair_simulation_suite
+
+    if clamp == 'voltage':
+        if dump_amplitudes:
+            LOGGER.warn("Voltage clamp mode; ignoring '--dump-amplitudes' flag")
+            dump_amplitudes = False
 
     np.random.seed(seed)
 
@@ -126,7 +135,8 @@ def run(
             traces_path = os.path.join(output_dir, title + ".traces.h5")
             with h5py.File(traces_path, 'w') as h5f:
                 # create empty H5 dump or overwrite existing one
-                pass
+                h5f.attrs['version'] = u'1.1'
+                h5f.attrs['clamp'] = clamp
 
         all_amplitudes = []
         for pre_gid, post_gid in pairs:
@@ -135,24 +145,30 @@ def run(
                 base_seed=seed,
                 n_trials=num_trials,
                 n_jobs=jobs,
+                clamp=clamp,
                 projection=projection,
                 **protocol
             )
-            v_mean, t, v_used, _ = psp.mean_pair_voltage_from_traces(traces, spike_filter)
-            if len(v_used) < len(traces):
-                filtered_count = len(traces) - len(v_used)
-                LOGGER.warning(
-                    "%d out of %d traces filtered out for a%d-a%d simulation(s) due to spiking",
-                    filtered_count, len(traces),
-                    pre_gid, post_gid
-                )
-            if v_mean is None:
-                average = None
-                ampl = np.nan
+
+            if clamp == 'current':
+                v_mean, t, v_used, _ = psp.mean_pair_voltage_from_traces(traces, spike_filter)
+                if len(v_used) < len(traces):
+                    filtered_count = len(traces) - len(v_used)
+                    LOGGER.warning(
+                        "%d out of %d traces filtered out for a%d-a%d simulation(s) due to spiking",
+                        filtered_count, len(traces),
+                        pre_gid, post_gid
+                    )
+                if v_mean is None:
+                    average = None
+                    ampl = np.nan
+                else:
+                    average = np.stack([v_mean, t])
+                    ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, pre_syn_type)
+                all_amplitudes.append(ampl)
             else:
-                average = np.stack([v_mean, t])
-                ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, pre_syn_type)
-            all_amplitudes.append(ampl)
+                average = np.mean(traces, axis=0)
+
             if dump_traces:
                 with h5py.File(traces_path, 'a') as h5f:
                     dump_pair_traces(h5f, traces, average, pre_gid, post_gid)
@@ -246,6 +262,7 @@ def plot(traces_files, output_dir):
     """ Plot voltage traces stored in .h5 dump """
     import matplotlib
     matplotlib.use('Agg')
+    matplotlib.rcParams['axes.formatter.useoffset'] = False
     import matplotlib.pyplot as plt
     from tqdm import tqdm
 
@@ -264,6 +281,11 @@ def plot(traces_files, output_dir):
             root = next(h5f.itervalues())
             if root.name != "/traces":
                 raise RuntimeError("Unexpected HDF5 layout")
+            clamp = root.attrs.get('clamp', 'voltage')
+            y_label = {
+                'current': 'V [mV]',  # we store voltage traces for current clamp and vice-versa
+                'voltage': 'I [nA]',
+            }[clamp]
             for pair in tqdm(root.itervalues(), total=len(root), desc=pathway):
                 title = "a{pre}-a{post}".format(
                     pre=pair.attrs['pre_gid'], post=pair.attrs['post_gid']
@@ -279,7 +301,7 @@ def plot(traces_files, output_dir):
                     ax.plot(t_avg, v_avg, lw=2, label="average")
                 ax.grid()
                 ax.set_xlabel('t [ms]')
-                ax.set_ylabel('V [mV]')
+                ax.set_ylabel(y_label)
                 ax.legend()
                 ax.set_title(title)
                 figure.savefig(os.path.join(pathway_output_dir, title + ".png"), dpi=300)

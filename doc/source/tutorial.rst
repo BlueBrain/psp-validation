@@ -14,11 +14,11 @@ for a brief description of available subcommands and options.
 Running simulations
 -------------------
 
-To run pair simulations for a given pathway and extract PSP amplitudes from resulting voltage traces:
+To run pair simulations for given pathway(s):
 
 .. code-block:: console
 
-    $ psp run -c <BlueConfig> -o <output-dir> -t <targets.yaml> -n NUM_PAIRS -r NUM_TRIALS [<pathway.yaml>...]
+    $ psp run -c <BlueConfig> -o <output-dir> -t <targets.yaml> -n NUM_PAIRS -r NUM_TRIALS --clamp <current|voltage> [<pathway.yaml>...]
 
 where
 
@@ -26,6 +26,7 @@ where
     - ``<targets.yaml>`` is :ref:`target definitions <Target definitions>` file
     - ``NUM_PAIRS`` is number of pairs to simulate
     - ``NUM_TRIALS`` is number of simulation trials per each pair
+    - ``clamp`` allows to choose between voltage and current clamp mode (default: ``current``)
 
 
 For each pathway config ``X.yaml``, `psp run` command above will (try to):
@@ -34,7 +35,11 @@ For each pathway config ``X.yaml``, `psp run` command above will (try to):
  - for each pair:
 
    - run ``NUM_TRIALS`` simulations with different base seed
-   - extract PSP amplitude from "average" voltage trace
+
+In *current clamp* mode, it will also:
+
+ - for each pair:
+   - extract PSP amplitude from "average" voltage trace (spiking trials are not taken into account)
  - calculate mean / std of obtained amplitudes
  - calculate conductance scaling factor, if reference data is provided
  - dump mean / std of obtained amplitudes, as well as scaling factor to :ref:`summary file <Summary file>`
@@ -48,12 +53,14 @@ For more `psp run` commands and options:
 
 In particular:
 
---dump-traces      dump voltage trace for each trial to ``X.traces.h5``
+--dump-traces      dump voltage / current trace for each trial to ``X.traces.h5``
 --dump-amplitudes  dump PSP amplitude values to ``X.amplitudes.txt``
 --jobs JOBS      use `multiprocessing <https://docs.python.org/2/library/multiprocessing.html>`_ to launch multiple simulation trials in parallel
 
-| ``X.traces.h5`` is an HDF5 file with the layout described :ref:`here <Voltage traces>`.
+| ``X.traces.h5`` is an HDF5 file with the layout described :ref:`here <Trace dump>`.
 | ``X.amplitudes.txt`` is a one-column text file with PSP amplitude value for each pair (``nan`` if amplitude could not be extracted).
+
+In *voltage clamp* mode, ``--dump-amplitudes`` is ignored.
 
 Collecting results
 ------------------
@@ -96,10 +103,10 @@ would result in
 
 output which is ready for copy-paste to JIRA or Confluence.
 
-Plotting voltage traces
------------------------
+Plotting traces
+---------------
 
-To plot voltage traces and their filtered average stored at ``.traces.h5`` file(s):
+To plot voltage / current traces and their average stored at ``.traces.h5`` file(s):
 
 .. code-block:: console
 
