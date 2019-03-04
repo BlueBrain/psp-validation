@@ -127,7 +127,9 @@ def run_pair_simulation_suite(
     if clamp == 'current':
         import bglibpy
         LOGGER.info("Calculating a%d holding current...", post_gid)
-        hold_I, _ = bglibpy.holding_current(hold_V, post_gid, blue_config, enable_ttx=post_ttx)
+        hold_I, _ = bglibpy.holding_current(  # pylint: disable=no-member
+            hold_V, post_gid, blue_config, enable_ttx=post_ttx
+        )
         LOGGER.info("a%d holding current: %.3f nA", post_gid, hold_I)
     else:
         hold_I = None

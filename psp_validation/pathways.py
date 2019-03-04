@@ -1,5 +1,7 @@
 """Repository for pathway queries
 """
+from builtins import filter
+
 import itertools
 
 from bluepy.v2.enums import Cell
@@ -106,7 +108,7 @@ def get_pairs(circuit, pre, post, n_pairs, constraints=None, projection=None):
         return_synapse_count=return_synapse_count
     )
     if filt is not None:
-        iter_connections = itertools.ifilter(filt, iter_connections)
+        iter_connections = filter(filt, iter_connections)
 
     return [conn[:2] for conn in itertools.islice(iter_connections, n_pairs)]
 
