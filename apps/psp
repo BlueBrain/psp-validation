@@ -49,6 +49,12 @@ def app(verbose=0):
     }[verbose])
 
 
+def _setup_bglibpy():
+    if 'BGLIBPY_RNG_MODE' in os.environ:
+        import bglibpy
+        bglibpy.RNGSettings.default_rng_mode = os.environ['BGLIBPY_RNG_MODE']
+
+
 @app.command()
 @click.argument("pathway_files", nargs=-1, required=True)
 @click.option("-c", "--blueconfig", required=True, help="Path to BlueConfig")
@@ -81,6 +87,8 @@ def run(
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
     from psp_validation.simulation import run_pair_simulation_suite
+
+    _setup_bglibpy()
 
     if clamp == 'voltage':
         if dump_amplitudes:

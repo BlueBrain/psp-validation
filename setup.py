@@ -16,7 +16,7 @@ setup(
         'numpy>=1.10',
         'tqdm>=4.0',
     ] + [
-        'bglibpy>=3.2.47,<4.0',
+        'bglibpy>=4.0.13,<5.0',
         'bluepy>=0.13',
     ],
     packages=find_packages(),
