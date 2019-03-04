@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# pylint: skip-file
+"""
+PSP analysis toolkit.
+
+ * `psp run`     Run pair simulations for given pathway(s)
+ * `psp summary` Collect `psp run` summary output
+ * `psp plot`    Plot voltage / current traces obtained with `psp run`
+"""
 
 from __future__ import print_function
 
 import os
-import yaml
 import logging
+import yaml
 
 import click
 import h5py
@@ -86,13 +92,15 @@ def run(
     clamp='current', dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
+    # TODO: `pylint` is likely right about "too many everything"
+    # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
     from psp_validation.simulation import run_pair_simulation_suite
 
     _setup_bglibpy()
 
     if clamp == 'voltage':
         if dump_amplitudes:
-            LOGGER.warn("Voltage clamp mode; ignoring '--dump-amplitudes' flag")
+            LOGGER.warning("Voltage clamp mode; ignoring '--dump-amplitudes' flag")
             dump_amplitudes = False
 
     np.random.seed(seed)
@@ -131,14 +139,14 @@ def run(
 
         protocol = config['protocol']
         if 'hold_I' in protocol:
-            LOGGER.warn(
+            LOGGER.warning(
                 "`hold_I` parameter in protocol is deprecated and will be ignored; "
                 "please remove it from '%s' pathway config",
                 config_path
             )
             del protocol['hold_I']
         if 'v_clamp' in protocol:
-            LOGGER.warn(
+            LOGGER.warning(
                 "`v_clamp` parameter in protocol is deprecated and will be ignored; "
                 "please remove it from '%s' pathway config.\n"
                 "For emulating voltage clamp, pass `--clamp voltage` to `psp run`.",
@@ -290,6 +298,7 @@ def summary(summary_files, with_scaling=False, style='default'):
 @click.option("-o", "--output-dir", required=True, help="Path to output folder")
 def plot(traces_files, output_dir):
     """ Plot voltage traces stored in .h5 dump """
+    # pylint: disable=too-many-locals
     import matplotlib
     matplotlib.use('Agg')
     matplotlib.rcParams['axes.formatter.useoffset'] = False
