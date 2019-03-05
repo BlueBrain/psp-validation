@@ -105,13 +105,16 @@ def run(
 
     np.random.seed(seed)
 
-    circuit = bluepy.Circuit(blueconfig).v2
     targets = load_yaml(targets)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     for config_path in pathway_files:
+        # Re-instantiate Circuit object and delete it every time
+        # before spawning `multiprocessing` pool as a way to workaround NSETM-689
+        circuit = bluepy.Circuit(blueconfig).v2
+
         title, config = load_config(config_path)
         LOGGER.info("Processing '%s' pathway...", title)
 
@@ -136,6 +139,8 @@ def run(
             pre_syn_type = get_synapse_type(circuit, [p[0] for p in pairs])
         else:
             pre_syn_type = "EXC"
+
+        del circuit
 
         protocol = config['protocol']
         if 'hold_I' in protocol:
