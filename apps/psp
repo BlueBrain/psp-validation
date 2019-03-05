@@ -58,7 +58,7 @@ def app(verbose=0):
 def _setup_bglibpy():
     if 'BGLIBPY_RNG_MODE' in os.environ:
         import bglibpy
-        bglibpy.RNGSettings.default_rng_mode = os.environ['BGLIBPY_RNG_MODE']
+        bglibpy.rngsettings.default_rng_mode = os.environ['BGLIBPY_RNG_MODE']
 
 
 @app.command()
