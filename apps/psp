@@ -21,7 +21,7 @@ import numpy as np
 
 import bluepy
 
-from psp_validation import psp, get_logger
+from psp_validation import psp, get_logger, setup_logging
 from psp_validation.pathways import get_pairs, get_synapse_type
 from psp_validation.persistencyutils import dump_pair_traces
 from psp_validation.version import VERSION
@@ -47,18 +47,12 @@ def load_config(filepath):
 @click.option("-v", "--verbose", count=True, help="-v for INFO, -vv for DEBUG")
 def app(verbose=0):
     """ PSP analysis tool """
-    logging.basicConfig(level=logging.WARNING)
-    LOGGER.setLevel({
+    level = {
         0: logging.WARNING,
         1: logging.INFO,
         2: logging.DEBUG
-    }[verbose])
-
-
-def _setup_bglibpy():
-    if 'BGLIBPY_RNG_MODE' in os.environ:
-        import bglibpy
-        bglibpy.rngsettings.default_rng_mode = os.environ['BGLIBPY_RNG_MODE']
+    }[verbose]
+    setup_logging(level)
 
 
 @app.command()
@@ -96,8 +90,6 @@ def run(
     # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
     from psp_validation.simulation import run_pair_simulation_suite
 
-    _setup_bglibpy()
-
     if clamp == 'voltage':
         if dump_amplitudes:
             LOGGER.warning("Voltage clamp mode; ignoring '--dump-amplitudes' flag")
@@ -105,16 +97,13 @@ def run(
 
     np.random.seed(seed)
 
+    circuit = bluepy.Circuit(blueconfig).v2
     targets = load_yaml(targets)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     for config_path in pathway_files:
-        # Re-instantiate Circuit object and delete it every time
-        # before spawning `multiprocessing` pool as a way to workaround NSETM-689
-        circuit = bluepy.Circuit(blueconfig).v2
-
         title, config = load_config(config_path)
         LOGGER.info("Processing '%s' pathway...", title)
 
@@ -139,8 +128,6 @@ def run(
             pre_syn_type = get_synapse_type(circuit, [p[0] for p in pairs])
         else:
             pre_syn_type = "EXC"
-
-        del circuit
 
         protocol = config['protocol']
         if 'hold_I' in protocol:

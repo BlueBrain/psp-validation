@@ -13,6 +13,7 @@ setup(
         'click>=7.0',
         'future>=0.16',
         'h5py>=2.7',
+        'joblib>=0.13',
         'numpy>=1.10',
         'tqdm>=4.0',
     ] + [

@@ -1,10 +1,12 @@
 """ Running pair simulations. """
 
+import os
 import collections
 
+import joblib
 import numpy as np
 
-from psp_validation import get_logger
+from psp_validation import get_logger, setup_logging
 
 
 LOGGER = get_logger('simulation')
@@ -18,10 +20,17 @@ def _ensure_list(v):
         return [v]
 
 
+def _bglibpy():
+    import bglibpy
+    if 'BGLIBPY_RNG_MODE' in os.environ:
+        bglibpy.rngsettings.default_rng_mode = os.environ['BGLIBPY_RNG_MODE']
+    return bglibpy
+
+
 def run_pair_simulation(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
-    hold_I=None, hold_V=None, post_ttx=False, projection=None
+    hold_I=None, hold_V=None, post_ttx=False, projection=None, log_level=None
 ):
     """
     Run single pair simulation trial.
@@ -38,16 +47,18 @@ def run_pair_simulation(
         hold_V: holding voltage [mV]
         post_ttx: emulate TTX effect on postsynaptic cell (i.e. block Na channels)
         projection: projection name (None for main connectome)
+        log_level: logging level
 
     Returns:
         postsynaptic cell soma voltage / injected current trace [(Y, t) tuple]
     """
     # pylint: disable=too-many-arguments,too-many-locals
-    import bglibpy
+    if log_level is not None:
+        setup_logging(log_level)
 
     LOGGER.info('sim_pair: a%d -> a%d (seed=%d)...', pre_gid, post_gid, base_seed)
 
-    ssim = bglibpy.ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed)
+    ssim = _bglibpy().ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed)
     ssim.instantiate_gids(
         [post_gid],
         add_replay=False,
@@ -88,11 +99,6 @@ def run_pair_simulation(
     return y, t
 
 
-def mp_run_pair_simulation(kwargs):
-    """ Forward kwargs to run_pair_simulation. """
-    return run_pair_simulation(**kwargs)
-
-
 def run_pair_simulation_suite(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
@@ -125,43 +131,35 @@ def run_pair_simulation_suite(
     # pylint: disable=too-many-arguments,too-many-locals
     assert clamp in ('current', 'voltage')
     if clamp == 'current':
-        import bglibpy
         LOGGER.info("Calculating a%d holding current...", post_gid)
-        hold_I, _ = bglibpy.holding_current(  # pylint: disable=no-member
+        hold_I, _ = _bglibpy().holding_current(  # pylint: disable=no-member
             hold_V, post_gid, blue_config, enable_ttx=post_ttx
         )
         LOGGER.info("a%d holding current: %.3f nA", post_gid, hold_I)
     else:
         hold_I = None
 
-    common_args = dict(
-        blue_config=blue_config,
-        pre_gid=pre_gid,
-        post_gid=post_gid,
-        t_stop=t_stop,
-        t_stim=t_stim,
-        record_dt=record_dt,
-        hold_I=hold_I,
-        hold_V=hold_V,
-        post_ttx=post_ttx,
-        projection=projection
-    )
-    run_args = [dict(base_seed=(base_seed + k), **common_args) for k in range(n_trials)]
-
     if n_jobs is None:
-        result = map(mp_run_pair_simulation, run_args)
-    else:
-        import multiprocessing
-        cpu_count = multiprocessing.cpu_count()
-        if n_jobs <= 0:
-            n_jobs = cpu_count
-        else:
-            # spawning too many jobs would be inefficient
-            n_jobs = min(n_jobs, cpu_count)
-        # no need to spawn more jobs than tasks to run
-        n_jobs = min(n_jobs, len(run_args))
-        pool = multiprocessing.Pool(n_jobs)
-        result = pool.map(mp_run_pair_simulation, run_args)
-        pool.close()
+        n_jobs = 1
+    elif n_jobs <= 0:
+        n_jobs = -1
+
+    result = joblib.Parallel(n_jobs=n_jobs, backend='loky')([
+        joblib.delayed(run_pair_simulation)(
+            blue_config=blue_config,
+            pre_gid=pre_gid,
+            post_gid=post_gid,
+            t_stop=t_stop,
+            t_stim=t_stim,
+            record_dt=record_dt,
+            hold_I=hold_I,
+            hold_V=hold_V,
+            post_ttx=post_ttx,
+            projection=projection,
+            log_level=get_logger().level,
+            base_seed=(base_seed + k),
+        )
+        for k in range(n_trials)
+    ])
 
     return np.array(result)
