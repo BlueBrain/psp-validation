@@ -144,8 +144,9 @@ def run_pair_simulation_suite(
     elif n_jobs <= 0:
         n_jobs = -1
 
+    worker = joblib.delayed(run_pair_simulation)
     result = joblib.Parallel(n_jobs=n_jobs, backend='loky')([
-        joblib.delayed(run_pair_simulation)(
+        worker(
             blue_config=blue_config,
             pre_gid=pre_gid,
             post_gid=post_gid,
