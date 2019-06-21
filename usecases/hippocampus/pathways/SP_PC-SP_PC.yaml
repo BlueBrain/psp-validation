@@ -15,6 +15,8 @@ pathway:
         max_dist_y: 100.0
         max_dist_z: 100.0
 
+min_amplitude: 0.01
+
 protocol:
     record_dt: 0.1
     hold_V: -68.5

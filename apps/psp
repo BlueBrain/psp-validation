@@ -129,6 +129,8 @@ def run(
         else:
             pre_syn_type = "EXC"
 
+        min_ampl = config.get('min_amplitude', 0.0)
+
         protocol = config['protocol']
         if 'hold_I' in protocol:
             LOGGER.warning(
@@ -187,11 +189,22 @@ def run(
                         pre_gid, post_gid
                     )
                 if v_mean is None:
+                    LOGGER.warning(
+                        "Could not extract PSP amplitude for a%d-a%d pair due to spiking",
+                        pre_gid, post_gid
+                    )
                     average = None
                     ampl = np.nan
                 else:
                     average = np.stack([v_mean, t])
                     ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, pre_syn_type)
+                    if ampl < min_ampl:
+                        LOGGER.warning(
+                            "PSP amplitude below given threshold for a%d-a%d pair (%.3g < %.3g)",
+                            pre_gid, post_gid,
+                            ampl, min_ampl
+                        )
+                        ampl = np.nan
                 all_amplitudes.append(ampl)
             else:
                 average = np.mean(traces, axis=0)
@@ -209,13 +222,6 @@ def run(
 
         model_mean = np.nanmean(all_amplitudes)
         model_std = np.nanstd(all_amplitudes)
-
-        nan_ampl = np.count_nonzero(np.isnan(all_amplitudes))
-        if nan_ampl > 0:
-            LOGGER.warning(
-                "Could not extract PSP amplitude for %d out of %d pair(s) due to spiking",
-                nan_ampl, len(all_amplitudes)
-            )
 
         if 'reference' in config:
             reference = config['reference']['psp_amplitude']

@@ -105,6 +105,17 @@ Reference biological data
 | synapse_count | dict   | Synapse count per connection mean / std |
 +---------------+--------+-----------------------------------------+
 
+Other
+~~~~~
+
++---------------+--------+-------------------------------------------------+
+| key           | type   | meaning                                         |
++===============+========+=================================================+
+| min_amplitude | float  | Minimal PSP amplitude to consider [mV]          |
+|               |        | (values below that would be replaced with NaNs) |
+|               |        | Optional, defaults to 0.0                       |
++---------------+--------+-------------------------------------------------+
+
 Example
 ~~~~~~~
 
@@ -128,6 +139,8 @@ Putting it all together:
             unique_gids: true
             max_dist_x: 100.0
             max_dist_z: 100.0
+
+    min_amplitude: 0.01
 
     protocol:
         record_dt: 0.1
