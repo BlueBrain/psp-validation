@@ -16,6 +16,7 @@ setup(
         'joblib>=0.13',
         'numpy>=1.10',
         'tqdm>=4.0',
+        'efel>=3.0.39',
     ] + [
         'bglibpy>=4.0.13,<5.0',
         'bluepy>=0.13',

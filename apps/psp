@@ -197,7 +197,7 @@ def run(
                     ampl = np.nan
                 else:
                     average = np.stack([v_mean, t])
-                    ampl = psp.get_peak_amplitude(t, v_mean, t_start, t_stim, pre_syn_type)
+                    ampl = psp.get_peak_amplitude(t, v_mean, t_stim, pre_syn_type)
                     if ampl < min_ampl:
                         LOGGER.warning(
                             "PSP amplitude below given threshold for a%d-a%d pair (%.3g < %.3g)",

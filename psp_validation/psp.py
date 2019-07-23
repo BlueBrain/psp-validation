@@ -8,6 +8,7 @@ are included. (no HypAmp for instance)
 """
 
 import numpy as np
+import efel
 
 from psp_validation import get_logger
 
@@ -33,8 +34,7 @@ def calculate_amplitude(traces,
         LOGGER.info("calculate_amplitude: removed from avg due to spiking")
         return np.nan
 
-    t_start = t_stim - 10
-    return get_peak_amplitude(t, v, t_start, t_stim, syn_type)
+    return get_peak_amplitude(t, v, t_stim, syn_type)
 
 
 class SpikeFilter(object):
@@ -115,33 +115,13 @@ def get_peak_voltage(time, voltage, t_stim, syn_type):
             could result in silently returning the wrong value.
     """
     _check_numpy_ndarrays(time, voltage)
+    if syn_type not in {'EXC', 'INH'}:
+        raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
     fun = np.max if syn_type == "EXC" else np.min
     return fun(voltage[time > t_stim])
 
 
-def get_mean_voltage(time, voltage, t_start, t_stop):
-    """Get the mean voltage in time range t_start to t_stop
-
-    Parameters:
-    time: numpy.ndarray containing time measurements
-    voltage: numpy.ndarray containing voltage measurements
-    t_start: numeric scalar representing start time
-    t_stop: numeric scalar representing stop time
-
-    Return:
-    mean value of voltage calculated for time between t_start and t_stop
-
-    Remarks:
-    Raises ValueError if either of time or voltage is an iterable
-            other than a numpy.ndarray. This is because this situation
-            could result in silently returning the wrong value.
-
-    """
-    _check_numpy_ndarrays(time, voltage)
-    return np.mean(voltage[(time > t_start) & (time < t_stop)])
-
-
-def get_peak_amplitude(time, voltage, t_start, t_stim, syn_type):
+def get_peak_amplitude(time, voltage, t_stim, syn_type):
     """Get the peak amplitude in a time series.
 
     Parameters:
@@ -154,9 +134,19 @@ def get_peak_amplitude(time, voltage, t_start, t_stim, syn_type):
     Return:
     RMS of the diffetence between calculated mean v and peak v
     """
-    base_v = get_mean_voltage(time, voltage, t_start, t_stim)
-    peak_v = get_peak_voltage(time, voltage, t_stim, syn_type)
-    return np.sqrt((base_v - peak_v) ** 2)
+    if syn_type not in {'EXC', 'INH'}:
+        raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
+
+    traces = [{
+        'T': time,
+        'V': voltage,
+        'stim_start': [t_stim],
+        'stim_end': [np.max(time)],
+    }]
+    peak = 'maximum_voltage' if syn_type == 'EXC' else 'minimum_voltage'
+    traces_results = efel.getFeatureValues(traces, [peak, 'voltage_base'])
+    amplitude = abs(traces_results[0][peak][0] - traces_results[0]['voltage_base'][0])
+    return amplitude
 
 
 def _check_numpy_ndarrays(*args):
@@ -172,6 +162,9 @@ def _check_numpy_ndarrays(*args):
 
 def compute_scaling(psp1, psp2, v_holding, syn_type):
     """ Compute conductance scaling factor. """
+    if syn_type not in {'EXC', 'INH'}:
+        raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
+
     E_rev = {
         'EXC': 0.0,
         'INH': -80.0,

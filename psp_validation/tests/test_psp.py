@@ -1,3 +1,4 @@
+import os
 from nose import tools as ntools
 import numpy as np
 
@@ -8,12 +9,7 @@ from psp_validation import psp
 
 _bconfig = "psp_validation/tests/input_data/sim_tencell_example1/RefBlueConfig_Scaling"
 
-
-def test_get_peak_voltage_EXC() :
-    time = np.linspace(1, 10, 10)
-    voltage = np.linspace(-10, 9, 10)
-    peak = np.max(voltage)
-    ntools.assert_equal(peak, psp.get_peak_voltage(time, voltage, 0., "EXC"))
+_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_data")
 
 
 def test_get_peak_voltage_INH() :
@@ -64,27 +60,6 @@ def test_getpeak_voltage_call_with_non_numpy_array_args_raises() :
     psp.get_peak_voltage([0, 1, 2, 3], [11, 22, 33, 11], 0, "XXX")
 
 
-def test_get_mean_voltage_full_range() :
-    time = np.linspace(0, 99, 100)
-    voltage = np.linspace(0, 9, 100)
-    base = np.mean(voltage)
-    ntools.assert_equal(base, psp.get_mean_voltage(time, voltage, -1, 100))
-
-
-def test_get_mean_voltage_partial_range() :
-    time = np.linspace(0, 99, 100)
-    voltage = np.linspace(0, 9, 100)
-    start = 10
-    stop = 50
-    base = np.mean(voltage[(time > start) & (time < stop)])
-    ntools.assert_equal(base, psp.get_mean_voltage(time, voltage, start, stop))
-
-
-@ntools.raises(ValueError)
-def test_get_mean_voltage_call_with_non_numpy_array_args_raises() :
-    psp.get_mean_voltage([0, 1, 2, 3], [11, 22, 33, 11], 0, 1)
-
-
 def test_numpy_ndarray_checker() :
     psp._check_numpy_ndarrays(np.array([1,2,3]))
     psp._check_numpy_ndarrays(np.array([1,2,3]), np.array([1,2,3]))
@@ -111,20 +86,22 @@ def test_numpy_ndarray_checker_raises3() :
    psp._check_numpy_ndarrays(1, 2, 3, "Hello")
 
 
-def test_get_peak_amplitude_EXC() :
-    t = np.linspace(1, 10, 10)
-    v = np.linspace(-10, 9, 10)
-    ntools.assert_almost_equal(17.94444444444444,
-                               psp.get_peak_amplitude(t, v, 0., 2.5, 'EXC'),
-                               places = 14)
+def test_get_peak_amplitude() :
+    # Use numpy to read the trace data from the txt file
+    data = np.loadtxt(os.path.join(os.path.dirname(__file__), 'input_data', 'example_trace.txt'))
 
+    ntools.assert_almost_equal(45.36493144290979,
+                               psp.get_peak_amplitude(time=data[:, 0],
+                                                      voltage=data[:, 1],
+                                                      t_stim=1400,
+                                                      syn_type='EXC'))
 
-def test_get_peak_amplitude_INH() :
-    t = np.linspace(1, 10, 10)
-    v = np.linspace(-10, 9, 10)
-    ntools.assert_almost_equal(3.166666666666666,
-                               psp.get_peak_amplitude(t, v, 0., 2.5, 'INH'),
-                               places = 14)
+    ntools.assert_almost_equal(40.91181329374111,
+                               psp.get_peak_amplitude(time=data[:, 0],
+                                                      voltage=data[:, 1],
+                                                      t_stim=1400,
+                                                      syn_type='INH'))
+
 
 
 def _make_traces(vss, ts):
@@ -235,7 +212,7 @@ def test_amplitude_from_traces() :
 
     traces = _make_traces(v, t)
     amplitude = psp.calculate_amplitude(traces, 'EXC', trace_filter, t_stim)
-    ntools.assert_equal(amplitude, 34.0)
+    ntools.assert_equal(amplitude, 33.99243604007126)
 
 
 def test_amplitude_from_traces_filter_all_returns_nan() :
@@ -270,4 +247,4 @@ def test_compute_scaling_INH():
 
 
 def test_compute_scaling_invalid():
-    ntools.assert_raises(KeyError, psp.compute_scaling, 1.0, 2.0, -70, 'err')
+    ntools.assert_raises(AttributeError, psp.compute_scaling, 1.0, 2.0, -70, 'err')
