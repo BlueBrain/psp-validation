@@ -6,12 +6,17 @@ Minis are not used because they provide too much noise.
 No current injection other than the current to achieve the holding potential
 are included. (no HypAmp for instance)
 """
+import os
 
+import bluepy
+import h5py
 import numpy as np
+
 import efel
-
 from psp_validation import get_logger
-
+from psp_validation.pathways import get_pairs, get_synapse_type
+from psp_validation.persistencyutils import dump_pair_traces
+from psp_validation.utils import load_config, load_yaml
 
 LOGGER = get_logger('lib')
 
@@ -40,6 +45,7 @@ def calculate_amplitude(traces,
 class SpikeFilter(object):
     """Functor to filter traces with spikes
     """
+
     def __init__(self, t_start, v_max):
 
         self.t0 = t_start
@@ -169,5 +175,184 @@ def compute_scaling(psp1, psp2, v_holding, syn_type):
         'EXC': 0.0,
         'INH': -80.0,
     }[syn_type]
+
     d = np.abs(E_rev - v_holding)
     return (psp2 * (1 - (psp1 / d))) / (psp1 * (1 - (psp2 / d)))
+
+
+def _import_run_pair_simulation_suite():
+    '''Return run_pair_simulation_suite but can also easily be mocked'''
+    from psp_validation.simulation import run_pair_simulation_suite
+    return run_pair_simulation_suite
+
+
+def run(
+    pathway_files, blueconfig, targets, output_dir, num_pairs, num_trials,
+    clamp='current', dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
+):
+    """ Obtain PSP amplitudes; derive scaling factors """
+    # TODO: `pylint` is likely right about "too many everything"
+    # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+    run_pair_simulation_suite = _import_run_pair_simulation_suite()
+
+    if clamp == 'voltage':
+        if dump_amplitudes:
+            LOGGER.warning("Voltage clamp mode; ignoring '--dump-amplitudes' flag")
+            dump_amplitudes = False
+
+    np.random.seed(seed)
+
+    circuit = bluepy.Circuit(blueconfig).v2
+    targets = load_yaml(targets)
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    for config_path in pathway_files:
+        title, config = load_config(config_path)
+        LOGGER.info("Processing '%s' pathway...", title)
+
+        pathway = config['pathway']
+        projection = pathway.get('projection')
+        if 'pairs' in pathway:
+            for item in pathway['pairs']:
+                assert isinstance(item, list) and len(item) == 2
+            pairs = pathway['pairs']
+        else:
+            LOGGER.info("Querying pathway pairs...")
+
+            def get_target(name):
+                return targets.get(name, name)
+
+            pre = get_target(pathway['pre'])
+            post = get_target(pathway['post'])
+            pairs = get_pairs(
+                circuit, pre, post, num_pairs,
+                constraints=pathway.get('constraints'),
+                projection=projection
+            )
+
+        if projection is None:
+            pre_syn_type = get_synapse_type(circuit, [p[0] for p in pairs])
+        else:
+            pre_syn_type = "EXC"
+
+        min_ampl = config.get('min_amplitude', 0.0)
+
+        protocol = config['protocol']
+        if 'hold_I' in protocol:
+            LOGGER.warning(
+                "`hold_I` parameter in protocol is deprecated and will be ignored; "
+                "please remove it from '%s' pathway config",
+                config_path
+            )
+            del protocol['hold_I']
+        if 'v_clamp' in protocol:
+            LOGGER.warning(
+                "`v_clamp` parameter in protocol is deprecated and will be ignored; "
+                "please remove it from '%s' pathway config.\n"
+                "For emulating voltage clamp, pass `--clamp voltage` to `psp run`.",
+                config_path
+            )
+            del protocol['v_clamp']
+
+        t_stim = config['protocol']['t_stim']
+        if isinstance(t_stim, list):
+            # in case of input spike train, use first spike time as split point
+            t_stim = min(t_stim)
+
+        t_start = t_stim - 10.
+        spike_filter = default_spike_filter(t_start)
+
+        if dump_traces:
+            traces_path = os.path.join(output_dir, title + ".traces.h5")
+            # create empty H5 dump or overwrite existing one
+            with h5py.File(traces_path, 'w') as h5f:
+                h5f.attrs['version'] = u'1.1'
+                # we store voltage traces for current clamp and vice-versa
+                h5f.attrs['data'] = {
+                    'current': 'voltage',
+                    'voltage': 'current',
+                }[clamp]
+
+        all_amplitudes = []
+        for pre_gid, post_gid in pairs:
+            traces = run_pair_simulation_suite(
+                blueconfig, pre_gid, post_gid,
+                base_seed=seed,
+                n_trials=num_trials,
+                n_jobs=jobs,
+                clamp=clamp,
+                projection=projection,
+                **protocol
+            )
+
+            if clamp == 'current':
+                v_mean, t, v_used, _ = mean_pair_voltage_from_traces(traces, spike_filter)
+                if len(v_used) < len(traces):
+                    filtered_count = len(traces) - len(v_used)
+                    LOGGER.warning(
+                        "%d out of %d traces filtered out for a%d-a%d simulation(s) due to spiking",
+                        filtered_count, len(traces),
+                        pre_gid, post_gid
+                    )
+                if v_mean is None:
+                    LOGGER.warning(
+                        "Could not extract PSP amplitude for a%d-a%d pair due to spiking",
+                        pre_gid, post_gid
+                    )
+                    average = None
+                    ampl = np.nan
+                else:
+                    average = np.stack([v_mean, t])
+                    ampl = get_peak_amplitude(t, v_mean, t_stim, pre_syn_type)
+                    if ampl < min_ampl:
+                        LOGGER.warning(
+                            "PSP amplitude below given threshold for a%d-a%d pair (%.3g < %.3g)",
+                            pre_gid, post_gid,
+                            ampl, min_ampl
+                        )
+                        ampl = np.nan
+                all_amplitudes.append(ampl)
+            else:
+                average = np.mean(traces, axis=0)
+
+            if dump_traces:
+                with h5py.File(traces_path, 'a') as h5f:
+                    dump_pair_traces(h5f, traces, average, pre_gid, post_gid)
+
+        if clamp != 'current':
+            continue
+
+        if dump_amplitudes:
+            amplitudes_path = os.path.join(output_dir, title + ".amplitudes.txt")
+            np.savetxt(amplitudes_path, all_amplitudes, fmt="%.9f")
+
+        model_mean = np.nanmean(all_amplitudes)
+        model_std = np.nanstd(all_amplitudes)
+
+        if 'reference' in config:
+            reference = config['reference']['psp_amplitude']
+            v_holding = config['protocol']['hold_V']
+
+            if v_holding is None:
+                traces_results = efel.getFeatureValues(traces, ['voltage_base'])
+                v_holding = traces_results[0]['voltage_base'][0]
+
+            scaling = compute_scaling(model_mean, reference['mean'], v_holding, pre_syn_type)
+        else:
+            reference = None
+            scaling = None
+
+        summary_path = os.path.join(output_dir, title + ".summary.yaml")
+        with open(summary_path, 'w') as f:
+            f.write("pathway: {}\n".format(title))
+            f.write("model:\n")
+            f.write("    mean: {}\n".format(model_mean))
+            f.write("    std: {}\n".format(model_std))
+            if reference is not None:
+                f.write("reference:\n")
+                f.write("    mean: {}\n".format(reference['mean']))
+                f.write("    std: {}\n".format(reference['std']))
+            if scaling is not None:
+                f.write("scaling: {}\n".format(scaling))

@@ -11,12 +11,13 @@ setup(
     version=__version__,
     install_requires=[
         'click>=7.0',
+        'efel>=3.0.39',
         'future>=0.16',
         'h5py>=2.7',
         'joblib>=0.13',
+        'libsonata>=0.0.3',
         'numpy>=1.10',
         'tqdm>=4.0',
-        'efel>=3.0.39',
     ] + [
         'bglibpy>=4.0.13,<5.0',
         'bluepy>=0.13',
@@ -26,9 +27,8 @@ setup(
     author_email="bbp-ou-nse@groupes.epfl.ch",
     description="PSP analysis tools",
     license="BBP-internal-confidential",
-    scripts=[
-        'apps/psp',
-    ],
+    entry_points={
+        'console_scripts': ['psp=psp_validation.cli:cli']},
     url="https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
     download_url="ssh://bbpcode.epfl.ch/nse/psp-validation",
     include_package_data=True

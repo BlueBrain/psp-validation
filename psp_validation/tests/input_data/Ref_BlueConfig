@@ -1,0 +1,20 @@
+Run Default
+{
+    Date    10:10:18
+
+    MorphologyPath /a
+    METypePath /b
+    CellLibraryFile circuit.mvd3
+    CircuitPath psp_validation/tests/input_data
+    nrnPath /c
+
+    CurrentDir /d
+    OutputRoot /e
+
+    BaseSeed 12345
+    RunMode LoadBalance
+    CircuitTarget mc2_Column
+    Duration 2000
+    Dt 0.025
+    ForwardSkip 1000
+}
