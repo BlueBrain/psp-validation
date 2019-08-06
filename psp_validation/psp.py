@@ -166,14 +166,14 @@ def _check_numpy_ndarrays(*args):
             raise ValueError("Argument must be numpy.ndarray")
 
 
-def compute_scaling(psp1, psp2, v_holding, syn_type):
+def compute_scaling(psp1, psp2, v_holding, syn_type, params):
     """ Compute conductance scaling factor. """
     if syn_type not in {'EXC', 'INH'}:
         raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
 
     E_rev = {
-        'EXC': 0.0,
-        'INH': -80.0,
+        'EXC': params.get('e_AMPA', 0.0),
+        'INH': params.get('e_GABAA', -80.0),
     }[syn_type]
 
     d = np.abs(E_rev - v_holding)
@@ -277,7 +277,7 @@ def run(
 
         all_amplitudes = []
         for pre_gid, post_gid in pairs:
-            traces = run_pair_simulation_suite(
+            params, traces = run_pair_simulation_suite(
                 blueconfig, pre_gid, post_gid,
                 base_seed=seed,
                 n_trials=num_trials,
@@ -339,7 +339,8 @@ def run(
                 traces_results = efel.getFeatureValues(traces, ['voltage_base'])
                 v_holding = traces_results[0]['voltage_base'][0]
 
-            scaling = compute_scaling(model_mean, reference['mean'], v_holding, pre_syn_type)
+            scaling = compute_scaling(model_mean, reference['mean'], v_holding, pre_syn_type,
+                                      params)
         else:
             reference = None
             scaling = None

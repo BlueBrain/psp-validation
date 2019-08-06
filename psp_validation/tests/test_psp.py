@@ -241,17 +241,20 @@ def test_amplitude_from_traces_filter_all_returns_nan() :
 
 
 def test_compute_scaling_EXC():
-    result = psp.compute_scaling(1.0, 2.0, -70.0, 'EXC')
+    result = psp.compute_scaling(1.0, 2.0, -70.0, 'EXC', {})
     assert_almost_equal(result, 2.029411764)
 
 
 def test_compute_scaling_INH():
-    result = psp.compute_scaling(1.0, 2.0, -70.0, 'INH')
+    result = psp.compute_scaling(1.0, 2.0, -70.0, 'INH', {})
     assert_almost_equal(result, 2.25)
+
+    result = psp.compute_scaling(1.0, 2.0, -70.0, 'INH', {'e_GABAA': -94.0})
+    assert_almost_equal(result, 2.0909090909)
 
 
 def test_compute_scaling_invalid():
-    assert_raises(AttributeError, psp.compute_scaling, 1.0, 2.0, -70, 'err')
+    assert_raises(AttributeError, psp.compute_scaling, 1.0, 2.0, -70, 'err', {})
 
 
 

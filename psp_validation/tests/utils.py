@@ -21,4 +21,4 @@ def mock_run_pair_simulation_suite(*args, **kwargs):
     time = data[:, 0]
     voltage = data[:, 1]
     trace = (voltage, time)
-    return [trace]
+    return {'e_GABAA': -90}, [trace]

@@ -27,6 +27,20 @@ def _bglibpy():
     return bglibpy
 
 
+def get_synapse_unique_value(cell, getter):
+    '''Return a value that is supposed to be the same accross all synapses
+
+    Args:
+        cell: a cell
+        getter: the getter function to be applied to each synapse
+    '''
+    values = list({getter(synapse) for synapse in cell.synapses.values()})
+    if not len(values) == 1:
+        raise AssertionError('Expected one value, got {}.\nHere are the values'
+                             '{}'.format(len(values), values))
+    return values[0]
+
+
 def run_pair_simulation(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
@@ -58,7 +72,8 @@ def run_pair_simulation(
 
     LOGGER.info('sim_pair: a%d -> a%d (seed=%d)...', pre_gid, post_gid, base_seed)
 
-    ssim = _bglibpy().ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed)
+    ssim = _bglibpy().ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed,
+                                rng_mode='Random123')
     ssim.instantiate_gids(
         [post_gid],
         add_replay=False,
@@ -70,6 +85,15 @@ def run_pair_simulation(
         projection=projection
     )
     post_cell = ssim.cells[post_gid]
+
+    if get_synapse_unique_value(post_cell, lambda synapse: synapse.is_inhibitory()):
+        params = {'e_GABAA': get_synapse_unique_value(
+            post_cell, lambda synapse: synapse.hsynapse.e_GABAA)}
+    else:
+        # FIXME:
+        # params = {'e_AMPA': get_synapse_unique_value(
+        #     post_cell, lambda synapse: synapse.hsynapse.e)}
+        params = {}
 
     if post_ttx:
         post_cell.enable_ttx()
@@ -96,7 +120,7 @@ def run_pair_simulation(
 
     LOGGER.info('sim_pair: a%d -> a%d (seed=%d)... done', pre_gid, post_gid, base_seed)
 
-    return y, t
+    return params, y, t
 
 
 def run_pair_simulation_suite(
@@ -145,7 +169,7 @@ def run_pair_simulation_suite(
         n_jobs = -1
 
     worker = joblib.delayed(run_pair_simulation)
-    result = joblib.Parallel(n_jobs=n_jobs, backend='loky')([
+    results = joblib.Parallel(n_jobs=n_jobs, backend='loky')([
         worker(
             blue_config=blue_config,
             pre_gid=pre_gid,
@@ -163,4 +187,6 @@ def run_pair_simulation_suite(
         for k in range(n_trials)
     ])
 
-    return np.array(result)
+    params = results[0][0]
+    traces = np.array([(result[1], result[2]) for result in results])
+    return params, traces
