@@ -8,7 +8,7 @@ import numpy as np
 import math
 from itertools import repeat
 from psp_validation import psp
-from psp_validation.tests.utils import mock_run_pair_simulation_suite, setup_tempdir
+from .utils import mock_run_pair_simulation_suite, setup_tempdir
 
 
 _bconfig = "psp_validation/tests/input_data/sim_tencell_example1/RefBlueConfig_Scaling"
@@ -263,7 +263,7 @@ def test_compute_scaling_invalid():
 @patch('psp_validation.psp.bluepy.Circuit')
 @patch('psp_validation.psp.get_synapse_type', return_value='EXC')
 def test_run(m1, m2, m3, m4):
-    hippo_path = os.path.join(dirname(__file__), '..', '..', 'usecases', 'hippocampus')
+    hippo_path = os.path.join(dirname(__file__), '..', 'usecases', 'hippocampus')
 
     with setup_tempdir('test-psp-run') as folder:
         psp.run(

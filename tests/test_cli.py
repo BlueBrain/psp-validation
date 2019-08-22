@@ -5,7 +5,7 @@ from nose.tools import assert_equal, ok_
 from click.testing import CliRunner
 from psp_validation.cli import cli
 
-from psp_validation.tests.utils import setup_tempdir, mock_run_pair_simulation_suite
+from .utils import setup_tempdir, mock_run_pair_simulation_suite
 
 
 @patch('psp_validation.psp._import_run_pair_simulation_suite', return_value=mock_run_pair_simulation_suite)
@@ -14,7 +14,7 @@ from psp_validation.tests.utils import setup_tempdir, mock_run_pair_simulation_s
 @patch('psp_validation.psp.get_synapse_type', return_value='EXC')
 def test_cli(m1, m2, m3, m4):
     runner = CliRunner()
-    hippo_path = os.path.join(dirname(__file__), '..', '..', 'usecases', 'hippocampus')
+    hippo_path = os.path.join(dirname(__file__), '..', 'usecases', 'hippocampus')
 
     with setup_tempdir('test-psp-cli') as folder:
         runner.invoke(cli,
