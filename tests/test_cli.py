@@ -7,6 +7,7 @@ from psp_validation.cli import cli
 
 from .utils import setup_tempdir, mock_run_pair_simulation_suite
 
+_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_data")
 
 @patch('psp_validation.psp._import_run_pair_simulation_suite', return_value=mock_run_pair_simulation_suite)
 @patch('psp_validation.psp.get_pairs', side_effect=lambda *args, **kargs: [(14194, 14494)])
@@ -25,8 +26,8 @@ def test_cli(m1, m2, m3, m4):
                        '-n', '1',
                        '-r', '1',
                        '-j', '1',
-                       os.path.join(hippo_path, 'pathways', 'SP_PC-SP_PC.yaml'),
+                       os.path.join(_path, 'pathway.yaml'),
                        '--dump-traces',
                        '--dump-amplitudes'])
 
-        ok_(os.path.exists(os.path.join(folder, 'SP_PC-SP_PC.summary.yaml')))
+        ok_(os.path.exists(os.path.join(folder, 'pathway.summary.yaml')))

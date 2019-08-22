@@ -70,6 +70,10 @@ def run(
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
     # pylint: disable=too-many-arguments
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     run_(
         pathway_files, blueconfig, targets, output_dir, num_pairs, num_trials,
         clamp, dump_traces, dump_amplitudes, seed, jobs)
