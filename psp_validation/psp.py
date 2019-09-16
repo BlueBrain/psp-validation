@@ -18,6 +18,7 @@ import efel
 from psp_validation import get_logger, PSPError
 from psp_validation.pathways import get_pairs, get_synapse_type
 from psp_validation.persistencyutils import dump_pair_traces
+from psp_validation.simulation import run_pair_simulation_suite
 from psp_validation.utils import load_config, load_yaml
 
 LOGGER = get_logger('lib')
@@ -177,12 +178,6 @@ def compute_scaling(psp1, psp2, v_holding, syn_type, params):
     return (psp2 * (1 - (psp1 / d))) / (psp1 * (1 - (psp2 / d)))
 
 
-def _import_run_pair_simulation_suite():
-    '''Return run_pair_simulation_suite but can also easily be mocked'''
-    from psp_validation.simulation import run_pair_simulation_suite
-    return run_pair_simulation_suite
-
-
 def _init_traces_dump(output_dir, title, clamp):
     '''create empty H5 dump or overwrite existing one'''
     traces_path = os.path.join(output_dir, title + ".traces.h5")
@@ -211,6 +206,7 @@ def _get_pathway_pairs(pathway, circuit, num_pairs, projection, targets):
         LOGGER.info("Querying pathway pairs...")
 
         def get_target(name):
+            '''get the target'''
             return targets.get(name, name)
 
         pre = get_target(pathway['pre'])
@@ -366,25 +362,28 @@ def run(
     clamp='current', dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
-    # pylint: disable=too-many-arguments,too-many-locals
-    run_pair_simulation_suite = _import_run_pair_simulation_suite()
+    # pylint: disable=too-many-arguments
 
     if clamp == 'voltage' and dump_amplitudes:
         raise PSPError("Voltage clamp mode; Can't pass --dump-amplitudes flag")
 
     np.random.seed(seed)
 
-    circuit = bluepy.Circuit(blueconfig).v2
-    targets = load_yaml(targets)
-
-    protocol_params = ProtocolParameters(clamp, circuit, targets, num_pairs, num_trials,
-                                         dump_amplitudes, dump_traces)
+    protocol_params = ProtocolParameters(clamp,
+                                         bluepy.Circuit(blueconfig).v2,
+                                         load_yaml(targets),
+                                         num_pairs,
+                                         num_trials,
+                                         dump_amplitudes,
+                                         dump_traces)
     for config_path in pathway_files:
         sim_runner = partial(run_pair_simulation_suite,
                              blueconfig=blueconfig,
                              base_seed=seed,
                              n_trials=num_trials,
                              n_jobs=jobs,
-                             clamp=clamp)
+                             clamp=clamp,
+                             log_level=get_logger().level
+                             )
 
         _run_pathway(config_path, output_dir, sim_runner, protocol_params)

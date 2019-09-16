@@ -9,7 +9,8 @@ from .utils import setup_tempdir, mock_run_pair_simulation_suite
 
 _path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_data")
 
-@patch('psp_validation.psp._import_run_pair_simulation_suite', return_value=mock_run_pair_simulation_suite)
+
+@patch('psp_validation.psp.run_pair_simulation_suite', return_value=mock_run_pair_simulation_suite())
 @patch('psp_validation.psp.get_pairs', side_effect=lambda *args, **kargs: [(14194, 14494)])
 @patch('psp_validation.psp.bluepy.Circuit')
 @patch('psp_validation.psp.get_synapse_type', return_value='EXC')

@@ -221,13 +221,13 @@ def test__init_traces_dump():
     with setup_tempdir('test-init-traces-dump') as folder:
         traces_path = psp._init_traces_dump(folder, 'title', 'current')
 
-        with h5py.File(traces_path) as h5f:
+        with h5py.File(traces_path, 'r') as h5f:
             assert_equal(h5f.attrs['data'], 'voltage')
 
     with setup_tempdir('test-init-traces-dump') as folder:
         traces_path = psp._init_traces_dump(folder, 'title', 'voltage')
 
-        with h5py.File(traces_path) as h5f:
+        with h5py.File(traces_path, 'r') as h5f:
             assert_equal(h5f.attrs['data'], 'current')
 
 
@@ -260,7 +260,7 @@ def test__run_one_pair():
                           protocol_params, pathway_params, all_amplitudes, h5_file)
         assert_almost_equal(all_amplitudes, [94.0238021084036])
 
-        with h5py.File(h5_file) as f:
+        with h5py.File(h5_file, 'r') as f:
             ok_('/traces/a1-a2' in f)
             group = f['/traces/a1-a2']
             assert_equal(group.attrs['pre_gid'], 1)
@@ -285,17 +285,25 @@ def test__run_pathway_no_pairs(m1):
                          folder, MagicMock(), protocol_params)
         assert_array_equal(os.listdir(folder),
                            ['pathway.traces.h5'])
-        with h5py.File(os.path.join(folder, 'pathway.traces.h5')) as f:
+        with h5py.File(os.path.join(folder, 'pathway.traces.h5'), 'r') as f:
             assert_array_equal(list(f.keys()), [])
 
 @patch('psp_validation.psp.get_synapse_type', return_value='EXC')
 @patch('psp_validation.psp._get_pathway_parameters', return_value=psp.PathwayParameters(
-    pathway={'pre': 'SP_PC', 'post': 'SP_PVBC', 'constraints': {'max_dist_x': 100.0, 'max_dist_y': 100.0, 'max_dist_z': 100.0}},
+    pathway={'pre': 'SP_PC',
+             'post': 'SP_PVBC',
+             'constraints': {'max_dist_x': 100.0,
+                             'max_dist_y': 100.0,
+                             'max_dist_z': 100.0}},
     projection=None,
     pairs=[(1, 2)],
     pre_syn_type='EXC',
     min_ampl=0.0,
-    protocol={'record_dt': 0.1, 'hold_V': -70.0, 't_stim': 800.0, 't_stop': 900.0, 'post_ttx': False},
+    protocol={'record_dt': 0.1,
+              'hold_V': -70.0,
+              't_stim': 800.0,
+              't_stop': 900.0,
+              'post_ttx': False},
     t_stim=800.0, spike_filter=psp.SpikeFilter(t_start=0, v_max=100)))
 def test__run_pathway(mock_get_pathway_parameters, mock_get_synapse_type):
     protocol_params = psp.ProtocolParameters(
@@ -316,7 +324,7 @@ def test__run_pathway(mock_get_pathway_parameters, mock_get_synapse_type):
                          protocol_params=protocol_params)
         assert_array_equal(list(sorted(os.listdir(folder))),
                            ['pathway.amplitudes.txt', 'pathway.summary.yaml', 'pathway.traces.h5'])
-        with h5py.File(os.path.join(folder, 'pathway.traces.h5')) as f:
+        with h5py.File(os.path.join(folder, 'pathway.traces.h5'), 'r') as f:
             assert_array_equal(list(f['traces']['a1-a2'].keys()), ['average', 'trials'])
 
     with setup_tempdir('test-run-pathway') as folder:
@@ -330,8 +338,8 @@ def test__run_pathway(mock_get_pathway_parameters, mock_get_synapse_type):
 
 
 
-@patch('psp_validation.psp._import_run_pair_simulation_suite',
-       return_value=mock_run_pair_simulation_suite)
+@patch('psp_validation.psp.run_pair_simulation_suite',
+       return_value=mock_run_pair_simulation_suite())
 @patch('psp_validation.psp.get_pairs', side_effect=lambda *args, **kargs: [(14194, 14494)])
 @patch('psp_validation.psp.bluepy.Circuit')
 @patch('psp_validation.psp.get_synapse_type', return_value='EXC')

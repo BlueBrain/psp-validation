@@ -2,6 +2,7 @@
 
 import os
 import collections
+import logging
 
 import joblib
 import numpy as np
@@ -20,10 +21,20 @@ def _ensure_list(v):
         return [v]
 
 
-def _bglibpy():
+def _bglibpy(level):
     import bglibpy
     if 'BGLIBPY_RNG_MODE' in os.environ:
         bglibpy.rngsettings.default_rng_mode = os.environ['BGLIBPY_RNG_MODE']
+
+    #  mapping from https://bbpteam.epfl.ch/project/issues/browse/NSETM-548
+    #  16/Sep/19 2:15 PM
+    if level < logging.INFO:
+        bglibpy.set_verbose(0)
+    elif level == logging.INFO:
+        bglibpy.set_verbose(2)
+    elif level == logging.DEBUG:
+        bglibpy.set_verbose(10)
+
     return bglibpy
 
 
@@ -44,7 +55,7 @@ def get_synapse_unique_value(cell, getter):
 def run_pair_simulation(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
-    hold_I=None, hold_V=None, post_ttx=False, projection=None, log_level=None
+    hold_I=None, hold_V=None, post_ttx=False, projection=None, log_level=logging.WARNING
 ):
     """
     Run single pair simulation trial.
@@ -67,13 +78,14 @@ def run_pair_simulation(
         postsynaptic cell soma voltage / injected current trace [(Y, t) tuple]
     """
     # pylint: disable=too-many-arguments,too-many-locals
-    if log_level is not None:
-        setup_logging(log_level)
+    setup_logging(log_level)
 
     LOGGER.info('sim_pair: a%d -> a%d (seed=%d)...', pre_gid, post_gid, base_seed)
 
-    ssim = _bglibpy().ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed,
-                                rng_mode='Random123')
+    ssim = _bglibpy(log_level).ssim.SSim(blue_config,
+                                         record_dt=record_dt,
+                                         base_seed=base_seed,
+                                         rng_mode='Random123')
     ssim.instantiate_gids(
         [post_gid],
         add_replay=False,
@@ -127,7 +139,8 @@ def run_pair_simulation_suite(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
     hold_V=None, post_ttx=False, clamp='current', projection=None,
-    n_trials=1, n_jobs=None
+    n_trials=1, n_jobs=None,
+    log_level=logging.WARNING
 ):
     """
     Run single pair simulation suite (i.e. multiple trials).
@@ -146,6 +159,7 @@ def run_pair_simulation_suite(
         projection: projection name (None for main connectome)
         n_trials: number of trials to run
         n_jobs: number of jobs to run in parallel (None for sequential runs)
+        log_level: logging level
 
     k-th trial would use (`base_seed` + k) as base seed; k=0..N-1.
 
@@ -153,10 +167,11 @@ def run_pair_simulation_suite(
         N x 2 x T numpy array with trials voltage / current traces (Y_k, t_k)
     """
     # pylint: disable=too-many-arguments,too-many-locals
+
     assert clamp in ('current', 'voltage')
     if clamp == 'current':
         LOGGER.info("Calculating a%d holding current...", post_gid)
-        hold_I, _ = _bglibpy().holding_current(  # pylint: disable=no-member
+        hold_I, _ = _bglibpy(log_level).holding_current(  # pylint: disable=no-member
             hold_V, post_gid, blue_config, enable_ttx=post_ttx
         )
         LOGGER.info("a%d holding current: %.3f nA", post_gid, hold_I)

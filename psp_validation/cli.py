@@ -20,7 +20,6 @@ import h5py
 from psp_validation import get_logger, setup_logging
 from psp_validation.utils import load_yaml
 from psp_validation.version import VERSION
-from psp_validation.psp import run as run_
 
 LOGGER = get_logger()
 
@@ -70,13 +69,13 @@ def run(
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
     # pylint: disable=too-many-arguments
+    from psp_validation import psp
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    run_(
-        pathway_files, blueconfig, targets, output_dir, num_pairs, num_trials,
-        clamp, dump_traces, dump_amplitudes, seed, jobs)
+    psp.run(pathway_files, blueconfig, targets, output_dir, num_pairs, num_trials,
+            clamp, dump_traces, dump_amplitudes, seed, jobs)
 
 
 @cli.command()
