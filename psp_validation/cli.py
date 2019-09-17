@@ -15,8 +15,8 @@ import os
 import logging
 
 import click
-import h5py
 
+import psp_validation
 from psp_validation import get_logger, setup_logging
 from psp_validation.utils import load_yaml
 from psp_validation.version import VERSION
@@ -129,53 +129,7 @@ def summary(summary_files, with_scaling=False, style='default'):
 @click.option("-o", "--output-dir", required=True, help="Path to output folder")
 def plot(traces_files, output_dir):
     """ Plot voltage traces stored in .h5 dump """
-    # pylint: disable=too-many-locals
-    import matplotlib
-    matplotlib.use('Agg')
-    matplotlib.rcParams['axes.formatter.useoffset'] = False
-    import matplotlib.pyplot as plt
-    from tqdm import tqdm
-
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    for filepath in traces_files:
-        pathway = os.path.basename(filepath).split(".", 1)[0]
-        pathway_output_dir = os.path.join(output_dir, pathway)
-        if not os.path.exists(pathway_output_dir):
-            os.makedirs(pathway_output_dir)
-
-        with h5py.File(filepath, 'r') as h5f:
-            if len(h5f) != 1:
-                raise RuntimeError("Unexpected HDF5 layout")
-            root = next(h5f.itervalues())
-            if root.name != "/traces":
-                raise RuntimeError("Unexpected HDF5 layout")
-            content = h5f.attrs.get('data', 'voltage')
-            y_label = {
-                'current': 'I [nA]',
-                'voltage': 'V [mV]',
-            }[content]
-            for pair in tqdm(root.itervalues(), total=len(root), desc=pathway):
-                title = "a{pre}-a{post}".format(
-                    pre=pair.attrs['pre_gid'], post=pair.attrs['post_gid']
-                )
-                figure = plt.figure()
-                ax = figure.gca()
-                for k, trial in enumerate(pair['trials']):
-                    label = 'trials' if (k == 0) else None  # show 'trials' only once in the legend
-                    v_k, t_k = trial
-                    ax.plot(t_k, v_k, color='gray', lw=1, ls=':', alpha=0.7, label=label)
-                if 'average' in pair:
-                    v_avg, t_avg = pair['average']
-                    ax.plot(t_avg, v_avg, lw=2, label="average")
-                ax.grid()
-                ax.set_xlabel('t [ms]')
-                ax.set_ylabel(y_label)
-                ax.legend()
-                ax.set_title(title)
-                figure.savefig(os.path.join(pathway_output_dir, title + ".png"), dpi=300)
-                plt.close(figure)
+    psp_validation.plot.voltage_traces(traces_files, output_dir)
 
 
 if __name__ == "__main__":
