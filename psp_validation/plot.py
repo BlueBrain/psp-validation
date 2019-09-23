@@ -2,6 +2,8 @@
 import os
 import h5py
 import matplotlib
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 def voltage_traces(traces_files, output_dir):
@@ -9,8 +11,6 @@ def voltage_traces(traces_files, output_dir):
     # pylint: disable=too-many-locals
     matplotlib.use('Agg')
     matplotlib.rcParams['axes.formatter.useoffset'] = False
-    import matplotlib.pyplot as plt
-    from tqdm import tqdm
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

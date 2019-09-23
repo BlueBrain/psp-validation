@@ -22,6 +22,7 @@ def _ensure_list(v):
 
 
 def _bglibpy(level):
+    # pylint: disable=import-outside-toplevel
     import bglibpy
     if 'BGLIBPY_RNG_MODE' in os.environ:
         bglibpy.rngsettings.default_rng_mode = os.environ['BGLIBPY_RNG_MODE']

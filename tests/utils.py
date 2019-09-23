@@ -3,6 +3,11 @@ import numpy as np
 import shutil
 import tempfile
 from contextlib import contextmanager
+from itertools import repeat
+
+def _make_traces(vss, ts):
+    return list(zip(vss, repeat(ts)))
+
 
 
 @contextmanager

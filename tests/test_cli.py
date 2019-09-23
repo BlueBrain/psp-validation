@@ -9,11 +9,10 @@ from .utils import setup_tempdir, mock_run_pair_simulation_suite
 
 _path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_data")
 
-
 @patch('psp_validation.psp.run_pair_simulation_suite', return_value=mock_run_pair_simulation_suite())
-@patch('psp_validation.psp.get_pairs', side_effect=lambda *args, **kargs: [(14194, 14494)])
+@patch('psp_validation.pathways._get_pathway_pairs', side_effect=lambda *args, **kargs: [(14194, 14494)])
 @patch('psp_validation.psp.bluepy.Circuit')
-@patch('psp_validation.psp.get_synapse_type', return_value='EXC')
+@patch('psp_validation.pathways.get_synapse_type', return_value='EXC')
 def test_cli(m1, m2, m3, m4):
     runner = CliRunner()
     hippo_path = os.path.join(dirname(__file__), '..', 'usecases', 'hippocampus')
