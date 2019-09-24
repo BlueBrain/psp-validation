@@ -16,7 +16,6 @@ import logging
 
 import click
 
-import psp_validation
 from psp_validation import get_logger, setup_logging
 from psp_validation.utils import load_yaml
 from psp_validation.version import VERSION
@@ -129,7 +128,8 @@ def summary(summary_files, with_scaling=False, style='default'):
 @click.option("-o", "--output-dir", required=True, help="Path to output folder")
 def plot(traces_files, output_dir):
     """ Plot voltage traces stored in .h5 dump """
-    psp_validation.plot.voltage_traces(traces_files, output_dir)
+    from psp_validation.plot import voltage_traces
+    voltage_traces(traces_files, output_dir)
 
 
 if __name__ == "__main__":

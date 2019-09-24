@@ -2,7 +2,6 @@
 import os
 import h5py
 import matplotlib
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 
@@ -10,6 +9,8 @@ def voltage_traces(traces_files, output_dir):
     """ Plot voltage traces stored in .h5 dump """
     # pylint: disable=too-many-locals
     matplotlib.use('Agg')
+    # pylint: disable=import-outside-toplevel
+    import matplotlib.pyplot as plt
     matplotlib.rcParams['axes.formatter.useoffset'] = False
 
     if not os.path.exists(output_dir):

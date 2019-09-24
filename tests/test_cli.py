@@ -31,3 +31,15 @@ def test_cli(m1, m2, m3, m4):
                        '--dump-amplitudes'])
 
         ok_(os.path.exists(os.path.join(folder, 'pathway.summary.yaml')))
+
+
+def test_plot_cli():
+    runner = CliRunner()
+
+    with setup_tempdir('test-psp-plot-cli') as folder:
+        runner.invoke(cli,
+                      ['plot', os.path.join(dirname(__file__), 'small-traces.h5'), '-o', folder])
+
+        assert_equal(os.listdir(folder), ['small-traces'])
+        out_folder = os.path.join(folder, 'small-traces')
+        assert_equal(os.listdir(out_folder), ['a11086-a10127.png'])
