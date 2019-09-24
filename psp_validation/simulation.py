@@ -83,10 +83,9 @@ def run_pair_simulation(
 
     LOGGER.info('sim_pair: a%d -> a%d (seed=%d)...', pre_gid, post_gid, base_seed)
 
-    ssim = _bglibpy(log_level).ssim.SSim(blue_config,
-                                         record_dt=record_dt,
-                                         base_seed=base_seed,
-                                         rng_mode='Random123')
+    bg = _bglibpy(log_level)
+    ssim = bg.ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed, rng_mode='Random123')
+
     ssim.instantiate_gids(
         [post_gid],
         add_replay=False,
@@ -103,10 +102,7 @@ def run_pair_simulation(
         params = {'e_GABAA': get_synapse_unique_value(
             post_cell, lambda synapse: synapse.hsynapse.e_GABAA)}
     else:
-        # FIXME:
-        # params = {'e_AMPA': get_synapse_unique_value(
-        #     post_cell, lambda synapse: synapse.hsynapse.e)}
-        params = {}
+        params = {'e_AMPA': bg.neuron.h.e_ProbAMPANMDA_EMS}
 
     if post_ttx:
         post_cell.enable_ttx()

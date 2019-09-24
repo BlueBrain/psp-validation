@@ -201,6 +201,12 @@ def test_compute_scaling_INH():
     result = test_module.compute_scaling(1.0, 2.0, -70.0, 'INH', {'e_GABAA': -94.0})
     assert_almost_equal(result, 2.0909090909)
 
+    result = test_module.compute_scaling(1.0, 2.0, -70.0, 'EXC', {})
+    assert_almost_equal(result, 2.0294117647058827)
+
+    result = test_module.compute_scaling(1.0, 2.0, -70.0, 'EXC', {'e_AMPA': -70.3})
+    assert_almost_equal(result, 0.8235294117647078)
+
 
 def test_compute_scaling_invalid():
     assert_raises(AttributeError, test_module.compute_scaling, 1.0, 2.0, -70, 'err', {})
