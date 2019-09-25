@@ -10,7 +10,8 @@ import numpy as np
 
 from psp_validation import get_logger
 from psp_validation.features import (compute_scaling, default_spike_filter, get_synapse_type,
-                                     mean_pair_voltage_from_traces, get_peak_amplitude)
+                                     resting_potential, mean_pair_voltage_from_traces,
+                                     get_peak_amplitude)
 from psp_validation.persistencyutils import dump_pair_traces
 from psp_validation.utils import load_config
 
@@ -190,6 +191,7 @@ class Pathway(object):
 
         self.t_start = self.t_stim - 10.
         self.spike_filter = default_spike_filter(self.t_start)
+        self.resting_potentials = list()
 
     def run(self):
         '''un the simulation for the given pathway'''
@@ -204,7 +206,6 @@ class Pathway(object):
         all_amplitudes = []
         for i_pair in range(len(self.pairs)):
             params = self._run_one_pair(i_pair, all_amplitudes, traces_path)
-            # all_traces.append(traces)
 
         if self.protocol_params.clamp != 'current':
             return
@@ -233,6 +234,21 @@ class Pathway(object):
             projection=self.config['pathway'].get('projection'),
             **self.config['protocol'])
 
+        average = self._post_run(pre_gid, post_gid, sim_results, all_amplitudes)
+
+        if self.protocol_params.dump_traces:
+            with h5py.File(traces_path, 'a') as h5f:
+                dump_pair_traces(h5f, sim_results, average, pre_gid, post_gid)
+
+        return sim_results.params
+
+    def _post_run(self, pre_gid, post_gid, sim_results, all_amplitudes):
+        '''Returns average of v_mean or current depending on clamping technique
+
+        Also:
+            - fill the all_amplitudes list
+            - Compute the resting potential if the holding voltage is None
+        '''
         if self.protocol_params.clamp == 'current':
             v_mean, t, v_used, _ = mean_pair_voltage_from_traces(sim_results, self.spike_filter)
             filtered_count = len(sim_results.voltages) - len(v_used)
@@ -253,19 +269,21 @@ class Pathway(object):
                 if ampl < self.min_ampl:
                     LOGGER.warning(
                         "PSP amplitude below given threshold for a%d-a%d pair (%.3g < %.3g)",
-                        pre_gid, post_gid,
-                        ampl, self.min_ampl
+                        pre_gid, post_gid, ampl, self.min_ampl
                     )
                     ampl = np.nan
+
+                # Use resting potential instead of hold_V when the later is None for the
+                # scaling computation: see NSETM-637
+                if 'reference' in self.config and self.config['protocol']['hold_V'] is None:
+                    self.resting_potentials.append(resting_potential(
+                        t, v_mean, self.t_start, self.t_stim))
+
             all_amplitudes.append(ampl)
         else:
             average = np.mean(sim_results.currents, axis=0)
 
-        if self.protocol_params.dump_traces:
-            with h5py.File(traces_path, 'a') as h5f:
-                dump_pair_traces(h5f, sim_results, average, pre_gid, post_gid)
-
-        return sim_results.params
+        return average
 
     def _init_traces_dump(self):
         '''create empty H5 dump or overwrite existing one'''
@@ -304,6 +322,8 @@ class Pathway(object):
         if 'reference' in self.config:
             reference = self.config['reference']['psp_amplitude']
             v_holding = self.config['protocol']['hold_V']
+            if v_holding is None:
+                v_holding = np.mean(self.resting_potentials)
             scaling = compute_scaling(model_mean, reference['mean'], v_holding, self.pre_syn_type,
                                       params)
         else:

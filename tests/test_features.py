@@ -1,4 +1,6 @@
+from mock import patch, MagicMock
 from itertools import repeat
+import pandas as pd
 import os
 
 import numpy as np
@@ -6,9 +8,10 @@ from numpy.testing import assert_array_equal
 from nose.tools import (assert_almost_equal, assert_dict_equal, assert_equal,
                         assert_raises, assert_true, ok_, raises)
 
+from psp_validation import PSPError
 import psp_validation.features as test_module
 from psp_validation.simulation import SimulationResult
-from .utils import _make_traces
+from .utils import _make_traces, mock_run_pair_simulation_suite
 
 
 _bconfig = "psp_validation/tests/input_data/sim_tencell_example1/RefBlueConfig_Scaling"
@@ -36,6 +39,13 @@ def test_get_peak_voltage_INH_with_timecut() :
     t_stim = 3
     peak = np.min(voltage[time > t_stim])
     assert_equal(peak, test_module.get_peak_voltage(time, voltage, t_stim, "INH"))
+
+
+def test__check_syntype():
+    test_module._check_syn_type("EXC")
+    test_module._check_syn_type("INH")
+    assert_raises(AttributeError, test_module._check_syn_type, "gloubi-boulga")
+
 
 
 @raises(Exception)
@@ -209,4 +219,25 @@ def test_compute_scaling_INH():
 
 
 def test_compute_scaling_invalid():
-    assert_raises(AttributeError, test_module.compute_scaling, 1.0, 2.0, -70, 'err', {})
+    assert_raises(PSPError, test_module.compute_scaling, 1.0, 2.0, -70, 'err', {})
+
+
+def test_resting_potential():
+    result = mock_run_pair_simulation_suite()
+    potential = test_module.resting_potential(result.time, result.voltages[0],  1000, 1400)
+    assert_almost_equal(potential, -42.18599807850207)
+
+
+    with patch('psp_validation.features.efel.getFeatureValues') as instance:
+        instance.return_value = None
+        assert_raises(PSPError, test_module.resting_potential,
+                      result.time, result.voltages[0],  1000, 1400)
+
+def test_get_synapse_type():
+    circuit = MagicMock()
+    circuit.cells.get.return_value = pd.Series(['EXC', 'EXC', 'EXC'])
+    group = MagicMock()
+    test_module.get_synapse_type(circuit, group)
+
+    circuit.cells.get.return_value = pd.Series(['EXC', 'EXC', 'INH'])
+    assert_raises(PSPError, test_module.get_synapse_type, circuit, group)

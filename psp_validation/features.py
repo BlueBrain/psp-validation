@@ -29,6 +29,11 @@ class SpikeFilter(object):
         return vs_filtered, t
 
 
+def _check_syn_type(syn_type):
+    if syn_type not in {'EXC', 'INH'}:
+        raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
+
+
 def default_spike_filter(t_start):
     """Return a SpikeFilter instance configured with t_start, v_max = -20
     """
@@ -91,10 +96,19 @@ def get_peak_voltage(time, voltage, t_stim, syn_type):
             could result in silently returning the wrong value.
     """
     _check_numpy_ndarrays(time, voltage)
-    if syn_type not in {'EXC', 'INH'}:
-        raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
+    _check_syn_type(syn_type)
     fun = np.max if syn_type == "EXC" else np.min
     return fun(voltage[time > t_stim])
+
+
+def efel_traces(time, voltage, t_stim):
+    '''Get traces in the format expected by efel.getFeatureValues'''
+    return [{
+        'T': time,
+        'V': voltage,
+        'stim_start': [t_stim],
+        'stim_end': [np.max(time)],
+    }]
 
 
 def get_peak_amplitude(time, voltage, t_stim, syn_type):
@@ -110,25 +124,37 @@ def get_peak_amplitude(time, voltage, t_stim, syn_type):
     Return:
     RMS of the diffetence between calculated mean v and peak v
     """
-    if syn_type not in {'EXC', 'INH'}:
-        raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
+    _check_syn_type(syn_type)
 
-    traces = [{
-        'T': time,
-        'V': voltage,
-        'stim_start': [t_stim],
-        'stim_end': [np.max(time)],
-    }]
+    traces = efel_traces(time, voltage, t_stim)
     peak = 'maximum_voltage' if syn_type == 'EXC' else 'minimum_voltage'
     traces_results = efel.getFeatureValues(traces, [peak, 'voltage_base'])
     amplitude = abs(traces_results[0][peak][0] - traces_results[0]['voltage_base'][0])
     return amplitude
 
 
+def resting_potential(time, voltage, t_start, t_stim):
+    '''Returns the resting potential
+    '''
+
+    traces = [{
+        'T': time,
+        'V': voltage,
+        'stim_start': [t_start],
+        'stim_end': [t_stim],
+    }]
+
+    feature_value = efel.getFeatureValues(traces, ['voltage_base'])
+    if feature_value is None:
+        raise PSPError('Something went wrong when computing efel voltage_base')
+
+    return feature_value[0]['voltage_base'][0]
+
+
 def compute_scaling(psp1, psp2, v_holding, syn_type, params):
     """ Compute conductance scaling factor. """
     if syn_type not in {'EXC', 'INH'}:
-        raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
+        raise PSPError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
 
     E_rev = {
         'EXC': params.get('e_AMPA', 0.0),

@@ -12,8 +12,6 @@ import psp_validation.pathways as test_module
 
 from .utils import mock_run_pair_simulation_suite, setup_tempdir
 
-_bconfig = "psp_validation/tests/input_data/sim_tencell_example1/RefBlueConfig_Scaling"
-
 _path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_data")
 
 _PATHWAY_PATH = os.path.join(_path, 'pathway.yaml')
@@ -120,7 +118,20 @@ def test__get_reference_and_scaling():
     assert_dict_equal(reference, {'mean': 12})
     assert_almost_equal(scaling, 0.11275791920953214)
 
-    # pathway.config['protocol']['hold_V'] = None
-    # reference, scaling = pathway._get_reference_and_scaling(model_mean, params)
-    # assert_dict_equal(reference, {'mean': 12})
-    # assert_almost_equal(scaling, 0.11275791920953214)
+    def pathway_null_hold_V(folder):
+        '''A helper to test a pathway with null hold_V'''
+        pathway = _dummy_pathway(dict(dump_traces=False, dump_amplitudes=False, output_dir=folder))
+        pathway.config['protocol']['hold_V'] = None
+        # let's have 2 pairs so averaging of resting potential does something
+        pathway.pairs = [(1, 2), (3, 4)]
+        pathway.t_stim = 1200
+        return pathway
+
+    with setup_tempdir('test-scaling-null-hold-v-ok') as folder:
+        pathway = pathway_null_hold_V(folder)
+
+        # Required to fill Pathway.resting_potential array
+        pathway.run()
+
+        reference, scaling = pathway._get_reference_and_scaling(model_mean, params)
+        assert_almost_equal(scaling, 0.007170083739722974)
