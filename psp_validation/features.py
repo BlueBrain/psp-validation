@@ -36,10 +36,17 @@ def default_spike_filter(t_start):
     return SpikeFilter(t_start, v_max)
 
 
-def mean_pair_voltage_from_traces(vts, trace_filter,
+def old_school_trace(simu_results):
+    '''Get the traces as it was before'''
+    return np.array([(voltage_array, simu_results.time) for voltage_array in
+                     simu_results.voltages])
+
+
+def mean_pair_voltage_from_traces(simu_results, trace_filter,
                                   v_clamp=None):
     """ Perform some filtering and calculate mean V over repetitions
     """
+    vts = old_school_trace(simu_results)
 
     vs, time = trace_filter(vts)
     if len(vs) == 0:
@@ -48,11 +55,9 @@ def mean_pair_voltage_from_traces(vts, trace_filter,
     # calc element-wise mean v (over reps)
     v_mean = np.mean(vs, axis=0)
 
-    if v_clamp:
-        currents = [x[2] for x in vts]
-        return v_mean, time, vs, currents
+    currents = [x[2] for x in vts] if v_clamp else None
 
-    return v_mean, time, vs, None
+    return v_mean, time, vs, currents
 
 
 def _check_numpy_ndarrays(*args):

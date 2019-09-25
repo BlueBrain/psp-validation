@@ -5,9 +5,10 @@ import tempfile
 from contextlib import contextmanager
 from itertools import repeat
 
+from psp_validation.simulation import SimulationResult
+
 def _make_traces(vss, ts):
     return list(zip(vss, repeat(ts)))
-
 
 
 @contextmanager
@@ -25,5 +26,4 @@ def mock_run_pair_simulation_suite(*args, **kwargs):
     data = np.loadtxt(filename)
     time = data[:, 0]
     voltage = data[:, 1]
-    trace = (voltage, time)
-    return {'e_GABAA': -90}, [trace]
+    return SimulationResult({'e_GABAA': -90}, time, [voltage], [voltage])

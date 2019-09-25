@@ -2,10 +2,12 @@ from itertools import repeat
 import os
 
 import numpy as np
+from numpy.testing import assert_array_equal
 from nose.tools import (assert_almost_equal, assert_dict_equal, assert_equal,
                         assert_raises, assert_true, ok_, raises)
 
 import psp_validation.features as test_module
+from psp_validation.simulation import SimulationResult
 from .utils import _make_traces
 
 
@@ -146,7 +148,6 @@ def test_SpikeFilter_filter() :
     assert_equal(filtered[0], vs[:3])
 
 
-
 def test_defaultSpikeFilter() :
     f = test_module.default_spike_filter(42)
     assert_equal(f.t0, 42)
@@ -154,15 +155,14 @@ def test_defaultSpikeFilter() :
 
 
 def test_mean_pair_voltage_from_traces_no_filter() :
-    t = np.linspace(1, 10, 100)
     v = [np.empty(100) for i in range(5)]
     for i, x in enumerate(v) :
         x.fill(10*i) # 0, 10, 20, 30, 40 : mean is 20
-    traces = _make_traces(v, t)
-    mean = test_module.mean_pair_voltage_from_traces(traces, test_module.SpikeFilter(0, 100))
+    results = SimulationResult({}, np.linspace(1, 10, 100), None, v)
+    mean = test_module.mean_pair_voltage_from_traces(results, test_module.SpikeFilter(0, 100))
     assert_true(np.all(mean[0] == 20.))
-    assert_true(np.all(mean[1] == t))
-    assert_true(np.all(mean[2] == v))
+    assert_true(np.all(mean[1] == results.time))
+    assert_array_equal(mean[2], v)
 
 
 def test_mean_pair_voltage_from_traces_filter() :
@@ -170,12 +170,12 @@ def test_mean_pair_voltage_from_traces_filter() :
     v = [np.empty(100) for i in range(5)]
     for i, x in enumerate(v) :
         x.fill(10*i) # 0, 10, 20, 30, 40 : mean is 20
-    traces = _make_traces(v, t)
+    results = SimulationResult({}, np.linspace(1, 10, 100), None, v)
     sf = test_module.SpikeFilter(0, 25)
-    mean = test_module.mean_pair_voltage_from_traces(traces, sf)
+    mean = test_module.mean_pair_voltage_from_traces(results, sf)
     assert_true(np.all(mean[0] == 10.))
     assert_true(np.all(mean[1] == t))
-    assert_true(np.all(mean[2] == v[:3]))
+    assert_array_equal(mean[2], v[:3])
 
 
 def test_mean_pair_voltage_from_traces_filter_all_returns_nan() :
@@ -183,9 +183,9 @@ def test_mean_pair_voltage_from_traces_filter_all_returns_nan() :
     v = [np.empty(100) for i in range(5)]
     for i, x in enumerate(v) :
         x.fill(10*i) # 0, 10, 20, 30, 40 : mean is 20
-    traces = _make_traces(v, t)
+    results = SimulationResult({}, np.linspace(1, 10, 100), None, v)
     sf = test_module.SpikeFilter(0, -5)
-    mean = test_module.mean_pair_voltage_from_traces(traces, sf)
+    mean = test_module.mean_pair_voltage_from_traces(results, sf)
     assert_equal(mean, (None, None, [], None))
 
 

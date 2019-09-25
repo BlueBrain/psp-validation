@@ -1,7 +1,8 @@
-"""Bundle of tools to help with persistifying data
-"""
+"""Bundle of tools to help with persistifying data"""
 
 import numpy
+
+from psp_validation.features import old_school_trace
 
 
 def dump_raw_traces_to_HDF5(h5file, data):
@@ -39,7 +40,7 @@ def dump_raw_traces_to_HDF5(h5file, data):
         h5file[group_name].attrs['gid_post'] = post_gid
 
 
-def dump_pair_traces(h5f, trials, average, pre_gid, post_gid):
+def dump_pair_traces(h5f, sim_results, average, pre_gid, post_gid):
     """
     Dump a set of simulated psp traces to an HDF5 file.
 
@@ -63,6 +64,6 @@ def dump_pair_traces(h5f, trials, average, pre_gid, post_gid):
     group = h5f.create_group('/traces/a%d-a%d' % (pre_gid, post_gid))
     group.attrs['pre_gid'] = pre_gid
     group.attrs['post_gid'] = post_gid
-    group['trials'] = trials
+    group['trials'] = old_school_trace(sim_results)
     if average is not None:
         group['average'] = average

@@ -228,17 +228,18 @@ class Pathway(object):
         '''
         # pylint: disable=too-many-locals
         pre_gid, post_gid = self.pairs[i_pair]
-        params, traces = self.sim_runner(pre_gid=pre_gid, post_gid=post_gid,
-                                         projection=self.config['pathway'].get('projection'),
-                                         **self.config['protocol'])
+        sim_results = self.sim_runner(
+            pre_gid=pre_gid, post_gid=post_gid,
+            projection=self.config['pathway'].get('projection'),
+            **self.config['protocol'])
 
         if self.protocol_params.clamp == 'current':
-            v_mean, t, v_used, _ = mean_pair_voltage_from_traces(traces, self.spike_filter)
-            if len(v_used) < len(traces):
-                filtered_count = len(traces) - len(v_used)
+            v_mean, t, v_used, _ = mean_pair_voltage_from_traces(sim_results, self.spike_filter)
+            filtered_count = len(sim_results.voltages) - len(v_used)
+            if filtered_count > 0:
                 LOGGER.warning("%d out of %d traces filtered out for a%d-a%d"
                                " simulation(s) due to spiking",
-                               filtered_count, len(traces),
+                               filtered_count, len(sim_results.voltages),
                                pre_gid, post_gid
                                )
             if v_mean is None:
@@ -258,13 +259,13 @@ class Pathway(object):
                     ampl = np.nan
             all_amplitudes.append(ampl)
         else:
-            average = np.mean(traces, axis=0)
+            average = np.mean(sim_results.currents, axis=0)
 
         if self.protocol_params.dump_traces:
             with h5py.File(traces_path, 'a') as h5f:
-                dump_pair_traces(h5f, traces, average, pre_gid, post_gid)
+                dump_pair_traces(h5f, sim_results, average, pre_gid, post_gid)
 
-        return params
+        return sim_results.params
 
     def _init_traces_dump(self):
         '''create empty H5 dump or overwrite existing one'''

@@ -1,16 +1,24 @@
 """ Running pair simulations. """
 
-import os
 import collections
 import logging
+import os
 
+import attr
 import joblib
-import numpy as np
 
 from psp_validation import get_logger, setup_logging
 
-
 LOGGER = get_logger('simulation')
+
+
+@attr.s
+class SimulationResult(object):
+    '''Parameters that are the same for all pathways'''
+    params = attr.ib()
+    time = attr.ib()
+    currents = attr.ib()
+    voltages = attr.ib()
 
 
 def _ensure_list(v):
@@ -76,7 +84,10 @@ def run_pair_simulation(
         log_level: logging level
 
     Returns:
-        postsynaptic cell soma voltage / injected current trace [(Y, t) tuple]
+        A 4-tuple (params, time, current, voltage)
+        time and voltage are arrays of the same size
+        In voltage clamp current is an array
+        In current clamp it is a scalar at the clamped value
     """
     # pylint: disable=too-many-arguments,too-many-locals
     setup_logging(log_level)
@@ -120,16 +131,16 @@ def run_pair_simulation(
 
     ssim.run(t_stop=t_stop, dt=0.025, v_init=hold_V)
 
-    t = post_cell.get_time()
+    time = post_cell.get_time()
 
-    if hold_I is None:
-        y = post_cell.get_recording('clamp_i')
-    else:
-        y = post_cell.get_soma_voltage()
+    voltage = post_cell.get_soma_voltage()
 
     LOGGER.info('sim_pair: a%d -> a%d (seed=%d)... done', pre_gid, post_gid, base_seed)
 
-    return params, y, t
+    return (params,
+            time,
+            post_cell.get_recording('clamp_i') if hold_I is None else hold_I,
+            voltage)
 
 
 def run_pair_simulation_suite(
@@ -199,6 +210,9 @@ def run_pair_simulation_suite(
         for k in range(n_trials)
     ])
 
-    params = results[0][0]
-    traces = np.array([(result[1], result[2]) for result in results])
-    return params, traces
+    return SimulationResult(
+        params=results[0][0],
+        time=results[0][1],
+        current=[result[2] for result in results],
+        voltage=[result[3] for result in results]
+    )
