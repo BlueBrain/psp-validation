@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -21,6 +20,8 @@ from psp_validation.utils import load_yaml
 from psp_validation.version import VERSION
 
 LOGGER = get_logger()
+
+# pylint: disable=import-outside-toplevel
 
 
 @click.group()
@@ -130,7 +131,3 @@ def plot(traces_files, output_dir):
     """ Plot voltage traces stored in .h5 dump """
     from psp_validation.plot import voltage_traces
     voltage_traces(traces_files, output_dir)
-
-
-if __name__ == "__main__":
-    cli()
