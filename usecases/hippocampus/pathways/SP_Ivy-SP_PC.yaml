@@ -1,24 +1,22 @@
 reference:
-    author: Fuentealba 2008
+    author: Fuentealba 2008 (syn Fuentealba 2008)
     psp_amplitude:
         mean: 0.8
         std: 0.4
-    synapse_count:
-        mean: null
-        std: null
 
 pathway:
     pre: SP_Ivy
     post: SP_PC
     constraints:
+        unique_gids: true
+        max_nsyn: 15
         max_dist_x: 100.0
         max_dist_y: 100.0
         max_dist_z: 100.0
 
 protocol:
     record_dt: 0.1
-    hold_V: -57.0
+    hold_V: -59.17
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false
-    v_clamp: null

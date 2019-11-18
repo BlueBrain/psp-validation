@@ -1,25 +1,25 @@
 reference:
-    author: Deuchars and Thompson 1996 (syn same article, but not sure about 1.5 +/- 0.5)
+    author: Deuchars and Thomson 1996 (syn same article)
     psp_amplitude:
         mean: 0.7
         std: 0.5
     synapse_count:
-        mean: 1.5
-        std: null
+        mean: 1.2
+        std: 0.
 
 pathway:
     pre: SP_PC
     post: SP_PC
     constraints:
+        unique_gids: true
+        max_nsyn: 2
         max_dist_x: 100.0
         max_dist_y: 100.0
         max_dist_z: 100.0
 
-min_amplitude: 0.01
-
 protocol:
     record_dt: 0.1
-    hold_V: -68.5
+    hold_V: -70.67
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false

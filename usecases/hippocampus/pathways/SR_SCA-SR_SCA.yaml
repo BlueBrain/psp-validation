@@ -1,24 +1,26 @@
 reference:
-    author: Pawelzik 2002
+    author: Pawelzik 2002 (syn Ali 2011 2-5)
     psp_amplitude:
         mean: 0.5
-        std: 0.0
-    synapse_count:
-        mean: null
         std: null
+    synapse_count:
+        mean: 3
+        std: 1
 
 pathway:
     pre: SR_SCA
     post: SR_SCA
     constraints:
-        max_dist_x: 100.0
-        max_dist_y: 100.0
-        max_dist_z: 100.0
+        unique_gids: true
+        min_nsyn: 2
+        max_nsyn: 5
+        max_dist_x: 200.0
+        max_dist_y: 200.0
+        max_dist_z: 200.0
 
 protocol:
     record_dt: 0.1
-    hold_V: -58.0
+    hold_V: -58.6
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false
-    v_clamp: null

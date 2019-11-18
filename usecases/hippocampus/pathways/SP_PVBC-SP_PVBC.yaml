@@ -2,7 +2,7 @@ reference:
     author: Cobb 1997 (syn Sik 1995)
     psp_amplitude:
         mean: 0.25
-        std: 0.0
+        std: null
     synapse_count:
         mean: 1.5
         std: null
@@ -11,14 +11,15 @@ pathway:
     pre: SP_PVBC
     post: SP_PVBC
     constraints:
+        unique_gids: true
+        max_nsyn: 3
         max_dist_x: 100.0
         max_dist_y: 100.0
         max_dist_z: 100.0
 
 protocol:
     record_dt: 0.1
-    hold_V: -59.0
+    hold_V: -62.0
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false
-    v_clamp: null

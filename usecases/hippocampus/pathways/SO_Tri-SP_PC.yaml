@@ -2,23 +2,22 @@ reference:
     author: Pawelzik 2002
     psp_amplitude:
         mean: 0.8
-        std: 0.0
-    synapse_count:
-        mean: null
         std: null
 
 pathway:
     pre: SO_Tri
     post: SP_PC
     constraints:
+        unique_gids: true
+        min_nsyn: 4
+        max_nsyn: 10
         max_dist_x: 200.0
         max_dist_y: 200.0
-        max_dist_z: 100.0
+        max_dist_z: 200.0
 
 protocol:
     record_dt: 0.1
-    hold_V: -58.5
+    hold_V: -59.1
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false
-    v_clamp: null

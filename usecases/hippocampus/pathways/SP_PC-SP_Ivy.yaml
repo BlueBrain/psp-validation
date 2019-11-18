@@ -3,22 +3,21 @@ reference:
     psp_amplitude:
         mean: 2.9
         std: 2.2
-    synapse_count:
-        mean: null
-        std: null
 
 pathway:
     pre: SP_PC
     post: SP_Ivy
     constraints:
+        unique_gids: true
+        min_nsyn: 2
+        max_nsyn: 5
         max_dist_x: 100.0
         max_dist_y: 100.0
         max_dist_z: 100.0
 
 protocol:
     record_dt: 0.1
-    hold_V: -60.0
+    hold_V: -62.17
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false
-    v_clamp: null

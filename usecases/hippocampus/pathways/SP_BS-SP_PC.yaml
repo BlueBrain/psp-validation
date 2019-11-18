@@ -1,16 +1,19 @@
 reference:
-    author: Pawelzik 2002 (syn Buhl 1994)
+    author: Pawelzik 2002 (syn Buhl 1994a)
     psp_amplitude:
         mean: 0.55
         std: 0.15
     synapse_count:
-        mean: 6.0
+        mean: 6
         std: null
 
 pathway:
     pre: SP_BS
     post: SP_PC
     constraints:
+        unique_gids: true
+        min_nsyn: 4
+        max_nsyn: 10
         max_dist_x: 100.0
         max_dist_y: 100.0
         max_dist_z: 100.0
@@ -21,5 +24,3 @@ protocol:
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false
-    v_clamp: null
-

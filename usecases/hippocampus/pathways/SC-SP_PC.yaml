@@ -1,0 +1,22 @@
+reference:
+    author: Magee and Cook 2000
+    psp_amplitude:
+        mean: 0.2
+        std: 0.0
+    synapse_count:
+        mean: 1.0
+        std: 0.0
+
+pathway:
+    projection: SC
+    pre: null
+    post: SP_PC
+    constraints:
+        unique_gids: true
+
+protocol:
+    record_dt: 0.1
+    hold_V: -77.0
+    t_stim: 800.0
+    t_stop: 900.0
+    post_ttx: true
