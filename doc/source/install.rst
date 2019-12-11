@@ -9,19 +9,19 @@ The easiest way to get ``psp-validation`` package might be with a *module*:
 .. code-block:: console
 
     $ module purge
-    $ module load nix/hpc/neuron
-    $ module load nix/hpc/neurodamus  # to set BGLIBPY_MOD_LIBRARY_PATH
-    $ module load nix/nse/psp-validation
+    $ module load neuron
+    $ module load neurodamus-core  # to set BGLIBPY_MOD_LIBRARY_PATH
+    $ module load psp-validation
 
 For hippocampus:
 
 .. code-block:: console
 
     $ module purge
-    $ module load nix/hpc/neuron
-    $ module load nix/hpc/neurodamus-hippocampus
+    $ module load neuron
+    $ module load neurodamus-hippocampus
     $ export BGLIBPY_MOD_LIBRARY_PATH=$BBP_HOME/lib/libnrnmech.so
-    $ module load nix/nse/psp-validation
+    $ module load psp-validation
 
 At this point, ``psp`` command should be available, as well as compatible ``BGLibPy``, ``BluePy`` and ``neuron``, as well as compiled MOD files.
 
