@@ -6,7 +6,7 @@ import yaml
 def load_yaml(filepath):
     """ Load YAML file. """
     with open(filepath, 'r') as f:
-        return yaml.load(f)
+        return yaml.load(f, Loader=yaml.FullLoader)
 
 
 def load_config(filepath):
