@@ -213,6 +213,6 @@ def run_pair_simulation_suite(
     return SimulationResult(
         params=results[0][0],
         time=results[0][1],
-        current=[result[2] for result in results],
-        voltage=[result[3] for result in results]
+        currents=[result[2] for result in results],
+        voltages=[result[3] for result in results]
     )
