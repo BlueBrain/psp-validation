@@ -50,14 +50,14 @@ def test__init_traces_dump():
         pathway = _dummy_pathway(dict(dump_traces=False, output_dir=folder))
         traces_path = pathway._init_traces_dump()
 
-        with h5py.File(traces_path) as h5f:
+        with h5py.File(traces_path, 'r') as h5f:
             assert_equal(h5f.attrs['data'], 'voltage')
 
     with setup_tempdir('test-init-traces-dump') as folder:
         pathway = _dummy_pathway(dict(dump_traces=True, output_dir=folder, clamp='voltage'))
         traces_path = pathway._init_traces_dump()
 
-        with h5py.File(traces_path) as h5f:
+        with h5py.File(traces_path, 'r') as h5f:
             assert_equal(h5f.attrs['data'], 'current')
 
 
@@ -71,7 +71,7 @@ def test__run_one_pair():
         pathway._run_one_pair(0, all_amplitudes, h5_file)
         assert_almost_equal(all_amplitudes, [94.0238021084036])
 
-        with h5py.File(h5_file) as f:
+        with h5py.File(h5_file, 'r') as f:
             ok_('/traces/a1-a2' in f)
             group = f['/traces/a1-a2']
             assert_equal(group.attrs['pre_gid'], 1)
@@ -88,7 +88,7 @@ def test__run_pathway_no_pairs():
 
         assert_array_equal(os.listdir(folder), ['pathway.traces.h5'])
 
-        with h5py.File(os.path.join(folder, 'pathway.traces.h5')) as f:
+        with h5py.File(os.path.join(folder, 'pathway.traces.h5'), 'r') as f:
             assert_array_equal(list(f.keys()), [])
 
 def test__run_pathway():
@@ -98,7 +98,7 @@ def test__run_pathway():
 
         assert_array_equal(list(sorted(os.listdir(folder))),
                            ['pathway.amplitudes.txt', 'pathway.summary.yaml', 'pathway.traces.h5'])
-        with h5py.File(os.path.join(folder, 'pathway.traces.h5')) as f:
+        with h5py.File(os.path.join(folder, 'pathway.traces.h5'), 'r') as f:
             assert_array_equal(list(f['traces']['a1-a2'].keys()), ['average', 'trials'])
 
     with setup_tempdir('test-run-pathway-no-traces') as folder:

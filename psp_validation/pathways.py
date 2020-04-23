@@ -11,7 +11,7 @@ import numpy as np
 from psp_validation import get_logger
 from psp_validation.features import (compute_scaling, default_spike_filter, get_synapse_type,
                                      resting_potential, mean_pair_voltage_from_traces,
-                                     get_peak_amplitude)
+                                     get_peak_amplitude, old_school_trace)
 from psp_validation.persistencyutils import dump_pair_traces
 from psp_validation.utils import load_config
 
@@ -234,23 +234,27 @@ class Pathway(object):
             projection=self.config['pathway'].get('projection'),
             **self.config['protocol'])
 
-        average = self._post_run(pre_gid, post_gid, sim_results, all_amplitudes)
+        traces, average = self._post_run(pre_gid, post_gid, sim_results, all_amplitudes)
 
         if self.protocol_params.dump_traces:
             with h5py.File(traces_path, 'a') as h5f:
-                dump_pair_traces(h5f, sim_results, average, pre_gid, post_gid)
+                dump_pair_traces(h5f, traces, average, pre_gid, post_gid)
 
         return sim_results.params
 
     def _post_run(self, pre_gid, post_gid, sim_results, all_amplitudes):
-        '''Returns average of v_mean or current depending on clamping technique
+        '''Returns a tuple (all traces, averaged trace)
+
+        Where trace is whether a voltage or a current depending on the clamping technique
 
         Also:
             - fill the all_amplitudes list
             - Compute the resting potential if the holding voltage is None
         '''
         if self.protocol_params.clamp == 'current':
-            v_mean, t, v_used, _ = mean_pair_voltage_from_traces(sim_results, self.spike_filter)
+            traces = old_school_trace(sim_results)
+            v_mean, t, v_used = mean_pair_voltage_from_traces(traces, self.spike_filter)
+
             filtered_count = len(sim_results.voltages) - len(v_used)
             if filtered_count > 0:
                 LOGGER.warning("%d out of %d traces filtered out for a%d-a%d"
@@ -281,9 +285,11 @@ class Pathway(object):
 
             all_amplitudes.append(ampl)
         else:
-            average = np.mean(sim_results.currents, axis=0)
+            average = np.stack([np.mean(sim_results.currents, axis=0),
+                                sim_results.time])
+            traces = sim_results.currents
 
-        return average
+        return traces, average
 
     def _init_traces_dump(self):
         '''create empty H5 dump or overwrite existing one'''

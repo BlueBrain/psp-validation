@@ -47,22 +47,17 @@ def old_school_trace(simu_results):
                      simu_results.voltages])
 
 
-def mean_pair_voltage_from_traces(simu_results, trace_filter,
-                                  v_clamp=None):
+def mean_pair_voltage_from_traces(vts, trace_filter):
     """ Perform some filtering and calculate mean V over repetitions
     """
-    vts = old_school_trace(simu_results)
-
     vs, time = trace_filter(vts)
     if len(vs) == 0:
-        return None, None, [], None
+        return None, None, []
 
     # calc element-wise mean v (over reps)
     v_mean = np.mean(vs, axis=0)
 
-    currents = [x[2] for x in vts] if v_clamp else None
-
-    return v_mean, time, vs, currents
+    return v_mean, time, vs
 
 
 def _check_numpy_ndarrays(*args):

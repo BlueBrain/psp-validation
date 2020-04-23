@@ -169,7 +169,8 @@ def test_mean_pair_voltage_from_traces_no_filter() :
     for i, x in enumerate(v) :
         x.fill(10*i) # 0, 10, 20, 30, 40 : mean is 20
     results = SimulationResult({}, np.linspace(1, 10, 100), None, v)
-    mean = test_module.mean_pair_voltage_from_traces(results, test_module.SpikeFilter(0, 100))
+    traces = test_module.old_school_trace(results)
+    mean = test_module.mean_pair_voltage_from_traces(traces, test_module.SpikeFilter(0, 100))
     assert_true(np.all(mean[0] == 20.))
     assert_true(np.all(mean[1] == results.time))
     assert_array_equal(mean[2], v)
@@ -181,8 +182,9 @@ def test_mean_pair_voltage_from_traces_filter() :
     for i, x in enumerate(v) :
         x.fill(10*i) # 0, 10, 20, 30, 40 : mean is 20
     results = SimulationResult({}, np.linspace(1, 10, 100), None, v)
+    traces = test_module.old_school_trace(results)
     sf = test_module.SpikeFilter(0, 25)
-    mean = test_module.mean_pair_voltage_from_traces(results, sf)
+    mean = test_module.mean_pair_voltage_from_traces(traces, sf)
     assert_true(np.all(mean[0] == 10.))
     assert_true(np.all(mean[1] == t))
     assert_array_equal(mean[2], v[:3])
@@ -195,8 +197,9 @@ def test_mean_pair_voltage_from_traces_filter_all_returns_nan() :
         x.fill(10*i) # 0, 10, 20, 30, 40 : mean is 20
     results = SimulationResult({}, np.linspace(1, 10, 100), None, v)
     sf = test_module.SpikeFilter(0, -5)
-    mean = test_module.mean_pair_voltage_from_traces(results, sf)
-    assert_equal(mean, (None, None, [], None))
+    traces = test_module.old_school_trace(results)
+    mean = test_module.mean_pair_voltage_from_traces(traces, sf)
+    assert_equal(mean, (None, None, []))
 
 
 def test_compute_scaling_EXC():
