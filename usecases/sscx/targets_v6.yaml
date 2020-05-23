@@ -4,30 +4,24 @@ EXC:
 INH:
   synapse_class: INH
 MC:
-  mtype: '@L.*_MC'
+  mtype: {"$regex": "L.*_MC"}
 
 # Distal Targeting INH
 DISTAR_INH:
-  mtype: '@L.*_(MC|BTC|DBC|BP)'
+  mtype: {"$regex": "L.*_(MC|BTC|DBC|BP)"}
 BC:
-  mtype: '@L.*_(NBC|LBC|SBC)'
+  mtype: {"$regex": "L.*_(NBC|LBC|SBC)"}
 PV_FS:
-  mtype: '@L.*_(NBC|LBC|SBC|CHC)'
+  mtype: {"$regex": "L.*_(NBC|LBC|CHC)"}
 INH_OTHER:
-  mtype: '@L.*_(DAC|DLAC|HAC|NGC.*|SAC|SLAC)'
+  mtype: {"$regex": "L.*_(DAC|DLAC|HAC|NGC.*|SAC|SLAC)"}
 
 # Specific
-L5_TTPC:
-  mtype: '@L5_TPC:(A|B)'
-L5_STPC:
-  mtype: L5_TPC:C
-L5_MC:
-  mtype: L5_MC
-L5_BC:
-  mtype: '@L5_(SBC|LBC|NBC)'
-L5_PC:
-  morph_class: PYR
-  layer: 5
+L1_NGC:
+  mtype: {"$regex": "L1_NGC-(DA|SA)"}
+L1_nonNGC:
+  mtype: {"$regex": "L1_(DAC|HAC|LAC|SCA)"}
+
 L2_PC:
   morph_class: PYR
   layer: 2
@@ -40,50 +34,51 @@ L3_PC:
 L23_PC:
   morph_class: PYR
   layer: [2, 3]
-L23_LBC:
-  mtype: L23_LBC
-L23_NBC:
-  mtype: L23_NBC
 L23_BC:
-  mtype: '@L23_(SBC|LBC|NBC)'
-L23_NBC_LBC:
-  mtype: '@L23_(LBC|NBC)'
-L23_MC:
-  mtype: L23_MC
-L23_BTC:
-  mtype: L23_BTC
-L23_DBC:
-  mtype: L23_DBC
-L23_BP:
-  mtype: L23_BP
-L23_NGC:
-  mtype: L23_NGC
-L23_SBC:
-  mtype: L23_SBC
-L23_ChC:
-  mtype: L23_CHC
+  mtype: {"$regex": "L23_(LBC|NBC|SBC)"}
+L23_NLBC:
+  mtype: {"$regex": "L23_(NBC|LBC)"}
+
+L234_PC:
+  morph_class: PYR
+  layer: [2, 3, 4]
+L234_NBC:
+  mtype: ["L23_NBC", "L4_NBC"]
+  etype: dNAC
 
 L4_EXC:
   layer: 4
   synapse_class: EXC
+L4_SS:
+  mtype: L4_SSC
+L4_FS:
+  mtype: {"$regex": "L4_(SBC|LBC|NBC|CHC)"}
+
 L5_EXC:
   layer: 5
   synapse_class: EXC
+L5_PC:
+  morph_class: PYR
+  layer: 5
+L5_TTPC:
+  mtype: {"$regex": "L5_TPC:(A|B)"}
+L5A_PC:
+  mtype: {"$regex": "L5_(UPC|TPC:C)"}
+L5_FS:
+  mtype: {"$regex": "L5_(SBC|LBC|NBC|CHC)"}
+L5_FS_sel_etypes:
+  mtype: {"$regex": "L5_(SBC|LBC|NBC|CHC)"}
+  etype: [bAC, bNAC, cNAC, dNAC]
+L5_MC_sel_etypes:
+  mtype: L5_MC
+  etype: [bAC, cNAC, dNAC]
 
-L4_SS:
-  mtype: L4_SSC
-
+L6_PC:
+  morph_class: PYR
+  layer: 6
 L6_BC:
-  mtype: '@L6_(SBC|LBC|NBC)'
-
-L6_BPC:
-  mtype: L6_BPC
-
-L6_MC:
-  mtype: L6_MC
-
-L6_IPC:
-  mtype: L6_IPC
-
+  mtype: {"$regex": "L6_(SBC|LBC|NBC)"}
 L6_TPC:
-  mtype: '@L6_TPC.*'
+  mtype: L6_TPC:A
+L6_NPC:
+  mtype: L6_TPC:C

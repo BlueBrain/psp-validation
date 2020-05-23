@@ -1,5 +1,5 @@
 reference:
-    author: "Feldmeyer 04"
+    author: "Feldmeyer 1999"
     psp_amplitude:
         mean: 1.59
         std: 1.51
@@ -12,13 +12,14 @@ pathway:
     post: L4_EXC
     constraints:
         unique_gids: true
+        min_nsyn: 2
+        max_nsyn: 5
         max_dist_x: 100.0
         max_dist_z: 100.0
 
 protocol:
     record_dt: 0.1
-    hold_V: -69.0
+    hold_V: -73.4
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false
-    v_clamp: null

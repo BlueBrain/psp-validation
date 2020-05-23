@@ -1,24 +1,23 @@
 reference:
-    author: null
+    author: "Wozny Williams 2011"
     psp_amplitude:
-        mean: 1.21
-        std: 1.18
-    synapse_count:
-        mean: 14.5
-        std: 1.7
+        mean: 0.58
+        std: 0.1
 
 pathway:
-    pre: L23_LBC
+    pre: L1_NGC
     post: L23_PC
     constraints:
         unique_gids: true
+        min_nsyn: 6
+        max_nsyn: 9
         max_dist_x: 100.0
         max_dist_z: 100.0
+        max_dist_y: 250.0
 
 protocol:
     record_dt: 0.1
-    hold_V: -66.0
+    hold_V: -76.6
     t_stim: 800.0
-    t_stop: 900.0
+    t_stop: 1000.0
     post_ttx: false
-    v_clamp: null

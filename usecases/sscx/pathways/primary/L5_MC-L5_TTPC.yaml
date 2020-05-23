@@ -1,5 +1,5 @@
 reference:
-    author: Silberberg
+    author: Silberberg and Markram 2007
     psp_amplitude:
         mean: 0.5
         std: 0.4
@@ -12,13 +12,14 @@ pathway:
     post: L5_TTPC
     constraints:
         unique_gids: true
+        min_nsyn: 9
+        max_nsyn: 15
         max_dist_x: 100.0
         max_dist_z: 100.0
 
 protocol:
     record_dt: 0.1
-    hold_V: -57.3
+    hold_V: -72.3
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: true
-    v_clamp: null

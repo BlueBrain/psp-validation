@@ -1,15 +1,12 @@
 reference:
-    author: "Angulo 99"
+    author: "Reyes and Sakmann 1999"
     psp_amplitude:
-        mean: 2.1
-        std: 1.3
-    synapse_count:
-        mean: null
-        std: null
+        mean: 0.3
+        std: 0.3
 
 pathway:
-    pre: L5_PC
-    post: L5_BC
+    pre: L23_PC
+    post: L5_TTPC
     constraints:
         unique_gids: true
         max_dist_x: 100.0
@@ -17,8 +14,7 @@ pathway:
 
 protocol:
     record_dt: 0.1
-    hold_V: -72.0
+    hold_V: -74.0
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false
-    v_clamp: null

@@ -1,15 +1,15 @@
 reference:
-    author: Thomas K Berger's thesis
+    author: Wang et al. 2002 (not sure of hold_V...), nsysn - Markram et al. 2004
     psp_amplitude:
-        mean: 0.32
-        std: 0.27
+        mean: 2.86
+        std: 1.17
     synapse_count:
-        mean: 4
-        std: null
+        mean: 3.4
+        std: 1.5
 
 pathway:
-    pre: L6_TPC
-    post: L6_BPC
+    pre: L234_PC
+    post: L234_NBC
     constraints:
         unique_gids: true
         min_nsyn: 3
@@ -19,7 +19,7 @@ pathway:
 
 protocol:
     record_dt: 0.1
-    hold_V: -82.5
+    hold_V: -74.0
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false

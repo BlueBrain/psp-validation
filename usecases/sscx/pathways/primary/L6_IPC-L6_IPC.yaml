@@ -1,11 +1,8 @@
 reference:
-    author: null
+    author: Thomas K Berger's thesis
     psp_amplitude:
         mean: 1.05
         std: 0.31
-    synapse_count:
-        mean: null
-        std: null
 
 pathway:
     pre: L6_IPC
@@ -17,8 +14,7 @@ pathway:
 
 protocol:
     record_dt: 0.1
-    hold_V: -70.0
+    hold_V: -82.5
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false
-    v_clamp: null
