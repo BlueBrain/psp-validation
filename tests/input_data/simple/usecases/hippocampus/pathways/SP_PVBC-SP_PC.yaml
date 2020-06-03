@@ -1,0 +1,14 @@
+pathway:
+    pre: SP_PVBC
+    post: SP_PC
+    constraints:
+        unique_gids: true
+        max_dist_x: 100.0
+        max_dist_z: 100.0
+
+protocol:
+    record_dt: 0.1
+    hold_V: -65.0
+    t_stim: 800.0
+    t_stop: 900.0
+    post_ttx: false

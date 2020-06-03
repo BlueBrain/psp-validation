@@ -9,7 +9,7 @@ are included. (no HypAmp for instance)
 from functools import partial
 
 import attr
-import bluepy
+from bluepy.v2 import Circuit
 import numpy as np
 
 from psp_validation import get_logger, PSPError
@@ -24,8 +24,8 @@ LOGGER = get_logger('lib')
 class ProtocolParameters(object):
     '''Parameters that are the same for all pathways'''
     clamp = attr.ib(type=str)
-    circuit = attr.ib(type=bluepy.v2.Circuit)
-    targets = attr.ib(type=bluepy.v2.Circuit)
+    circuit = attr.ib(type=Circuit)
+    targets = attr.ib(type=Circuit)
     num_pairs = attr.ib(type=dict)
     num_trials = attr.ib(type=dict)
     dump_amplitudes = attr.ib(type=bool)
@@ -46,7 +46,7 @@ def run(
     np.random.seed(seed)
 
     protocol_params = ProtocolParameters(clamp,
-                                         bluepy.Circuit(blueconfig).v2,
+                                         Circuit(blueconfig),
                                          load_yaml(targets),
                                          num_pairs,
                                          num_trials,

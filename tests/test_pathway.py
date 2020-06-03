@@ -1,4 +1,5 @@
 import os
+from tempfile import TemporaryDirectory
 
 import h5py
 from mock import MagicMock, patch
@@ -6,15 +7,16 @@ from nose.tools import (assert_almost_equal, assert_dict_equal, assert_equal,
                         assert_raises, assert_true, ok_, raises)
 from numpy.testing import assert_array_equal
 
-from psp_validation.psp import ProtocolParameters
-from psp_validation.features import SpikeFilter
 import psp_validation.pathways as test_module
+from psp_validation.features import SpikeFilter
+from psp_validation.psp import ProtocolParameters
 
-from .utils import mock_run_pair_simulation_suite, setup_tempdir
+from .utils import mock_run_pair_simulation_suite
 
 _path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_data")
 
 _PATHWAY_PATH = os.path.join(_path, 'pathway.yaml')
+
 
 def _default_protocol(**kwargs):
     args_ = dict(
@@ -29,6 +31,7 @@ def _default_protocol(**kwargs):
     )
     args_.update(kwargs)
     return ProtocolParameters(**args_)
+
 
 @patch('psp_validation.pathways._get_pathway_pairs',
        side_effect=lambda *args, **kargs: [(14194, 14494)])
@@ -46,14 +49,14 @@ def _dummy_pathway(protocol_kwargs, pairs_mock, synapse_type_mock):
 
 
 def test__init_traces_dump():
-    with setup_tempdir('test-init-traces-dump') as folder:
+    with TemporaryDirectory('test-init-traces-dump') as folder:
         pathway = _dummy_pathway(dict(dump_traces=False, output_dir=folder))
         traces_path = pathway._init_traces_dump()
 
         with h5py.File(traces_path, 'r') as h5f:
             assert_equal(h5f.attrs['data'], 'voltage')
 
-    with setup_tempdir('test-init-traces-dump') as folder:
+    with TemporaryDirectory('test-init-traces-dump') as folder:
         pathway = _dummy_pathway(dict(dump_traces=True, output_dir=folder, clamp='voltage'))
         traces_path = pathway._init_traces_dump()
 
@@ -64,7 +67,7 @@ def test__init_traces_dump():
 def test__run_one_pair():
     all_amplitudes = list()
 
-    with setup_tempdir('test-run-one-pair') as folder:
+    with TemporaryDirectory('test-run-one-pair') as folder:
         pathway = _dummy_pathway(dict(output_dir=folder))
 
         h5_file = os.path.join(folder, 'dump.h5')
@@ -81,7 +84,7 @@ def test__run_one_pair():
 
 
 def test__run_pathway_no_pairs():
-    with setup_tempdir('test-run-pathway') as folder:
+    with TemporaryDirectory('test-run-pathway') as folder:
         pathway = _dummy_pathway(dict(output_dir=folder))
         pathway.pairs = []
         pathway.run()
@@ -91,8 +94,9 @@ def test__run_pathway_no_pairs():
         with h5py.File(os.path.join(folder, 'pathway.traces.h5'), 'r') as f:
             assert_array_equal(list(f.keys()), [])
 
+
 def test__run_pathway():
-    with setup_tempdir('test-run-pathway-dump-trace') as folder:
+    with TemporaryDirectory('test-run-pathway-dump-trace') as folder:
         pathway = _dummy_pathway(dict(dump_traces=True, output_dir=folder))
         pathway.run()
 
@@ -101,12 +105,11 @@ def test__run_pathway():
         with h5py.File(os.path.join(folder, 'pathway.traces.h5'), 'r') as f:
             assert_array_equal(list(f['traces']['a1-a2'].keys()), ['average', 'trials'])
 
-    with setup_tempdir('test-run-pathway-no-traces') as folder:
+    with TemporaryDirectory('test-run-pathway-no-traces') as folder:
         pathway = _dummy_pathway(dict(dump_traces=False, output_dir=folder))
         pathway.run()
         assert_array_equal(list(sorted(os.listdir(folder))),
                            ['pathway.amplitudes.txt', 'pathway.summary.yaml'])
-
 
 
 def test__get_reference_and_scaling():
@@ -127,7 +130,7 @@ def test__get_reference_and_scaling():
         pathway.t_stim = 1200
         return pathway
 
-    with setup_tempdir('test-scaling-null-hold-v-ok') as folder:
+    with TemporaryDirectory('test-scaling-null-hold-v-ok') as folder:
         pathway = pathway_null_hold_V(folder)
 
         # Required to fill Pathway.resting_potential array

@@ -8,8 +8,6 @@ PSP analysis toolkit.
  * `psp plot`    Plot voltage / current traces obtained with `psp run`
 """
 
-from __future__ import print_function
-
 import os
 import logging
 
