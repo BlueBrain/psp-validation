@@ -3,6 +3,7 @@
 import collections
 import logging
 import os
+import warnings
 
 import attr
 import joblib
@@ -129,7 +130,11 @@ def run_pair_simulation(
         # add pre-calculated current to set the holding potential
         post_cell.add_ramp(0, 10000, hold_I, hold_I, dt=0.025)
 
-    ssim.run(t_stop=t_stop, dt=0.025, v_init=hold_V)
+    if 'ForwardSkip' in ssim.bc.Run:
+        warnings.warn('ForwardSkip found in config file but will disabled for this simulation.'
+                      ' (SSCXDIS-229)')
+
+    ssim.run(t_stop=t_stop, dt=0.025, v_init=hold_V, forward_skip=False)
 
     time = post_cell.get_time()
 
