@@ -65,7 +65,7 @@ def get_synapse_unique_value(cell, getter):
 def run_pair_simulation(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
-    hold_I=None, hold_V=None, post_ttx=False, projection=None, log_level=logging.WARNING
+    hold_I=None, hold_V=None, post_ttx=False, add_projections=False, log_level=logging.WARNING
 ):
     """
     Run single pair simulation trial.
@@ -81,7 +81,7 @@ def run_pair_simulation(
         hold_I: holding current [nA] (if None, voltage clamp is applied)
         hold_V: holding voltage [mV]
         post_ttx: emulate TTX effect on postsynaptic cell (i.e. block Na channels)
-        projection: projection name (None for main connectome)
+        add_projections: Whether to enable projections from BlueConfig. Default is False.
         log_level: logging level
 
     Returns:
@@ -106,7 +106,7 @@ def run_pair_simulation(
         add_synapses=True,
         pre_spike_trains={pre_gid: _ensure_list(t_stim)},
         intersect_pre_gids=[pre_gid],
-        projection=projection
+        add_projections=add_projections
     )
     post_cell = ssim.cells[post_gid]
 
@@ -151,7 +151,7 @@ def run_pair_simulation(
 def run_pair_simulation_suite(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
-    hold_V=None, post_ttx=False, clamp='current', projection=None,
+    hold_V=None, post_ttx=False, clamp='current', add_projections=False,
     n_trials=1, n_jobs=None,
     log_level=logging.WARNING
 ):
@@ -169,7 +169,7 @@ def run_pair_simulation_suite(
         hold_V: holding voltage (mV)
         post_ttx: emulate TTX effect on postsynaptic cell (i.e. block Na channels)
         clamp: type of the clamp used ['current' | 'voltage']
-        projection: projection name (None for main connectome)
+        add_projections: Whether to enable projections from BlueConfig. Default is False.
         n_trials: number of trials to run
         n_jobs: number of jobs to run in parallel (None for sequential runs)
         log_level: logging level
@@ -208,7 +208,7 @@ def run_pair_simulation_suite(
             hold_I=hold_I,
             hold_V=hold_V,
             post_ttx=post_ttx,
-            projection=projection,
+            add_projections=add_projections,
             log_level=get_logger().level,
             base_seed=(base_seed + k),
         )

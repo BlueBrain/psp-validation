@@ -231,7 +231,7 @@ class Pathway(object):
         pre_gid, post_gid = self.pairs[i_pair]
         sim_results = self.sim_runner(
             pre_gid=pre_gid, post_gid=post_gid,
-            projection=self.config['pathway'].get('projection'),
+            add_projections=bool(self.config['pathway'].get('projection')),
             **self.config['protocol'])
 
         traces, average = self._post_run(pre_gid, post_gid, sim_results, all_amplitudes)

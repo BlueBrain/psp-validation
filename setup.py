@@ -15,7 +15,7 @@ setup(
         'tqdm>=4.0',
         'neuron>=7.8.0',
     ] + [
-        'bglibpy>=4.0.13,<5.0',
+        'bglibpy>=4.2,<5.0',
         'bluepy[sonata]>=0.14.3',
     ],
     packages=find_packages(),
