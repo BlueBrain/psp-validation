@@ -18,6 +18,7 @@ It relies on `BluePy <https://bbpcode.epfl.ch/documentation/bluepy-0.11.9/>`_ fo
    tutorial
    files
    cookbook
+   changelog
 
 
 Acknowledgments
