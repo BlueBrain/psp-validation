@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.3.1
+-------------
+
+- Update bglibpy dependency to 4.3.15.
+
 Version 0.3.0
 -------------
 
