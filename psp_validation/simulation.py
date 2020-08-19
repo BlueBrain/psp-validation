@@ -2,6 +2,7 @@
 
 import collections
 import logging
+import multiprocessing
 import os
 import warnings
 
@@ -60,6 +61,23 @@ def get_synapse_unique_value(cell, getter):
         raise AssertionError('Expected one value, got {}.\nHere are the values'
                              '{}'.format(len(values), values))
     return values[0]
+
+
+def run_pair_simulation_isolated(**kwargs):
+    '''execute the `run_pair_simulation` in its own process
+
+    Note: this is required because bglibpy uses NEURON, and the latter
+    cannot be coerced to clean up its memory usage; thus causing out of
+    memory problems as more simulations are run across multiple workers
+    '''
+    pool = multiprocessing.Pool(1, maxtasksperchild=1)
+    responses = pool.apply(run_pair_simulation, kwds=kwargs)
+
+    pool.terminate()
+    pool.join()
+    del pool
+
+    return responses
 
 
 def run_pair_simulation(
@@ -196,7 +214,8 @@ def run_pair_simulation_suite(
     elif n_jobs <= 0:
         n_jobs = -1
 
-    worker = joblib.delayed(run_pair_simulation)
+    # Note: for debugging purposes, run_pair_simulation should be called directly
+    worker = joblib.delayed(run_pair_simulation_isolated)
     results = joblib.Parallel(n_jobs=n_jobs, backend='loky')([
         worker(
             blue_config=blue_config,
