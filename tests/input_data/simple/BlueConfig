@@ -9,7 +9,6 @@ Run Default
     CircuitPath /gpfs/bbp.cscs.ch/project/proj42/circuits/CA1.O1/20190306.syn/
     nrnPath /gpfs/bbp.cscs.ch/project/proj42/circuits/CA1.O1/20190306.syn/connectome/functional/edges.sonata
 
-    CurrentDir .
     OutputRoot .
     TargetFile user.target
 

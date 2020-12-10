@@ -9,14 +9,14 @@ setup(
     install_requires=[
         'click>=7.0',
         'efel>=3.0.39',
-        'h5py>=2.7',
+        'h5py>=2.7,<3',  # can't use h5py>3; see NSETM-1247, remove on release of bluepy v1
         'joblib>=0.13',
         'numpy>=1.10',
         'tqdm>=4.0',
         'neuron>=7.8.0',
     ] + [
         'bglibpy>=4.3.15,<5.0',
-        'bluepy[sonata]>=0.14.3',
+        'bluepy[sonata]==0.16.0',   # can't use h5py>3; see above
     ],
     packages=find_packages(),
     author="BlueBrain NSE",
