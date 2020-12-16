@@ -1,11 +1,9 @@
 import os
 import numpy as np
-import shutil
-import tempfile
-from contextlib import contextmanager
 from itertools import repeat
 
 from psp_validation.simulation import SimulationResult
+
 
 def _make_traces(vss, ts):
     return list(zip(vss, repeat(ts)))

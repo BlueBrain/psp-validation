@@ -44,7 +44,7 @@ def dump_pair_traces(h5f, traces, average, pre_gid, post_gid):
 
     Args:
         h5f: writable h5py.File
-        trials: N x 2 x T numpy array with trials voltage (or current) traces (V_k (or I_k), t_k)
+        traces: N x 2 x T numpy array with trials voltage (or current) traces (V_k (or I_k), t_k)
         average: 2 x T numpy array with averaged / filtered trace (V_mean, t)
         pre_gid: presynaptic GID
         post_gid: postsynaptic GID

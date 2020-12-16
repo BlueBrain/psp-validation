@@ -1,18 +1,17 @@
 import os
-from itertools import repeat
 
 import numpy as np
 import pandas as pd
 from mock import MagicMock, patch
-from nose.tools import (assert_almost_equal, assert_dict_equal, assert_equal,
-                        assert_raises, assert_true, ok_, raises)
+from nose.tools import assert_almost_equal, assert_equal, assert_raises, assert_true, raises
 from numpy.testing import assert_array_equal
 
 import psp_validation.features as test_module
 from psp_validation import PSPError
 from psp_validation.simulation import SimulationResult
+from psp_validation.trace_filters import NullFilter, SpikeFilter
 
-from .utils import _make_traces, mock_run_pair_simulation_suite
+from .utils import mock_run_pair_simulation_suite
 
 _path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_data")
 
@@ -46,24 +45,24 @@ def test__check_syntype():
     assert_raises(AttributeError, test_module._check_syn_type, "gloubi-boulga")
 
 
-@raises(Exception)
+@raises(ValueError)
 def test_get_peak_voltage_EXC_with_empty_input_raises():
-    test_module.get_peak_voltage([], [], 0, "EXC")
+    test_module.get_peak_voltage(np.array([]), np.array([]), 0, "EXC")
 
 
-@raises(Exception)
+@raises(ValueError)
 def test_get_peak_voltage_INH_with_empty_input_raises():
-    test_module.get_peak_voltage([], [], 0, "INH")
+    test_module.get_peak_voltage(np.array([]), np.array([]), 0, "INH")
 
 
-@raises(Exception)
+@raises(ValueError)
 def test_get_peak_voltage_EXC_with_future_t_stim_raises():
-    test_module.get_peak_voltage(np.array[0, 1, 2, 3], [11, 22, 33, 11], 4, "EXC")
+    test_module.get_peak_voltage(np.array([0, 1, 2, 3]), np.array([11, 22, 33, 11]), 4, "EXC")
 
 
-@raises(Exception)
+@raises(ValueError)
 def test_get_peak_voltage_INH_with_future_t_stim_raises():
-    test_module.get_peak_voltage(np.array[0, 1, 2, 3], [11, 22, 33, 11], 4, "INH")
+    test_module.get_peak_voltage(np.array([0, 1, 2, 3]), np.array([11, 22, 33, 11]), 4, "INH")
 
 
 @raises(ValueError)
@@ -114,76 +113,27 @@ def test_get_peak_amplitude():
                                                        syn_type='INH'))
 
 
-def test_SpikeFilter_members():
-    sf = test_module.SpikeFilter(4321, 1234)
-    assert_equal(sf.t0, 4321)
-    assert_equal(sf.v_max, 1234)
-
-
-def test_SpikeFilter_no_filter():
-    t = np.linspace(1, 10, 100)
-    v = np.linspace(-10, 9, 100)
-    traces = _make_traces(repeat(v, 5), t)
-    sf = test_module.SpikeFilter(0, 10)
-    filtered = sf(traces)
-    vs = [x[0] for x in traces]
-    assert_equal(len(filtered[0]), len(vs))
-    assert_equal(filtered[0], vs)
-
-
-def test_SpikeFilter_filter_all():
-    t = np.linspace(1, 10, 100)
-    v = [np.empty(100) for i in range(5)]
-    for i, x in enumerate(v):
-        x.fill(10*i)
-    traces = _make_traces(v, t)
-    sf = test_module.SpikeFilter(0, -5)
-    filtered = sf(traces)
-    vs = [x[0] for x in traces]
-    assert_equal(len(filtered[0]), 0)
-    assert_equal(filtered[0], [])
-
-
-def test_SpikeFilter_filter():
-    t = np.linspace(1, 10, 100)
-    v = [np.empty(100) for i in range(5)]
-    for i, x in enumerate(v):
-        x.fill(10*i)
-    traces = _make_traces(v, t)
-    sf = test_module.SpikeFilter(0, 25)
-    filtered = sf(traces)
-    vs = [x[0] for x in traces]
-    assert_equal(len(filtered[0]), 3)
-    assert_equal(filtered[0], vs[:3])
-
-
-def test_defaultSpikeFilter():
-    f = test_module.default_spike_filter(42)
-    assert_equal(f.t0, 42)
-    assert_equal(f.v_max, -20)
 
 
 def test_mean_pair_voltage_from_traces_no_filter():
-    v = [np.empty(100) for i in range(5)]
-    for i, x in enumerate(v):
-        x.fill(10*i)  # 0, 10, 20, 30, 40 : mean is 20
-    results = SimulationResult({}, np.linspace(1, 10, 100), None, v)
+    t = np.linspace(1, 10, 100)
+    v = [np.full(100, 10.0 * i) for i in range(5)]  # 0, 10, 20, 30, 40 : mean is 20
+    results = SimulationResult({}, t, None, v)
     traces = test_module.old_school_trace(results)
-    mean = test_module.mean_pair_voltage_from_traces(traces, test_module.SpikeFilter(0, 100))
+    filters = [NullFilter(), SpikeFilter(0, 100)]
+    mean = test_module.mean_pair_voltage_from_traces(traces, filters)
     assert_true(np.all(mean[0] == 20.))
-    assert_true(np.all(mean[1] == results.time))
+    assert_true(np.all(mean[1] == t))
     assert_array_equal(mean[2], v)
 
 
 def test_mean_pair_voltage_from_traces_filter():
     t = np.linspace(1, 10, 100)
-    v = [np.empty(100) for i in range(5)]
-    for i, x in enumerate(v):
-        x.fill(10*i)  # 0, 10, 20, 30, 40 : mean is 20
-    results = SimulationResult({}, np.linspace(1, 10, 100), None, v)
+    v = [np.full(100, 10.0 * i) for i in range(5)]  # 0, 10, 20, 30, 40 : mean is 20
+    results = SimulationResult({}, t, None, v)
     traces = test_module.old_school_trace(results)
-    sf = test_module.SpikeFilter(0, 25)
-    mean = test_module.mean_pair_voltage_from_traces(traces, sf)
+    filters = [NullFilter(), SpikeFilter(0, 25)]
+    mean = test_module.mean_pair_voltage_from_traces(traces, filters)
     assert_true(np.all(mean[0] == 10.))
     assert_true(np.all(mean[1] == t))
     assert_array_equal(mean[2], v[:3])
@@ -191,13 +141,11 @@ def test_mean_pair_voltage_from_traces_filter():
 
 def test_mean_pair_voltage_from_traces_filter_all_returns_nan():
     t = np.linspace(1, 10, 100)
-    v = [np.empty(100) for i in range(5)]
-    for i, x in enumerate(v):
-        x.fill(10*i)  # 0, 10, 20, 30, 40 : mean is 20
-    results = SimulationResult({}, np.linspace(1, 10, 100), None, v)
-    sf = test_module.SpikeFilter(0, -5)
+    v = [np.full(100, 10.0 * i) for i in range(5)]  # 0, 10, 20, 30, 40 : mean is 20
+    results = SimulationResult({}, t, None, v)
+    filters = [NullFilter(), SpikeFilter(0, -5)]
     traces = test_module.old_school_trace(results)
-    mean = test_module.mean_pair_voltage_from_traces(traces, sf)
+    mean = test_module.mean_pair_voltage_from_traces(traces, filters)
     assert_equal(mean, (None, None, []))
 
 

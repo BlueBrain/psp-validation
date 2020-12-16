@@ -1,44 +1,17 @@
 '''The module all features extraction are defined'''
+
+import efel
 import numpy as np
 from bluepy.v2.enums import Cell
-import efel
 
-from psp_validation import PSPError
+from psp_validation import PSPError, get_logger
 
-
-class SpikeFilter(object):
-    """Functor to filter traces with spikes
-    """
-
-    def __init__(self, t_start, v_max):
-
-        self.t0 = t_start
-        self.v_max = v_max
-
-    def __call__(self, traces):
-
-        vs_filtered = []
-        t = []
-        for trace_ in traces:
-            v_, t_ = trace_[0], trace_[1]
-            if (v_ is None or get_peak_voltage(t_, v_, self.t0, 'EXC') > self.v_max):
-                continue
-            vs_filtered.append(v_)
-            t = t_
-
-        return vs_filtered, t
+LOGGER = get_logger('lib')
 
 
 def _check_syn_type(syn_type):
     if syn_type not in {'EXC', 'INH'}:
         raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
-
-
-def default_spike_filter(t_start):
-    """Return a SpikeFilter instance configured with t_start, v_max = -20
-    """
-    v_max = -20
-    return SpikeFilter(t_start, v_max)
 
 
 def old_school_trace(simu_results):
@@ -47,14 +20,27 @@ def old_school_trace(simu_results):
                      simu_results.voltages])
 
 
-def mean_pair_voltage_from_traces(vts, trace_filter):
-    """ Perform some filtering and calculate mean V over repetitions
+def mean_pair_voltage_from_traces(vts, trace_filters):
+    """Perform some filtering and calculate mean V over repetitions.
+
+    Args:
+        vts (np.ndarray): N x 2 x T array of traces
+        trace_filters (list): list of BaseTraceFilter
+
+    Returns:
+        (float, np.ndarray, np.ndarray): (v_mean, array of times, array of selected voltages)
     """
-    vs, time = trace_filter(vts)
-    if len(vs) == 0:
+    for trace_filter in trace_filters:
+        vts = trace_filter(vts)
+    if len(vts) == 0:
         return None, None, []
 
+    vts = np.array(vts)
+
+    # keep the first time series (they are all the same)
+    time = vts[0, 1]
     # calc element-wise mean v (over reps)
+    vs = vts[:, 0]
     v_mean = np.mean(vs, axis=0)
 
     return v_mean, time, vs
@@ -110,14 +96,13 @@ def get_peak_amplitude(time, voltage, t_stim, syn_type):
     """Get the peak amplitude in a time series.
 
     Parameters:
-    t: array holding N time measurements
-    v: array holding N voltage measurements
-    t_start: lower t bound for mean v calculation
-    t_stim:  upper t bound for mean v calculation,
-    lower t bound for peak v calculation
+        time: array holding T time measurements
+        voltage: array holding T voltage measurements
+        t_stim: time of the stimulus
+        syn_type: type of synapse ("EXC" or "INH")
 
     Return:
-    RMS of the diffetence between calculated mean v and peak v
+        Absolute difference between calculated mean v and peak v
     """
     _check_syn_type(syn_type)
 

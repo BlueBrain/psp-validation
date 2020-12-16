@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.3.2
+-------------
+
+- Add a configuration parameter `min_trace_amplitude` to
+  filter out synaptic failures before calculating mean PSPs [NSETM-1166].
+
 Version 0.3.1
 -------------
 

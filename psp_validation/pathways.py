@@ -4,15 +4,21 @@ import itertools
 import os
 from builtins import filter
 
-from bluepy.v2.enums import Cell
 import h5py
 import numpy as np
+from bluepy.v2.enums import Cell
 
 from psp_validation import get_logger
-from psp_validation.features import (compute_scaling, default_spike_filter, get_synapse_type,
-                                     resting_potential, mean_pair_voltage_from_traces,
-                                     get_peak_amplitude, old_school_trace)
+from psp_validation.features import (
+    compute_scaling,
+    get_peak_amplitude,
+    get_synapse_type,
+    mean_pair_voltage_from_traces,
+    old_school_trace,
+    resting_potential,
+)
 from psp_validation.persistencyutils import dump_pair_traces
+from psp_validation.trace_filters import AmplitudeFilter, NullFilter, SpikeFilter
 from psp_validation.utils import load_config
 
 LOGGER = get_logger('lib')
@@ -183,6 +189,7 @@ class Pathway(object):
             self.pre_syn_type = "EXC"
 
         self.min_ampl = self.config.get('min_amplitude', 0.0)
+        self.min_trace_ampl = self.config.get('min_trace_amplitude', 0.0)  # NSETM-1166
 
         self.t_stim = self.config['protocol']['t_stim']
         if isinstance(self.t_stim, list):
@@ -190,7 +197,15 @@ class Pathway(object):
             self.t_stim = min(self.t_stim)
 
         self.t_start = self.t_stim - 10.
-        self.spike_filter = default_spike_filter(self.t_start)
+        self.trace_filters = [
+            NullFilter(),
+            SpikeFilter(t_start=self.t_start, v_max=-20),
+            AmplitudeFilter(
+                t_stim=self.t_stim,
+                min_trace_amplitude=self.min_trace_ampl,
+                syn_type=self.pre_syn_type,
+            ),
+        ]
         self.resting_potentials = list()
 
     def run(self):
@@ -250,15 +265,18 @@ class Pathway(object):
         Also:
             - fill the all_amplitudes list
             - Compute the resting potential if the holding voltage is None
+
+        In case of voltage traces, they are filtered to calculate the average,
+        but the returned traces are not filtered.
         '''
         if self.protocol_params.clamp == 'current':
             traces = old_school_trace(sim_results)
-            v_mean, t, v_used = mean_pair_voltage_from_traces(traces, self.spike_filter)
+            v_mean, t, v_used = mean_pair_voltage_from_traces(traces, self.trace_filters)
 
             filtered_count = len(sim_results.voltages) - len(v_used)
             if filtered_count > 0:
                 LOGGER.warning("%d out of %d traces filtered out for a%d-a%d"
-                               " simulation(s) due to spiking",
+                               " simulation(s) due to spiking or synaptic failure",
                                filtered_count, len(sim_results.voltages),
                                pre_gid, post_gid
                                )

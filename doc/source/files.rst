@@ -108,13 +108,19 @@ Reference biological data
 Other
 ~~~~~
 
-+---------------+--------+-------------------------------------------------+
-| key           | type   | meaning                                         |
-+===============+========+=================================================+
-| min_amplitude | float  | Minimal PSP amplitude to consider [mV]          |
-|               |        | (values below that would be replaced with NaNs) |
-|               |        | Optional, defaults to 0.0                       |
-+---------------+--------+-------------------------------------------------+
++---------------------+--------+------------------------------------------------------------+
+| key                 | type   | meaning                                                    |
++=====================+========+============================================================+
+| min_amplitude       | float  | Minimal PSP amplitude of the mean value to consider [mV].  |
+|                     |        | Values below that are replaced with NaNs.                  |
+|                     |        | Optional, defaults to 0.0.                                 |
++---------------------+--------+------------------------------------------------------------+
+| min_trace_amplitude | float  | Minimal PSP amplitude of the traces to consider, relative  |
+|                     |        | to the resting potential [mV].                             |
+|                     |        | Traces that are completely below this value are considered |
+|                     |        | synaptic failures and are filtered out.                    |
+|                     |        | Optional, defaults to 0.0 (traces are not filtered out).   |
++---------------------+--------+------------------------------------------------------------+
 
 Example
 ~~~~~~~
@@ -141,6 +147,7 @@ Putting it all together:
             max_dist_z: 100.0
 
     min_amplitude: 0.01
+    min_trace_amplitude: 0.01
 
     protocol:
         record_dt: 0.1

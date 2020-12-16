@@ -3,13 +3,12 @@ from tempfile import TemporaryDirectory
 
 import h5py
 from mock import MagicMock, patch
-from nose.tools import (assert_almost_equal, assert_dict_equal, assert_equal,
-                        assert_raises, assert_true, ok_, raises)
+from nose.tools import assert_almost_equal, assert_dict_equal, assert_equal, ok_
 from numpy.testing import assert_array_equal
 
 import psp_validation.pathways as test_module
-from psp_validation.features import SpikeFilter
 from psp_validation.psp import ProtocolParameters
+from psp_validation.trace_filters import SpikeFilter
 
 from .utils import mock_run_pair_simulation_suite
 
@@ -44,7 +43,7 @@ def _dummy_pathway(protocol_kwargs, pairs_mock, synapse_type_mock):
     pathway.pre_syn_type = 'EXC'
     pathway.min_ampl = 12.3
     pathway.t_stim = 199.
-    pathway.spike_filter = SpikeFilter(t_start=0, v_max=100)
+    pathway.trace_filters = [SpikeFilter(t_start=0, v_max=100)]
     return pathway
 
 
