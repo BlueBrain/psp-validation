@@ -13,11 +13,9 @@ import logging
 
 import click
 
-from psp_validation import get_logger, setup_logging
+from psp_validation import setup_logging
 from psp_validation.utils import load_yaml
 from psp_validation.version import VERSION
-
-LOGGER = get_logger()
 
 # pylint: disable=import-outside-toplevel
 

@@ -1,10 +1,10 @@
 """Trace filters."""
+import logging
 from abc import ABC, abstractmethod
 
-from psp_validation import get_logger
 from psp_validation.features import get_peak_amplitude, get_peak_voltage
 
-LOGGER = get_logger('lib')
+LOGGER = logging.getLogger(__name__)
 
 
 class BaseTraceFilter(ABC):

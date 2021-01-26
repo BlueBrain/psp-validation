@@ -6,18 +6,19 @@ Minis are not used because they provide too much noise.
 No current injection other than the current to achieve the holding potential
 are included. (no HypAmp for instance)
 """
+import logging
 from functools import partial
 
 import attr
 from bluepy.v2 import Circuit
 import numpy as np
 
-from psp_validation import get_logger, PSPError
+from psp_validation import PSPError
 from psp_validation.pathways import Pathway
 from psp_validation.simulation import run_pair_simulation_suite
 from psp_validation.utils import load_yaml
 
-LOGGER = get_logger('lib')
+LOGGER = logging.getLogger(__name__)
 
 
 @attr.s
@@ -61,7 +62,7 @@ def run(
                              n_trials=num_trials,
                              n_jobs=jobs,
                              clamp=clamp,
-                             log_level=get_logger().level
+                             log_level=LOGGER.getEffectiveLevel(),
                              )
 
         Pathway(pathway_config_path, sim_runner, protocol_params).run()

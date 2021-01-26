@@ -1,6 +1,7 @@
 """Repository for pathway queries
 """
 import itertools
+import logging
 import os
 from builtins import filter
 
@@ -8,7 +9,6 @@ import h5py
 import numpy as np
 from bluepy.v2.enums import Cell
 
-from psp_validation import get_logger
 from psp_validation.features import (
     compute_scaling,
     get_peak_amplitude,
@@ -21,7 +21,7 @@ from psp_validation.persistencyutils import dump_pair_traces
 from psp_validation.trace_filters import AmplitudeFilter, NullFilter, SpikeFilter
 from psp_validation.utils import load_config
 
-LOGGER = get_logger('lib')
+LOGGER = logging.getLogger(__name__)
 
 
 class ConnectionFilter(object):

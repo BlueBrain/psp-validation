@@ -9,9 +9,9 @@ import warnings
 import attr
 import joblib
 
-from psp_validation import get_logger, setup_logging
+from psp_validation import setup_logging
 
-LOGGER = get_logger('simulation')
+LOGGER = logging.getLogger(__name__)
 
 
 @attr.s
@@ -228,7 +228,7 @@ def run_pair_simulation_suite(
             hold_V=hold_V,
             post_ttx=post_ttx,
             add_projections=add_projections,
-            log_level=get_logger().level,
+            log_level=log_level,
             base_seed=(base_seed + k),
         )
         for k in range(n_trials)

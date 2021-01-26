@@ -1,12 +1,13 @@
 '''The module all features extraction are defined'''
+import logging
 
 import efel
 import numpy as np
 from bluepy.v2.enums import Cell
 
-from psp_validation import PSPError, get_logger
+from psp_validation import PSPError
 
-LOGGER = get_logger('lib')
+LOGGER = logging.getLogger(__name__)
 
 
 def _check_syn_type(syn_type):
