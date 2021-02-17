@@ -2,7 +2,6 @@
 
 import collections
 import logging
-import multiprocessing
 import os
 import warnings
 
@@ -10,6 +9,7 @@ import attr
 import joblib
 
 from psp_validation import setup_logging
+from psp_validation.utils import isolate
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +49,16 @@ def _bglibpy(level):
     return bglibpy
 
 
+def get_holding_current(log_level, hold_V, post_gid, blue_config, post_ttx):
+    """Retrieve the holding current using bglibpy."""
+    hold_I, _ = _bglibpy(log_level).holding_current(  # pylint: disable=no-member
+        hold_V, post_gid, blue_config, enable_ttx=post_ttx
+    )
+    # If the memory allocated by bglibpy for the simulation is not automatically freed,
+    # consider to call gc.collect() here. See NSETM-1356 and BGLPY-80 for more information.
+    return hold_I
+
+
 def get_synapse_unique_value(cell, getter):
     '''Return a value that is supposed to be the same accross all synapses
 
@@ -61,23 +71,6 @@ def get_synapse_unique_value(cell, getter):
         raise AssertionError('Expected one value, got {}.\nHere are the values'
                              '{}'.format(len(values), values))
     return values[0]
-
-
-def run_pair_simulation_isolated(**kwargs):
-    '''execute the `run_pair_simulation` in its own process
-
-    Note: this is required because bglibpy uses NEURON, and the latter
-    cannot be coerced to clean up its memory usage; thus causing out of
-    memory problems as more simulations are run across multiple workers
-    '''
-    pool = multiprocessing.Pool(1, maxtasksperchild=1)
-    responses = pool.apply(run_pair_simulation, kwds=kwargs)
-
-    pool.terminate()
-    pool.join()
-    del pool
-
-    return responses
 
 
 def run_pair_simulation(
@@ -202,9 +195,7 @@ def run_pair_simulation_suite(
     assert clamp in ('current', 'voltage')
     if clamp == 'current':
         LOGGER.info("Calculating a%d holding current...", post_gid)
-        hold_I, _ = _bglibpy(log_level).holding_current(  # pylint: disable=no-member
-            hold_V, post_gid, blue_config, enable_ttx=post_ttx
-        )
+        hold_I = get_holding_current(log_level, hold_V, post_gid, blue_config, post_ttx)
         LOGGER.info("a%d holding current: %.3f nA", post_gid, hold_I)
     else:
         hold_I = None
@@ -214,8 +205,12 @@ def run_pair_simulation_suite(
     elif n_jobs <= 0:
         n_jobs = -1
 
-    # Note: for debugging purposes, run_pair_simulation should be called directly
-    worker = joblib.delayed(run_pair_simulation_isolated)
+    # Isolate `run_pair_simulation` in its own process.
+    # Note: this is required because bglibpy uses NEURON, and the latter
+    #   cannot be coerced to clean up its memory usage; thus causing out of
+    #   memory problems as more simulations are run across multiple workers.
+    # Note: for debugging purposes, run_pair_simulation should be called directly.
+    worker = joblib.delayed(isolate(run_pair_simulation))
     results = joblib.Parallel(n_jobs=n_jobs, backend='loky')([
         worker(
             blue_config=blue_config,

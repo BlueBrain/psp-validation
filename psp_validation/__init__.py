@@ -9,7 +9,8 @@ LOGGER = logging.getLogger(__name__)
 
 def setup_logging(level):
     """ Setup application logger. """
-    logging.basicConfig(level=logging.WARNING)
+    logformat = "%(asctime)s %(levelname)-8s %(name)s: %(message)s"
+    logging.basicConfig(level=logging.WARNING, format=logformat)
     LOGGER.setLevel(level=level)
 
 

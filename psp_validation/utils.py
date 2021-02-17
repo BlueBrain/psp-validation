@@ -1,5 +1,7 @@
 '''The famous utils module'''
+import multiprocessing
 import os
+
 import yaml
 
 
@@ -25,3 +27,22 @@ def load_config(filepath):
     )
 
     return title, config
+
+
+def isolate(func):
+    """Isolate a function in a separate process.
+
+    Note: it does not work as a decorator.
+    Note: initially based on morph-tool, removing NestedPool because incompatible with Python 3.8.
+
+    Args:
+        func (function): function to isolate.
+
+    Returns:
+        the isolated function
+    """
+    def func_isolated(*args, **kwargs):
+        with multiprocessing.Pool(1, maxtasksperchild=1) as pool:
+            return pool.apply(func, args, kwargs)
+
+    return func_isolated
