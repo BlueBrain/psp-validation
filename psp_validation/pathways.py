@@ -7,7 +7,7 @@ from builtins import filter
 
 import h5py
 import numpy as np
-from bluepy.v2.enums import Cell
+from bluepy.enums import Cell
 
 from psp_validation.features import (
     compute_scaling,
@@ -29,7 +29,7 @@ class ConnectionFilter(object):
     Filter (pre_gid, post_gid, [nsyn]) tuples by different criteria.
 
     Args:
-        circuit: bluepy.v2.Circuit instance
+        circuit: bluepy.Circuit instance
 
         unique_gids: use GIDs only once
         min_nsyn: min synapse count for connection
@@ -98,9 +98,9 @@ def get_pairs(circuit, pre, post, n_pairs, constraints=None, projection=None):
     Get 'n_pairs' connected pairs specified by `query` and optional `constraints`.
 
     Args:
-        circuit: bluepy.v2.Circuit instance
-        pre: presynaptic cell group (BluePy.v2 query)
-        post: postsynaptic cell group (BluePy.v2 query)
+        circuit: bluepy.Circuit instance
+        pre: presynaptic cell group (BluePy query)
+        post: postsynaptic cell group (BluePy query)
         n_pairs: number of pairs to return
         constraints: dict passed as kwargs to `ConnectionFilter`
         projection: projection name (None for main connectome)

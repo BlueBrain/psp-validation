@@ -7,16 +7,16 @@ setup(
     name="psp-validation",
     version=__version__,
     install_requires=[
+        'attrs>=20.3.0',
         'click>=7.0',
         'efel>=3.0.39',
-        'h5py>=2.7,<3',  # can't use h5py>3; see NSETM-1247, remove on release of bluepy v1
-        'joblib>=0.13',
+        'h5py>=3,<4',
+        'joblib>=0.16',
         'numpy>=1.10',
         'tqdm>=4.0',
         'neuron>=7.8.0',
-    ] + [
-        'bglibpy>=4.3.15,<5.0',
-        'bluepy[sonata]==0.16.0',   # can't use h5py>3; see above
+        'bglibpy>=4.4.27,<5.0',
+        'bluepy>=2.1,<3.0',
     ],
     packages=find_packages(),
     author="BlueBrain NSE",

@@ -1,7 +1,13 @@
 Changelog
 =========
 
-Version 0.3.2
+Version 0.4.0
+-------------
+
+- Update bluepy dependency to 2.1.0.
+- Update bglibpy dependency to 4.4.27.
+
+Version 0.3.3
 -------------
 
 - Add a configuration parameter `min_trace_amplitude` to

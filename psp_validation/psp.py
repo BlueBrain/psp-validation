@@ -10,7 +10,7 @@ import logging
 from functools import partial
 
 import attr
-from bluepy.v2 import Circuit
+from bluepy import Circuit
 import numpy as np
 
 from psp_validation import PSPError

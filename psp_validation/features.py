@@ -3,7 +3,7 @@ import logging
 
 import efel
 import numpy as np
-from bluepy.v2.enums import Cell
+from bluepy.enums import Cell
 
 from psp_validation import PSPError
 
