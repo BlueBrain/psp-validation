@@ -3,7 +3,7 @@ Introduction
 
 ``psp-validation`` package is a tool for running pair neuron simulations and extracting postsynaptic potential (PSP) amplitudes from the resulting voltage traces.
 
-It relies on `BluePy <https://bbpcode.epfl.ch/documentation/bluepy-0.11.9/>`_ for querying GID pairs from a circuit, and `BGLibPy <https://bbpcode.epfl.ch/documentation/BGLibPy-3.2>`_ for actually running pair simulations.
+It relies on `BluePy <https://bbpteam.epfl.ch/documentation/projects/bluepy/latest/>`_ for querying GID pairs from a circuit, and `BGLibPy <https://bbpcode.epfl.ch/documentation/BGLibPy-3.2>`_ for actually running pair simulations.
 
 .. warning::
 
@@ -11,6 +11,7 @@ It relies on `BluePy <https://bbpcode.epfl.ch/documentation/bluepy-0.11.9/>`_ fo
     | We apologize for possible inconvenience.
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
 
    install

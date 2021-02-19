@@ -1,6 +1,8 @@
 File formats
 ============
 
+.. _pathway-config:
+
 Pathway config
 --------------
 
@@ -159,10 +161,12 @@ Putting it all together:
 Please refer to `usecases <https://bbpcode.epfl.ch/source/xref/nse/psp-validation/usecases/>`_ for more examples.
 
 
+.. _target-definitions:
+
 Target definitions
 ------------------
 
-Additional targets defined as BluePy.v2 `cell groups <https://bbpcode.epfl.ch/documentation/bluepy-0.11.9/tutorial.html#v2-cells-get>`_.
+Additional targets defined as BluePy `cell groups <https://bbpteam.epfl.ch/documentation/projects/bluepy/latest/circuit.html#cells-get>`_.
 
 For example,
 
@@ -172,12 +176,14 @@ For example,
         layer: 4
         synapse_class: EXC
 
-corresponds to BluePy.v2 cell group
+corresponds to BluePy cell group
 
 .. code-block:: python
 
     {Cell.LAYER: 4, Cell.SYNAPSE_CLASS: 'EXC'}
 
+
+.. _summary-file:
 
 Summary file
 ------------
@@ -196,6 +202,8 @@ If source pathway config specifies reference PSP amplitude data, it is repeated 
         mean: 1.3
         std:  1.1
     scaling: 0.94519076506
+
+.. _trace-dump:
 
 Trace dump
 ----------

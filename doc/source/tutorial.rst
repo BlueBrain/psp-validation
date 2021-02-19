@@ -22,8 +22,8 @@ To run pair simulations for given pathway(s):
 
 where
 
-    - ``<pathway.yaml>`` is :ref:`pathway config <Pathway Config>` file
-    - ``<targets.yaml>`` is :ref:`target definitions <Target definitions>` file
+    - ``<pathway.yaml>`` is :ref:`pathway config <pathway-config>` file
+    - ``<targets.yaml>`` is :ref:`target definitions <target-definitions>` file
     - ``NUM_PAIRS`` is number of pairs to simulate
     - ``NUM_TRIALS`` is number of simulation trials per each pair
     - ``clamp`` allows to choose between voltage and current clamp mode (default: ``current``)
@@ -42,7 +42,7 @@ In *current clamp* mode, it will also:
    - extract PSP amplitude from "average" voltage trace (spiking trials are not taken into account)
  - calculate mean / std of obtained amplitudes
  - calculate conductance scaling factor, if reference data is provided
- - dump mean / std of obtained amplitudes, as well as scaling factor to :ref:`summary file <Summary file>`
+ - dump mean / std of obtained amplitudes, as well as scaling factor to :ref:`summary file <summary-file>`
 
 For more `psp run` commands and options:
 
@@ -57,7 +57,7 @@ In particular:
 --dump-amplitudes  dump PSP amplitude values to ``X.amplitudes.txt``
 --jobs JOBS      use `multiprocessing <https://docs.python.org/2/library/multiprocessing.html>`_ to launch multiple simulation trials in parallel
 
-| ``X.traces.h5`` is an HDF5 file with the layout described :ref:`here <Trace dump>`.
+| ``X.traces.h5`` is an HDF5 file with the layout described :ref:`here <trace-dump>`.
 | ``X.amplitudes.txt`` is a one-column text file with PSP amplitude value for each pair (``nan`` if amplitude could not be extracted).
 
 In *voltage clamp* mode, ``--dump-amplitudes`` is ignored.

@@ -7,6 +7,7 @@ Version 0.4.0
 - Update bluepy dependency to 2.1.0.
 - Update bglibpy dependency to 4.4.27.
 - Fix growing memory issues [NSETM-1356].
+- Update documentation format.
 
 Version 0.3.3
 -------------

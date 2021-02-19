@@ -18,6 +18,7 @@ setup(
         'bglibpy>=4.4.27,<5.0',
         'bluepy>=2.1,<3.0',
     ],
+    extras_require={"docs": ["sphinx", "sphinx-bluebrain-theme"]},
     packages=find_packages(),
     author="BlueBrain NSE",
     author_email="bbp-ou-nse@groupes.epfl.ch",
@@ -28,5 +29,20 @@ setup(
         'console_scripts': ['psp=psp_validation.cli:cli']},
     url="https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
     download_url="ssh://bbpcode.epfl.ch/nse/psp-validation",
-    include_package_data=True
+    project_urls={
+        "Tracker": "https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
+        "Source": "ssh://bbpcode.epfl.ch/nse/psp-validation",
+    },
+    include_package_data=True,
+    classifiers=[
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Education",
+        "Intended Audience :: Science/Research",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+    ],
 )
