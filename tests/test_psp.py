@@ -1,10 +1,6 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import warnings
-
-from nose.tools import (assert_almost_equal, assert_dict_equal, assert_equal,
-                        assert_raises, assert_true, ok_, raises)
 
 from psp_validation import psp
 
@@ -32,9 +28,10 @@ def test_run():
                 seed=0,
                 jobs=1,
             )
-            assert_equal({path.name for path in Path(folder).iterdir()},
-                         {'SP_PVBC-SP_PC.traces.h5',
-                          'SP_PVBC-SP_PC.summary.yaml',
-                          'SP_PVBC-SP_PC.amplitudes.txt'})
+            assert {path.name for path in Path(folder).iterdir()} == {
+                'SP_PVBC-SP_PC.traces.h5',
+                'SP_PVBC-SP_PC.summary.yaml',
+                'SP_PVBC-SP_PC.amplitudes.txt',
+            }
     finally:
         os.chdir(orig_path)

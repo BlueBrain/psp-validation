@@ -2,9 +2,8 @@ import os
 from tempfile import TemporaryDirectory
 
 import h5py
-from mock import MagicMock, patch
-from nose.tools import assert_almost_equal, assert_dict_equal, assert_equal, ok_
-from numpy.testing import assert_array_equal
+from unittest.mock import MagicMock, patch
+from numpy.testing import assert_array_equal, assert_allclose
 
 import psp_validation.pathways as test_module
 from psp_validation.psp import ProtocolParameters
@@ -53,14 +52,14 @@ def test__init_traces_dump():
         traces_path = pathway._init_traces_dump()
 
         with h5py.File(traces_path, 'r') as h5f:
-            assert_equal(h5f.attrs['data'], 'voltage')
+            assert h5f.attrs['data'] == 'voltage'
 
     with TemporaryDirectory('test-init-traces-dump') as folder:
         pathway = _dummy_pathway(dict(dump_traces=True, output_dir=folder, clamp='voltage'))
         traces_path = pathway._init_traces_dump()
 
         with h5py.File(traces_path, 'r') as h5f:
-            assert_equal(h5f.attrs['data'], 'current')
+            assert h5f.attrs['data'] == 'current'
 
 
 def test__run_one_pair():
@@ -71,15 +70,15 @@ def test__run_one_pair():
 
         h5_file = os.path.join(folder, 'dump.h5')
         pathway._run_one_pair(0, all_amplitudes, h5_file)
-        assert_almost_equal(all_amplitudes, [94.0238021084036])
+        assert_allclose(all_amplitudes, [94.0238021084036])
 
         with h5py.File(h5_file, 'r') as f:
-            ok_('/traces/a1-a2' in f)
+            assert '/traces/a1-a2' in f
             group = f['/traces/a1-a2']
-            assert_equal(group.attrs['pre_gid'], 1)
-            assert_equal(group.attrs['post_gid'], 2)
-            ok_('trials' in group)
-            ok_('average' in group)
+            assert group.attrs['pre_gid'] == 1
+            assert group.attrs['post_gid'] == 2
+            assert 'trials' in group
+            assert 'average' in group
 
 
 def test__run_pathway_no_pairs():
@@ -117,8 +116,8 @@ def test__get_reference_and_scaling():
     params = {}
     pathway.config = {'reference': {'psp_amplitude': {'mean': 12}}, 'protocol': {'hold_V': 43.0}}
     reference, scaling = pathway._get_reference_and_scaling(model_mean, params)
-    assert_dict_equal(reference, {'mean': 12})
-    assert_almost_equal(scaling, 0.11275791920953214)
+    assert reference == {'mean': 12}
+    assert_allclose(scaling, 0.11275791920953214)
 
     def pathway_null_hold_V(folder):
         '''A helper to test a pathway with null hold_V'''
@@ -136,4 +135,4 @@ def test__get_reference_and_scaling():
         pathway.run()
 
         reference, scaling = pathway._get_reference_and_scaling(model_mean, params)
-        assert_almost_equal(scaling, 0.007170083739722974)
+        assert_allclose(scaling, 0.007170083739722974)

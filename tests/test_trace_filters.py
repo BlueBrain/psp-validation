@@ -1,7 +1,6 @@
 from itertools import repeat
 
 import numpy as np
-from nose.tools import assert_equal
 from numpy.testing import assert_array_equal
 
 import psp_validation.trace_filters as test_module
@@ -17,7 +16,7 @@ def test_NullFilter_no_filter():
     tf = test_module.NullFilter()
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (5, 2, 100))
+    assert filtered.shape == (5, 2, 100)
     assert_array_equal(filtered, traces)
 
 
@@ -31,15 +30,15 @@ def test_NullFilter_filter_all():
     tf = test_module.NullFilter()
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (0,))
+    assert filtered.shape == (0,)
     assert_array_equal(filtered, [])
 
 
 def test_SpikeFilter_members():
     tf = test_module.SpikeFilter(4321, 1234)
 
-    assert_equal(tf.t0, 4321)
-    assert_equal(tf.v_max, 1234)
+    assert tf.t0 == 4321
+    assert tf.v_max == 1234
 
 
 def test_SpikeFilter_no_filter():
@@ -50,7 +49,7 @@ def test_SpikeFilter_no_filter():
     tf = test_module.SpikeFilter(0, 10)
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (5, 2, 100))
+    assert filtered.shape == (5, 2, 100)
     assert_array_equal(filtered, traces)
 
 
@@ -62,7 +61,7 @@ def test_SpikeFilter_filter_all():
     tf = test_module.SpikeFilter(0, -5)
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (0,))
+    assert filtered.shape == (0,)
     assert_array_equal(filtered, [])
 
 
@@ -74,16 +73,16 @@ def test_SpikeFilter_filter():
     tf = test_module.SpikeFilter(0, 25)
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (3, 2, 100))
+    assert filtered.shape == (3, 2, 100)
     assert_array_equal(filtered, traces[:3])
 
 
 def test_AmplitudeFilter_members():
     tf = test_module.AmplitudeFilter(2345, 0.12, 'EXC')
 
-    assert_equal(tf.t_stim, 2345)
-    assert_equal(tf.min_trace_amplitude, 0.12)
-    assert_equal(tf.syn_type, 'EXC')
+    assert tf.t_stim == 2345
+    assert tf.min_trace_amplitude == 0.12
+    assert tf.syn_type == 'EXC'
 
 
 def test_AmplitudeFilter_no_filter_with_zero_amplitude():
@@ -94,7 +93,7 @@ def test_AmplitudeFilter_no_filter_with_zero_amplitude():
     tf = test_module.AmplitudeFilter(2, 0, 'EXC')
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (5, 2, 100))
+    assert filtered.shape == (5, 2, 100)
     assert_array_equal(filtered, traces)
 
 
@@ -107,7 +106,7 @@ def test_AmplitudeFilter_no_filter_exc():
     tf = test_module.AmplitudeFilter(2, 9, 'EXC')
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (5, 2, 100))
+    assert filtered.shape == (5, 2, 100)
     assert_array_equal(filtered, traces)
 
 
@@ -120,7 +119,7 @@ def test_AmplitudeFilter_no_filter_inh():
     tf = test_module.AmplitudeFilter(2, 9, 'INH')
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (5, 2, 100))
+    assert filtered.shape == (5, 2, 100)
     assert_array_equal(filtered, traces)
 
 
@@ -133,7 +132,7 @@ def test_AmplitudeFilter_filter_all_exc():
     tf = test_module.AmplitudeFilter(2, 9, 'EXC')
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (0,))
+    assert filtered.shape == (0,)
     assert_array_equal(filtered, [])
 
 
@@ -146,7 +145,7 @@ def test_AmplitudeFilter_filter_all_inh():
     tf = test_module.AmplitudeFilter(2, 9, 'INH')
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (0,))
+    assert filtered.shape == (0,)
     assert_array_equal(filtered, [])
 
 
@@ -158,7 +157,7 @@ def test_AmplitudeFilter_filter_all_flat_exc():
     tf = test_module.AmplitudeFilter(2, 9, 'EXC')
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (0,))
+    assert filtered.shape == (0,)
     assert_array_equal(filtered, [])
 
 
@@ -170,7 +169,7 @@ def test_AmplitudeFilter_filter_all_flat_inh():
     tf = test_module.AmplitudeFilter(2, 9, 'INH')
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (0,))
+    assert filtered.shape == (0,)
     assert_array_equal(filtered, [])
 
 
@@ -187,5 +186,5 @@ def test_AmplitudeFilter_filter():
     tf = test_module.AmplitudeFilter(2, 4, 'EXC')
     filtered = np.array(tf(traces))
 
-    assert_equal(filtered.shape, (3, 2, 100))
+    assert filtered.shape == (3, 2, 100)
     assert_array_equal(filtered, traces[:3])

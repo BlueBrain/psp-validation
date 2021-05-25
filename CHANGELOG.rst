@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.4.1
+-------------
+
+- Replace nose tests with pytest.
+- Update documentation.
+
 Version 0.4.0
 -------------
 

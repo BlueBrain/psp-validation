@@ -2,9 +2,10 @@ import os
 
 import numpy as np
 import pandas as pd
-from mock import MagicMock, patch
-from nose.tools import assert_almost_equal, assert_equal, assert_raises, assert_true, raises
-from numpy.testing import assert_array_equal
+from unittest.mock import MagicMock, patch
+
+import pytest
+from numpy.testing import assert_array_equal, assert_allclose
 
 import psp_validation.features as test_module
 from psp_validation import PSPError
@@ -20,7 +21,8 @@ def test_get_peak_voltage_INH():
     time = np.linspace(1, 10, 10)
     voltage = np.linspace(-10, 9, 10)
     peak = np.min(voltage)
-    assert_equal(peak, test_module.get_peak_voltage(time, voltage, 0., "INH"))
+    actual = test_module.get_peak_voltage(time, voltage, 0., "INH")
+    assert peak == actual
 
 
 def test_get_peak_voltage_EXC_with_timecut():
@@ -28,7 +30,8 @@ def test_get_peak_voltage_EXC_with_timecut():
     voltage = np.linspace(-10, 9, 10)
     t_stim = 3
     peak = np.max(voltage[time > t_stim])
-    assert_equal(peak, test_module.get_peak_voltage(time, voltage, t_stim, "EXC"))
+    actual = test_module.get_peak_voltage(time, voltage, t_stim, "EXC")
+    assert peak == actual
 
 
 def test_get_peak_voltage_INH_with_timecut():
@@ -36,38 +39,40 @@ def test_get_peak_voltage_INH_with_timecut():
     voltage = np.linspace(-10, 0, 10)
     t_stim = 3
     peak = np.min(voltage[time > t_stim])
-    assert_equal(peak, test_module.get_peak_voltage(time, voltage, t_stim, "INH"))
+    actual = test_module.get_peak_voltage(time, voltage, t_stim, "INH")
+    assert peak == actual
 
 
 def test__check_syntype():
     test_module._check_syn_type("EXC")
     test_module._check_syn_type("INH")
-    assert_raises(AttributeError, test_module._check_syn_type, "gloubi-boulga")
+    with pytest.raises(AttributeError):
+        test_module._check_syn_type("gloubi-boulga")
 
 
-@raises(ValueError)
 def test_get_peak_voltage_EXC_with_empty_input_raises():
-    test_module.get_peak_voltage(np.array([]), np.array([]), 0, "EXC")
+    with pytest.raises(ValueError):
+        test_module.get_peak_voltage(np.array([]), np.array([]), 0, "EXC")
 
 
-@raises(ValueError)
 def test_get_peak_voltage_INH_with_empty_input_raises():
-    test_module.get_peak_voltage(np.array([]), np.array([]), 0, "INH")
+    with pytest.raises(ValueError):
+        test_module.get_peak_voltage(np.array([]), np.array([]), 0, "INH")
 
 
-@raises(ValueError)
 def test_get_peak_voltage_EXC_with_future_t_stim_raises():
-    test_module.get_peak_voltage(np.array([0, 1, 2, 3]), np.array([11, 22, 33, 11]), 4, "EXC")
+    with pytest.raises(ValueError):
+        test_module.get_peak_voltage(np.array([0, 1, 2, 3]), np.array([11, 22, 33, 11]), 4, "EXC")
 
 
-@raises(ValueError)
 def test_get_peak_voltage_INH_with_future_t_stim_raises():
-    test_module.get_peak_voltage(np.array([0, 1, 2, 3]), np.array([11, 22, 33, 11]), 4, "INH")
+    with pytest.raises(ValueError):
+        test_module.get_peak_voltage(np.array([0, 1, 2, 3]), np.array([11, 22, 33, 11]), 4, "INH")
 
 
-@raises(ValueError)
 def test_getpeak_voltage_call_with_non_numpy_array_args_raises():
-    test_module.get_peak_voltage([0, 1, 2, 3], [11, 22, 33, 11], 0, "XXX")
+    with pytest.raises(ValueError):
+        test_module.get_peak_voltage([0, 1, 2, 3], [11, 22, 33, 11], 0, "XXX")
 
 
 def test_numpy_ndarray_checker():
@@ -76,43 +81,45 @@ def test_numpy_ndarray_checker():
     test_module._check_numpy_ndarrays(np.array([1, 2, 3]), np.array([1, 2, 3]), np.array([1, 2, 3]))
 
 
-@raises(ValueError)
 def test_numpy_ndarray_checker_raises0():
-    test_module._check_numpy_ndarrays([1, 2, 3], np.array([1, 2, 3]))
+    with pytest.raises(ValueError):
+        test_module._check_numpy_ndarrays([1, 2, 3], np.array([1, 2, 3]))
 
 
-@raises(ValueError)
 def test_numpy_ndarray_checker_raises1():
-    test_module._check_numpy_ndarrays(np.array([1, 2, 3]), [1, 2, 3])
+    with pytest.raises(ValueError):
+        test_module._check_numpy_ndarrays(np.array([1, 2, 3]), [1, 2, 3])
 
 
-@raises(ValueError)
 def test_numpy_ndarray_checker_raises2():
-    test_module._check_numpy_ndarrays(np.array([1, 2, 3]), (1, 2, 3))
+    with pytest.raises(ValueError):
+        test_module._check_numpy_ndarrays(np.array([1, 2, 3]), (1, 2, 3))
 
 
-@raises(ValueError)
 def test_numpy_ndarray_checker_raises3():
-    test_module._check_numpy_ndarrays(1, 2, 3, "Hello")
+    with pytest.raises(ValueError):
+        test_module._check_numpy_ndarrays(1, 2, 3, "Hello")
 
 
 def test_get_peak_amplitude():
     # Use numpy to read the trace data from the txt file
     data = np.loadtxt(os.path.join(os.path.dirname(__file__), 'input_data', 'example_trace.txt'))
 
-    assert_almost_equal(45.36493144290979,
-                        test_module.get_peak_amplitude(time=data[:, 0],
-                                                       voltage=data[:, 1],
-                                                       t_stim=1400,
-                                                       syn_type='EXC'))
+    actual = test_module.get_peak_amplitude(
+        time=data[:, 0],
+        voltage=data[:, 1],
+        t_stim=1400,
+        syn_type='EXC',
+    )
+    assert_allclose(45.36493144290979, actual)
 
-    assert_almost_equal(40.91181329374111,
-                        test_module.get_peak_amplitude(time=data[:, 0],
-                                                       voltage=data[:, 1],
-                                                       t_stim=1400,
-                                                       syn_type='INH'))
-
-
+    actual = test_module.get_peak_amplitude(
+        time=data[:, 0],
+        voltage=data[:, 1],
+        t_stim=1400,
+        syn_type='INH',
+    )
+    assert_allclose(40.91181329374111, actual)
 
 
 def test_mean_pair_voltage_from_traces_no_filter():
@@ -122,8 +129,8 @@ def test_mean_pair_voltage_from_traces_no_filter():
     traces = test_module.old_school_trace(results)
     filters = [NullFilter(), SpikeFilter(0, 100)]
     mean = test_module.mean_pair_voltage_from_traces(traces, filters)
-    assert_true(np.all(mean[0] == 20.))
-    assert_true(np.all(mean[1] == t))
+    assert np.all(mean[0] == 20.)
+    assert np.all(mean[1] == t)
     assert_array_equal(mean[2], v)
 
 
@@ -134,8 +141,8 @@ def test_mean_pair_voltage_from_traces_filter():
     traces = test_module.old_school_trace(results)
     filters = [NullFilter(), SpikeFilter(0, 25)]
     mean = test_module.mean_pair_voltage_from_traces(traces, filters)
-    assert_true(np.all(mean[0] == 10.))
-    assert_true(np.all(mean[1] == t))
+    assert np.all(mean[0] == 10.)
+    assert np.all(mean[1] == t)
     assert_array_equal(mean[2], v[:3])
 
 
@@ -146,41 +153,42 @@ def test_mean_pair_voltage_from_traces_filter_all_returns_nan():
     filters = [NullFilter(), SpikeFilter(0, -5)]
     traces = test_module.old_school_trace(results)
     mean = test_module.mean_pair_voltage_from_traces(traces, filters)
-    assert_equal(mean, (None, None, []))
+    assert mean == (None, None, [])
 
 
 def test_compute_scaling_EXC():
     result = test_module.compute_scaling(1.0, 2.0, -70.0, 'EXC', {})
-    assert_almost_equal(result, 2.029411764)
+    assert_allclose(result, 2.029411764)
 
 
 def test_compute_scaling_INH():
     result = test_module.compute_scaling(1.0, 2.0, -70.0, 'INH', {})
-    assert_almost_equal(result, 2.25)
+    assert_allclose(result, 2.25)
 
     result = test_module.compute_scaling(1.0, 2.0, -70.0, 'INH', {'e_GABAA': -94.0})
-    assert_almost_equal(result, 2.0909090909)
+    assert_allclose(result, 2.0909090909)
 
     result = test_module.compute_scaling(1.0, 2.0, -70.0, 'EXC', {})
-    assert_almost_equal(result, 2.0294117647058827)
+    assert_allclose(result, 2.0294117647058827)
 
     result = test_module.compute_scaling(1.0, 2.0, -70.0, 'EXC', {'e_AMPA': -70.3})
-    assert_almost_equal(result, 0.8235294117647078)
+    assert_allclose(result, 0.8235294117647078)
 
 
 def test_compute_scaling_invalid():
-    assert_raises(PSPError, test_module.compute_scaling, 1.0, 2.0, -70, 'err', {})
+    with pytest.raises(PSPError):
+        test_module.compute_scaling(1.0, 2.0, -70, 'err', {})
 
 
 def test_resting_potential():
     result = mock_run_pair_simulation_suite()
-    potential = test_module.resting_potential(result.time, result.voltages[0],  1000, 1400)
-    assert_almost_equal(potential, -42.18599807850207)
+    potential = test_module.resting_potential(result.time, result.voltages[0], 1000, 1400)
+    assert_allclose(potential, -42.18599807850207)
 
     with patch('psp_validation.features.efel.getFeatureValues') as instance:
         instance.return_value = None
-        assert_raises(PSPError, test_module.resting_potential,
-                      result.time, result.voltages[0],  1000, 1400)
+        with pytest.raises(PSPError):
+            test_module.resting_potential(result.time, result.voltages[0], 1000, 1400)
 
 
 def test_get_synapse_type():
@@ -190,4 +198,5 @@ def test_get_synapse_type():
     test_module.get_synapse_type(circuit, group)
 
     circuit.cells.get.return_value = pd.Series(['EXC', 'EXC', 'INH'])
-    assert_raises(PSPError, test_module.get_synapse_type, circuit, group)
+    with pytest.raises(PSPError):
+        test_module.get_synapse_type(circuit, group)
