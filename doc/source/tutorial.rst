@@ -22,27 +22,26 @@ To run pair simulations for given pathway(s):
 
 where
 
-    - ``<pathway.yaml>`` is :ref:`pathway config <pathway-config>` file
-    - ``<targets.yaml>`` is :ref:`target definitions <target-definitions>` file
-    - ``NUM_PAIRS`` is number of pairs to simulate
-    - ``NUM_TRIALS`` is number of simulation trials per each pair
-    - ``clamp`` allows to choose between voltage and current clamp mode (default: ``current``)
+- ``<pathway.yaml>`` is :ref:`pathway config <pathway-config>` file
+- ``<targets.yaml>`` is :ref:`target definitions <target-definitions>` file
+- ``NUM_PAIRS`` is number of pairs to simulate
+- ``NUM_TRIALS`` is number of simulation trials per each pair
+- ``clamp`` allows to choose between voltage and current clamp mode (default: ``current``)
 
 
 For each pathway config ``X.yaml``, `psp run` command above will (try to):
 
- - find ``NUM_PAIRS`` pathway pairs
- - for each pair:
-
+- find ``NUM_PAIRS`` pathway pairs
+- for each pair:
    - run ``NUM_TRIALS`` simulations with different base seed
 
 In *current clamp* mode, it will also:
 
- - for each pair:
+- for each pair:
    - extract PSP amplitude from "average" voltage trace (spiking trials are not taken into account)
- - calculate mean / std of obtained amplitudes
- - calculate conductance scaling factor, if reference data is provided
- - dump mean / std of obtained amplitudes, as well as scaling factor to :ref:`summary file <summary-file>`
+- calculate mean / std of obtained amplitudes
+- calculate conductance scaling factor, if reference data is provided
+- dump mean / std of obtained amplitudes, as well as scaling factor to :ref:`summary file <summary-file>`
 
 For more `psp run` commands and options:
 
