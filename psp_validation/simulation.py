@@ -8,7 +8,7 @@ import warnings
 import attr
 import joblib
 
-from psp_validation import setup_logging
+from psp_validation import setup_logging, PSPError
 from psp_validation.utils import isolate
 
 LOGGER = logging.getLogger(__name__)
@@ -59,18 +59,18 @@ def get_holding_current(log_level, hold_V, post_gid, blue_config, post_ttx):
     return hold_I
 
 
-def get_synapse_unique_value(cell, getter):
+def _get_synapse_unique_value(cell, getter):
     '''Return a value that is supposed to be the same accross all synapses
 
     Args:
         cell: a cell
         getter: the getter function to be applied to each synapse
     '''
-    values = list({getter(synapse) for synapse in cell.synapses.values()})
+    values = {getter(synapse) for synapse in cell.synapses.values()}
     if not len(values) == 1:
-        raise AssertionError('Expected one value, got {}.\nHere are the values'
-                             '{}'.format(len(values), values))
-    return values[0]
+        raise PSPError('Synaptic value is expected to be uniform among all synapses'
+                       f' but there are multiple values: {values}')
+    return values.pop()
 
 
 def run_pair_simulation(
@@ -121,10 +121,17 @@ def run_pair_simulation(
     )
     post_cell = ssim.cells[post_gid]
 
-    if get_synapse_unique_value(post_cell, lambda synapse: synapse.is_inhibitory()):
-        params = {'e_GABAA': get_synapse_unique_value(
+    if _get_synapse_unique_value(post_cell, lambda synapse: synapse.is_inhibitory()):
+        first_synapse = next(iter(post_cell.synapses.values())).hsynapse
+        if not hasattr(first_synapse, 'e_GABAA'):
+            raise PSPError('Inhibitory reverse potential e_GABAA is expected to be under '
+                           '"e_GABAA" synaptic range NEURON variable')
+        params = {'e_GABAA': _get_synapse_unique_value(
             post_cell, lambda synapse: synapse.hsynapse.e_GABAA)}
     else:
+        if not hasattr(bg.neuron.h, 'e_ProbAMPANMDA_EMS'):
+            raise PSPError('Excitatory reverse potential e_AMPA is expected to be under '
+                           '"e_ProbAMPANMDA_EMS" global NEURON variable')
         params = {'e_AMPA': bg.neuron.h.e_ProbAMPANMDA_EMS}
 
     if post_ttx:

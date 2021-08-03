@@ -4,6 +4,7 @@ Changelog
 Version 0.4.1
 -------------
 
+- Better errors description for synaptic reversal potentials usage.
 - Replace nose tests with pytest.
 - Update documentation.
 
