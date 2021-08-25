@@ -1,5 +1,4 @@
-"""Repository for pathway queries
-"""
+"""Repository for pathway queries."""
 import itertools
 import logging
 import os
@@ -25,8 +24,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ConnectionFilter(object):
-    """
-    Filter (pre_gid, post_gid, [nsyn]) tuples by different criteria.
+    """Filter (pre_gid, post_gid, [nsyn]) tuples by different criteria.
 
     Args:
         circuit: bluepy.Circuit instance
@@ -94,8 +92,7 @@ class ConnectionFilter(object):
 
 
 def get_pairs(circuit, pre, post, n_pairs, constraints=None, projection=None):
-    """
-    Get 'n_pairs' connected pairs specified by `query` and optional `constraints`.
+    """Get 'n_pairs' connected pairs specified by `query` and optional `constraints`.
 
     Args:
         circuit: bluepy.Circuit instance
@@ -130,12 +127,11 @@ def get_pairs(circuit, pre, post, n_pairs, constraints=None, projection=None):
 
 
 def _get_pathway_pairs(pathway, circuit, num_pairs, projection, targets):
-    '''
-    Get 'num_pairs' of gids for the given pathway
+    """Get 'num_pairs' of gids for the given pathway.
 
     Returns:
         List of (pre_gid, post_gid) pairs
-    '''
+    """
     if 'pairs' in pathway:
         for item in pathway['pairs']:
             assert isinstance(item, list) and len(item) == 2
@@ -144,7 +140,7 @@ def _get_pathway_pairs(pathway, circuit, num_pairs, projection, targets):
         LOGGER.info("Querying pathway pairs...")
 
         def get_target(name):
-            '''Get target'''
+            """Get target."""
             return targets.get(name, name)
 
         pre = get_target(pathway['pre'])
@@ -157,18 +153,42 @@ def _get_pathway_pairs(pathway, circuit, num_pairs, projection, targets):
 
 
 class Pathway(object):
-    '''Pathway specific parameters'''
+    """Pathway specific parameters.
+
+    A pathway is all connections between given pre post cell types.
+    When doing psp-validation we sample from this pathway (we dont use all connection),
+    but that's how we use the term: "pathway".
+
+    A connection is a sample from the pathway, or all synapses between given pre and post single
+    cells
+
+    Synapse is just one synapse from the connection (as a connection can be mediated by multiple
+    synapses
+    """
 
     def __init__(self, pathway_config_path, sim_runner, protocol_params):
-        '''The pathway constructor
+        """The pathway constructor.
 
-        The simulation is only run when the "run" method is called
+        The simulation is run only when ``run`` method is called.
 
         Args:
             pathway_config_path (str): path to a pathway file
             sim_runner (function): a callable to run the simulation
             protocol_params (ProtocolParameters): the parameters to used
-        '''
+
+        Attrs:
+            title: the pathway name, taken from the basename of the pathway file
+            config: the config
+            sim_runner: a callable that will run the simulation and return traces
+            protocol_params: the parameters describing the experimental protocol
+            pathway: a dictionary with the pathway specific information
+            projection: projection
+            pairs: the list of gid pairs
+            t_stim: numeric scalar representing stimulation time.
+            t_start: the simulation start time
+            trace_filters: list of filters to filter out voltage traces
+            resting_potentials: the resting potentials
+        """
         self.title, self.config = load_config(pathway_config_path)
         self.sim_runner = sim_runner
         self.protocol_params = protocol_params
@@ -209,7 +229,7 @@ class Pathway(object):
         self.resting_potentials = []
 
     def run(self):
-        '''un the simulation for the given pathway'''
+        """Run the simulation for the given pathway."""
         if self.protocol_params.dump_traces:
             traces_path = self._init_traces_dump()
         else:
@@ -233,15 +253,15 @@ class Pathway(object):
         self._write_summary(params, all_amplitudes)
 
     def _run_one_pair(self, i_pair, all_amplitudes, traces_path):
-        '''
+        """
         Runs the simulation for a given pair, extract the peak amplitude and
-        write the trace to disk if protocol_params.dump_traces
+        write the trace to disk if protocol_params.dump_traces.
 
         Args:
             i_pair (int): the pair index in the list of pairs
             all_amplitudes: a list that will store all amplitudes
             traces_path: the trace path
-        '''
+        """
         # pylint: disable=too-many-locals
         pre_gid, post_gid = self.pairs[i_pair]
         sim_results = self.sim_runner(
@@ -258,9 +278,9 @@ class Pathway(object):
         return sim_results.params
 
     def _post_run(self, pre_gid, post_gid, sim_results, all_amplitudes):
-        '''Returns a tuple (all traces, averaged trace)
+        """Returns a tuple (all traces, averaged trace).
 
-        Where trace is whether a voltage or a current depending on the clamping technique
+        Where trace is a voltage in current clamp mode, a current in voltage clamp mode
 
         Also:
             - fill the all_amplitudes list
@@ -268,7 +288,7 @@ class Pathway(object):
 
         In case of voltage traces, they are filtered to calculate the average,
         but the returned traces are not filtered.
-        '''
+        """
         if self.protocol_params.clamp == 'current':
             traces = old_school_trace(sim_results)
             v_mean, t, v_used = mean_pair_voltage_from_traces(traces, self.trace_filters)
@@ -310,7 +330,7 @@ class Pathway(object):
         return traces, average
 
     def _init_traces_dump(self):
-        '''create empty H5 dump or overwrite existing one'''
+        """Create empty H5 dump or overwrite existing one."""
         traces_path = os.path.join(self.protocol_params.output_dir,
                                    self.title + ".traces.h5")
         with h5py.File(traces_path, 'w') as h5f:

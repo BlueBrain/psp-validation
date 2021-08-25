@@ -1,4 +1,4 @@
-'''The plot module'''
+"""The plot module."""
 import os
 import h5py
 import matplotlib

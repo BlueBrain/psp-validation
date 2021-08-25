@@ -1,4 +1,4 @@
-"""Bundle of tools to help with persistifying data"""
+"""Bundle of tools to help with persistifying data."""
 
 import numpy
 

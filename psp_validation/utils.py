@@ -1,4 +1,4 @@
-'''The famous utils module'''
+"""The famous utils module."""
 import multiprocessing
 import os
 
@@ -6,13 +6,13 @@ import yaml
 
 
 def load_yaml(filepath):
-    """ Load YAML file. """
+    """Load YAML file."""
     with open(filepath, 'r') as f:
         return yaml.load(f, Loader=yaml.FullLoader)
 
 
 def load_config(filepath):
-    """ Load YAML job config. """
+    """Load YAML job config."""
     title = os.path.splitext(os.path.basename(filepath))[0]
     config = load_yaml(filepath)
     assert 'hold_I' not in config['protocol'], ("`hold_I` parameter in protocol is deprecated. "

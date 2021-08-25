@@ -1,4 +1,4 @@
-""" Running pair simulations. """
+"""Running pair simulations."""
 
 import collections
 import logging
@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 
 @attr.s
 class SimulationResult(object):
-    '''Parameters that are the same for all pathways'''
+    """Parameters that are the same for all pathways."""
     params = attr.ib()
     time = attr.ib()
     currents = attr.ib()
@@ -24,7 +24,7 @@ class SimulationResult(object):
 
 
 def _ensure_list(v):
-    """ Convert iterable / wrap scalar into list. """
+    """Convert iterable / wrap scalar into list."""
     if isinstance(v, collections.Iterable):
         return list(v)
     else:
@@ -60,12 +60,12 @@ def get_holding_current(log_level, hold_V, post_gid, blue_config, post_ttx):
 
 
 def _get_synapse_unique_value(cell, getter):
-    '''Return a value that is supposed to be the same accross all synapses
+    """Return a value that is supposed to be the same accross all synapses.
 
     Args:
         cell: a cell
         getter: the getter function to be applied to each synapse
-    '''
+    """
     values = {getter(synapse) for synapse in cell.synapses.values()}
     if not len(values) == 1:
         raise PSPError('Synaptic value is expected to be uniform among all synapses'

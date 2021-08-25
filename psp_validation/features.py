@@ -1,4 +1,4 @@
-'''The module all features extraction are defined'''
+"""Features extractions definitions."""
 import logging
 
 import efel
@@ -16,7 +16,7 @@ def _check_syn_type(syn_type):
 
 
 def old_school_trace(simu_results):
-    '''Get the traces as it was before'''
+    """Get the traces as it was before."""
     return np.array([(voltage_array, simu_results.time) for voltage_array in
                      simu_results.voltages])
 
@@ -84,7 +84,7 @@ def get_peak_voltage(time, voltage, t_stim, syn_type):
 
 
 def efel_traces(time, voltage, t_stim):
-    '''Get traces in the format expected by efel.getFeatureValues'''
+    """Get traces in the format expected by efel.getFeatureValues."""
     return [{
         'T': time,
         'V': voltage,
@@ -115,9 +115,7 @@ def get_peak_amplitude(time, voltage, t_stim, syn_type):
 
 
 def resting_potential(time, voltage, t_start, t_stim):
-    '''Returns the resting potential
-    '''
-
+    """Returns the resting potential."""
     traces = [{
         'T': time,
         'V': voltage,
@@ -133,7 +131,7 @@ def resting_potential(time, voltage, t_start, t_stim):
 
 
 def compute_scaling(psp1, psp2, v_holding, syn_type, params):
-    """ Compute conductance scaling factor. """
+    """Compute conductance scaling factor."""
     if syn_type not in {'EXC', 'INH'}:
         raise PSPError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
 
@@ -147,8 +145,7 @@ def compute_scaling(psp1, psp2, v_holding, syn_type, params):
 
 
 def get_synapse_type(circuit, cell_group):
-    """
-    Get synapse type for `cell_group` cells.
+    """Get synapse type for `cell_group` cells.
 
     Raise an Exception if there are cells of more than one synapse type.
     """
