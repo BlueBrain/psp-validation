@@ -206,7 +206,7 @@ class Pathway(object):
                 syn_type=self.pre_syn_type,
             ),
         ]
-        self.resting_potentials = list()
+        self.resting_potentials = []
 
     def run(self):
         '''un the simulation for the given pathway'''
@@ -314,7 +314,7 @@ class Pathway(object):
         traces_path = os.path.join(self.protocol_params.output_dir,
                                    self.title + ".traces.h5")
         with h5py.File(traces_path, 'w') as h5f:
-            h5f.attrs['version'] = u'1.1'
+            h5f.attrs['version'] = '1.1'
             # we store voltage traces for current clamp and vice-versa
             h5f.attrs['data'] = {
                 'current': 'voltage',
