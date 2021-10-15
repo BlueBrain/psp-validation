@@ -12,7 +12,7 @@ LOGGER = logging.getLogger(__name__)
 
 def _check_syn_type(syn_type):
     if syn_type not in {'EXC', 'INH'}:
-        raise AttributeError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
+        raise AttributeError(f'syn_type must be one of EXC or INH, not: {syn_type}')
 
 
 def old_school_trace(simu_results):
@@ -133,7 +133,7 @@ def resting_potential(time, voltage, t_start, t_stim):
 def compute_scaling(psp1, psp2, v_holding, syn_type, params):
     """Compute conductance scaling factor."""
     if syn_type not in {'EXC', 'INH'}:
-        raise PSPError('syn_type must be one of EXC or INH, not: {}'.format(syn_type))
+        raise PSPError(f'syn_type must be one of EXC or INH, not: {syn_type}')
 
     E_rev = {
         'EXC': params.get('e_AMPA', 0.0),
@@ -152,8 +152,7 @@ def get_synapse_type(circuit, cell_group):
     syn_types = circuit.cells.get(cell_group, Cell.SYNAPSE_CLASS).unique()
     if len(syn_types) != 1:
         raise PSPError(
-            "Cell group should consist of cells with same synapse type, found: [{}]".format(
-                ",".join(syn_types)
-            )
+            f"Cell group should consist of cells with same synapse type, "
+            f"found: [{','.join(syn_types)}]"
         )
     return syn_types[0]

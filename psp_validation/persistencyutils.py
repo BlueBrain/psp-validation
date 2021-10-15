@@ -32,7 +32,7 @@ def dump_raw_traces_to_HDF5(h5file, data):
     for pair in data:
         traces = [(t[0], t[1]) for t in pair]  # strip out gids
         pre_gid, post_gid = pair[0][2]
-        group_name = '/traces/a%d-a%d' % (pre_gid, post_gid)
+        group_name = f'/traces/a{pre_gid}-a{post_gid}'
         h5file[group_name] = numpy.array(traces)
         h5file[group_name].attrs['gid_pre'] = pre_gid
         h5file[group_name].attrs['gid_post'] = post_gid
@@ -59,7 +59,7 @@ def dump_pair_traces(h5f, traces, average, pre_gid, post_gid):
 
     Each pair group has attributes 'pre_gid' and 'post_gid'.
     """
-    group = h5f.create_group('/traces/a%d-a%d' % (pre_gid, post_gid))
+    group = h5f.create_group(f'/traces/a{pre_gid}-a{post_gid}')
     group.attrs['pre_gid'] = pre_gid
     group.attrs['post_gid'] = post_gid
     group['trials'] = traces

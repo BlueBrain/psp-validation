@@ -84,13 +84,13 @@ def summary(summary_files, with_scaling=False, style='default'):
         if value is None:
             return "N/A"
         else:
-            return "%.6g" % value
+            return f"{value:.6g}"
 
     def _format_value_mean_std(value):
         if value is None:
             return "N/A"
         else:
-            return "%.6g±%.6g" % (value['mean'], value['std'])
+            return f"{value['mean']:.6g}±{value['std']:.6g}"
 
     def _add_borders(values):
         return [''] + values + ['']

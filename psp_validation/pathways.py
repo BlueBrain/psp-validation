@@ -351,16 +351,20 @@ class Pathway(object):
         summary_path = os.path.join(self.protocol_params.output_dir,
                                     self.title + ".summary.yaml")
         with open(summary_path, 'w') as f:
-            f.write("pathway: {}\n".format(self.title))
-            f.write("model:\n")
-            f.write("    mean: {}\n".format(model_mean))
-            f.write("    std: {}\n".format(model_std))
+            f.write(
+                f"pathway: {self.title}\n"
+                f"model:\n"
+                f"    mean: {model_mean}\n"
+                f"    std: {model_std}\n"
+            )
             if reference is not None:
-                f.write("reference:\n")
-                f.write("    mean: {}\n".format(reference['mean']))
-                f.write("    std: {}\n".format(reference['std']))
+                f.write(
+                    f"reference:\n"
+                    f"    mean: {reference['mean']}\n"
+                    f"    std: {reference['std']}\n"
+                )
             if scaling is not None:
-                f.write("scaling: {}\n".format(scaling))
+                f.write(f"scaling: {scaling}\n")
 
     def _get_reference_and_scaling(self, model_mean, params):
         if 'reference' in self.config:
