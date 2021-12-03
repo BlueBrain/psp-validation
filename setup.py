@@ -17,6 +17,7 @@ setup(
         'neuron>=7.8.0',
         'bglibpy>=4.4.27,<5.0',
         'bluepy>=2.1,<3.0',
+        'seaborn>=0.11,<1.0',
     ],
     extras_require={"docs": ["sphinx", "sphinx-bluebrain-theme"]},
     packages=find_packages(),
@@ -26,12 +27,13 @@ setup(
     license="BBP-internal-confidential",
     python_requires='>=3.6',
     entry_points={
-        'console_scripts': ['psp=psp_validation.cli:cli']},
+        'console_scripts': ['psp=psp_validation.cli:cli',
+                            'cv-validation=psp_validation.cv_validation.cli:cli']},
     url="https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
-    download_url="ssh://bbpcode.epfl.ch/nse/psp-validation",
+    download_url="git@bbpgitlab.epfl.ch:nse/psp-validation.git",
     project_urls={
         "Tracker": "https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
-        "Source": "ssh://bbpcode.epfl.ch/nse/psp-validation",
+        "Source": "https://bbpgitlab.epfl.ch/nse/psp-validation",
     },
     include_package_data=True,
     classifiers=[

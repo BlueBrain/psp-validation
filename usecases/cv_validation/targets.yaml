@@ -1,0 +1,24 @@
+# Values taken from the cv-validation code
+L4_SS:
+  mtype: L4_SSC
+  $target: S1HL
+
+L6_PC:
+  layer: 6
+  synapse_class: EXC
+  $target: S1HL
+
+L6_CC:
+  mtype:
+    $regex: "L6_(U|I|H)PC"
+  $target: S1HL
+
+L4_EXC:
+  layer: 4
+  synapse_class: EXC
+  $target: S1HL
+
+L4_FS:
+  mtype:
+    $regex: "L4_(SBC|LBC|NBC|CHC)"
+  $target: S1HL

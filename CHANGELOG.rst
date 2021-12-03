@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.5.0
+-------------
+
+- Add CV-validation
+
 Version 0.4.1
 -------------
 

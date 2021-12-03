@@ -19,6 +19,7 @@ It relies on `BluePy <https://bbpteam.epfl.ch/documentation/projects/bluepy/late
    tutorial
    files
    cookbook
+   cv_validation
    changelog
 
 

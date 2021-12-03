@@ -1,0 +1,20 @@
+# Values taken from the cv-validation code
+reference:
+  author: "Qi and Feldmeyer 2016"
+  cv: 0.50
+
+pathway:
+  pre: L4_SS
+  post: L6_PC
+  constraints:
+    max_dist_x: 200
+    max_dist_y: 200
+    max_dist_z: 750
+
+protocol:
+  t_stim: 800.0
+  # 28.2+/-3.5 ms from Barros-Zulaica et al. 2019 (mean of 33 in vitro L5_TTPC voltage traces)
+  tau: 28.2
+  # 0.22+/-0.1 ms from Barros-Zulaica et al. 2019 (mean of 33 in vitro L5_TTPC voltage traces)
+  sigma: 0.22
+  min_good_trials: 5
