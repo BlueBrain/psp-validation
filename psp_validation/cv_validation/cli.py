@@ -62,16 +62,27 @@ def setup(circuit_config, output_dir, pathways, targets, num_pairs, seed):
 @click.option("-r", "--num-trials", type=int, required=True,
               help="Run NUM_TRIALS simulations for each pair")
 @click.option("--nrrp", nargs=2, type=int, required=True, help="NRRP range given as: <min> <max>")
-def run(output_dir, pathways, num_trials, nrrp):
+@click.option(
+    "-m", "--clamp", type=click.Choice(['current', 'voltage']),
+    help="Clamp type used", default='current', show_default=True
+)
+@click.option(
+    "-j", "--jobs", type=int,
+    help=(
+        "Number of trials to run in parallel"
+        "(if not specified, trials are run sequentially; "
+        "setting to 0 would use all available CPUs)"
+    )
+)
+def run(output_dir, pathways, num_trials, nrrp, clamp, jobs):
     """Run the simulation with the data configured in setup."""
     simulation_dir = os.path.join(output_dir, 'simulations')
     pre_post_seeds = read_simulation_pairs(simulation_dir)
     pathway = load_yaml(pathways)
-    t_stim = pathway['protocol']['t_stim']
 
     for nrrp_ in range(nrrp[0], nrrp[1] + 1):
         for row in pre_post_seeds.itertuples():
-            run_simulation(row.seed, num_trials, row.pre, row.post, nrrp_, t_stim, simulation_dir)
+            run_simulation(row, num_trials, nrrp_, pathway['protocol'], simulation_dir, clamp, jobs)
 
 
 @cli.command()
@@ -82,9 +93,17 @@ def run(output_dir, pathways, num_trials, nrrp):
               help="Number of pairs to randomly choose from the simulation")
 @click.option("-r", "--num-reps", type=int, default=None,
               help="Number iterations (repetitions) done for each lambda value")
-def calibrate(output_dir, pathways, nrrp, num_pairs, num_reps):
+@click.option(
+    "-j", "--jobs", type=int,
+    help=(
+        "Number of trials to run in parallel"
+        "(if not specified, trials are run sequentially; "
+        "setting to 0 would use all available CPUs)"
+    )
+)
+def calibrate(output_dir, pathways, nrrp, num_pairs, num_reps, jobs):
     """Analyse the simulation results."""
     pathway = load_yaml(pathways)
     pathway_name = f"{pathway['pathway']['pre']}-{pathway['pathway']['post']}"
     run_calibration(output_dir, pathway, pathway_name, nrrp,
-                    n_pairs=num_pairs, n_reps=num_reps)
+                    n_pairs=num_pairs, n_reps=num_reps, n_jobs=jobs)

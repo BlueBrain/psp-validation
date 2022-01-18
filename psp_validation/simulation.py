@@ -1,6 +1,5 @@
 """Running pair simulations."""
 
-import collections
 import logging
 import os
 import warnings
@@ -9,7 +8,7 @@ import attr
 import joblib
 
 from psp_validation import setup_logging, PSPError
-from psp_validation.utils import isolate
+from psp_validation.utils import ensure_list, isolate
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,14 +20,6 @@ class SimulationResult(object):
     time = attr.ib()
     currents = attr.ib()
     voltages = attr.ib()
-
-
-def _ensure_list(v):
-    """Convert iterable / wrap scalar into list."""
-    if isinstance(v, collections.Iterable):
-        return list(v)
-    else:
-        return [v]
 
 
 def _bglibpy(level):
@@ -76,7 +67,8 @@ def _get_synapse_unique_value(cell, getter):
 def run_pair_simulation(
     blue_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
-    hold_I=None, hold_V=None, post_ttx=False, add_projections=False, log_level=logging.WARNING
+    hold_I=None, hold_V=None, post_ttx=False,
+    add_projections=False, nrrp=None, log_level=logging.WARNING
 ):
     """
     Run single pair simulation trial.
@@ -93,6 +85,7 @@ def run_pair_simulation(
         hold_V: holding voltage [mV]
         post_ttx: emulate TTX effect on postsynaptic cell (i.e. block Na channels)
         add_projections: Whether to enable projections from BlueConfig. Default is False.
+        nrrp: Number of vesicles in the Release Ready Pool
         log_level: logging level
 
     Returns:
@@ -109,13 +102,19 @@ def run_pair_simulation(
     bg = _bglibpy(log_level)
     ssim = bg.ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed, rng_mode='Random123')
 
+    if nrrp is not None:
+        ssim.bc.add_section("Connection", "NrrpOverride",
+                            {"Source": "Mosaic",
+                             "Destination": "Mosaic",
+                             "SynapseConfigure": f"%s.Nrrp = {nrrp}"})
+
     ssim.instantiate_gids(
         [post_gid],
         add_replay=False,
         add_minis=False,
         add_stimuli=False,
         add_synapses=True,
-        pre_spike_trains={pre_gid: _ensure_list(t_stim)},
+        pre_spike_trains={pre_gid: ensure_list(t_stim)},
         intersect_pre_gids=[pre_gid],
         add_projections=add_projections
     )
@@ -146,7 +145,7 @@ def run_pair_simulation(
     else:
         # current clamp
         # add pre-calculated current to set the holding potential
-        post_cell.add_ramp(0, 10000, hold_I, hold_I, dt=0.025)
+        post_cell.add_ramp(0, 10000, hold_I, hold_I)
 
     if 'ForwardSkip' in ssim.bc.Run:
         warnings.warn('ForwardSkip found in config file but will disabled for this simulation.'
@@ -154,16 +153,12 @@ def run_pair_simulation(
 
     ssim.run(t_stop=t_stop, dt=0.025, v_init=hold_V, forward_skip=False)
 
-    time = post_cell.get_time()
-
-    voltage = post_cell.get_soma_voltage()
-
     LOGGER.info('sim_pair: a%d -> a%d (seed=%d)... done', pre_gid, post_gid, base_seed)
 
     return (params,
-            time,
+            post_cell.get_time(),
             post_cell.get_recording('clamp_i') if hold_I is None else hold_I,
-            voltage)
+            post_cell.get_soma_voltage())
 
 
 def run_pair_simulation_suite(

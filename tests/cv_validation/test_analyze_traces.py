@@ -7,33 +7,36 @@ import psp_validation.cv_validation.analyze_traces as test_module
 def test__filter_traces():
     t = np.arange(0, 100, .1)
     t_stim = 60
-    traces = np.full((2, len(t)), -50)
-    traces[1, -10] = 0  # add late spike
+    traces = np.random.random((2, len(t))) * 30 - 70
+    spike = test_module.SPIKE_TH + np.random.random()
+    spike_idx = np.random.choice(np.where(t > t_stim)[0])
+    traces[0, spike_idx] = spike  # add late spike
 
     # check that the trace with a late spike is filtered out
     res = test_module._filter_traces(t, traces, t_stim)
-    assert_array_equal(res, [traces[0, :]])
+    assert res.shape==(1, len(t))
+    assert_array_equal(res, [traces[1]])
 
     # check that None is return if all traces filtered out
-    traces[0, -10] = 0
+    traces[:, spike_idx] = spike
     res = test_module._filter_traces(t, traces, t_stim)
     assert res is None
 
 
-def test__get_peak_amplitudes():
+def test__get_peak_amplitude_current():
     t = np.arange(0, 100, .1)
     t_stim = 60
     base = -50.0
-    traces = np.full((1, len(t)), base)
+    trace = np.full(len(t), base)
 
     peak = -40.0
-    traces[:, -10] = peak
-    res = test_module._get_peak_amplitudes(t, traces, 'EXC', t_stim)
+    trace[-10] = peak
+    res = test_module._get_peak_amplitude_current(t, trace, t_stim, 'INH')
     assert_array_almost_equal(res, [peak - base])
 
     peak = -60.0
-    traces[:, -10] = peak
-    res = test_module._get_peak_amplitudes(t, traces, 'INH', t_stim)
+    trace[-10] = peak
+    res = test_module._get_peak_amplitude_current(t, trace, t_stim, 'EXC')
     assert_array_almost_equal(res, [base - peak])
 
 
@@ -53,8 +56,8 @@ def test_calc_cv(*_):
     with patch('psp_validation.cv_validation.analyze_traces._get_peak_amplitudes') as patched:
         patched.return_value = amplitudes
         expected = np.std(amplitudes) / np.mean(amplitudes)
-        assert test_module.calc_cv(None, None, None, None, False) == expected
+        assert test_module.calc_cv(None, None, None, None, 'current', False) == expected
 
         # Since JK_var = (n-1)/n * SUM_SQUARES, and Var = 1/n * SUM_SQUARES
         expected = np.sqrt(len(amplitudes) - 1) * np.std(amplitudes) / np.mean(amplitudes)
-        assert test_module.calc_cv(None, None, None, None, True) == expected
+        assert test_module.calc_cv(None, None, None, None, 'current', True) == expected

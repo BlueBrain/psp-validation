@@ -131,7 +131,8 @@ def calibrate(fig_dir, pathway_name, all_cvs, target_cv, nrrp, n_pairs, n_reps):
                  target_jk_cv, best_jk_lambda, nrrp, fig_name)
 
 
-def run_calibration(output_dir, pathways, pathway_name, nrrp, n_pairs=None, n_reps=None):
+def run_calibration(
+        output_dir, pathways, pathway_name, nrrp, n_pairs=None, n_reps=None, n_jobs=None):
     """Run the calibration for given nrrp range"""
     pairs = read_simulation_pairs(os.path.join(output_dir, 'simulations'))
     n_simulated_pairs = len(pairs)
@@ -144,7 +145,8 @@ def run_calibration(output_dir, pathways, pathway_name, nrrp, n_pairs=None, n_re
 
     # precalculate CVs from all simulations
     target_cv = pathways['reference']['cv']
-    all_cvs = get_all_cvs(pathway_name, output_dir, pairs, nrrp, pathways['protocol'])
+    all_cvs = get_all_cvs(
+        pathway_name, output_dir, pairs, nrrp, pathways['protocol'], n_jobs=n_jobs)
 
     fig_dir = os.path.join(os.path.realpath(output_dir), 'figures')
     ensure_dir_exists(fig_dir)

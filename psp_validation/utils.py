@@ -1,4 +1,5 @@
 """The famous utils module."""
+from collections.abc import Iterable
 import multiprocessing
 import os
 
@@ -46,3 +47,11 @@ def isolate(func):
             return pool.apply(func, args, kwargs)
 
     return func_isolated
+
+
+def ensure_list(v):
+    """Convert iterable / wrap scalar/str into list."""
+    if isinstance(v, Iterable) and not isinstance(v, str):
+        return list(v)
+    else:
+        return [v]

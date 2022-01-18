@@ -2,7 +2,7 @@ CV Validation
 =============
 
 ``cv-validation`` command runs single cell simulations in ``bglibpy`` to help calibrate NRRP to match
-experimental coefficients of variation (CV) of PSP amplitudes.
+experimental coefficients of variation (CV) of PSP or PSC amplitudes.
 
 It's a three-phase process consisting of setup, simulation and analysis (calibration).
 
@@ -35,7 +35,7 @@ Simulation
 Simulation outputs one ``.h5`` file per NRRP containing
 
 *  Simulated pairs
-*  Results of the simulation (points of time and soma voltages)
+*  Results of the simulation (points of time, soma voltages and currents)
 *  Seeds used for random number generation
 
 The structure of the ``.h5`` file is as follows:
@@ -43,9 +43,10 @@ The structure of the ``.h5`` file is as follows:
 .. code-block:: yaml
 
     sgid_tgid_pair:  # contains attribute 'seed' (same as in the csv file)
-      RNG_seed_for_simulation:
+      RNG_seed_for_simulation:  # Seed used for the simulation
         time: [...]
-        soma: [...]
+        soma_voltage: [...]
+        soma_current: [...]
 
 Simulation is mainly driven with the files created in :ref:`Setup <Setup>`.
 A few parameters are given to the simulation
@@ -54,6 +55,8 @@ A few parameters are given to the simulation
 *  NRRP range to simulate
 *  Number of simulations to do (per pair)
 *  Output path (same as in :ref:`Setup <Setup>`)
+*  *(optional)* Clamp to apply
+*  *(optional)* Number of parallel jobs (if not set, trials are run sequentially)
 
 Analysis
 ~~~~~~~~
@@ -61,7 +64,7 @@ Analysis
 This phase analyses the results in the ``.h5`` files obtained in the simulation phase and outputs
 the computed optimal NRRP based on the simulated runs.
 
-The optimal NRRP is acquired by analysing the CVs and Jackknife sampled CVs (JKCV) of the PSP amplitudes of the
+The optimal NRRP is acquired by analysing the CVs and Jackknife sampled CVs (JKCV) of the PSP/PSC amplitudes of the
 simulated pairs using a Monte Carlo-like optimization.
 
 In a nutshell this is done as follows:
@@ -79,8 +82,9 @@ Parameters passed to the analysis script:
 *  Pathway file (see files in: ``usecases/cv_validation/pathways/``)
 *  NRRP range used in :ref:`Simulation <Simulation>`
 *  Output path (same as in :ref:`Setup <Setup>`)
-*  *(optional)* number of pairs to randomly select out of all simulated pairs (Default: n_simulated/2)
-*  *(optional)* number of repetitions for random NRRP generation (Default: 50)
+*  *(optional)* Number of pairs to randomly select out of all simulated pairs (Default: n_simulated/2)
+*  *(optional)* Number of repetitions for random NRRP generation (Default: 50)
+*  *(optional)* Number of parallel jobs (if not set, trials are run sequentially)
 
 Running
 -------
@@ -119,6 +123,10 @@ Then to run the simulation:
         -p <pathway_file> \       # Pathway File (see usecases/cv_validation/pathways)
         -o <output_dir>           # Output directory
 
+    # OPTIONAL
+        -m <clamp>  # Clamp to apply: 'voltage' or 'current' (Default: 'current')
+        -j <jobs>   # Number of parallel jobs to run (Default: None -> run sequentially)
+
     # Simulation is clearly the longest out of the three steps. To speed up the execution,
     # the NRRP range can be divided  and run in different nodes.
     # E.g., instead of
@@ -144,4 +152,5 @@ Analysis/calibration can be run with:
     # OPTIONAL
         -n <num_pairs>   # number of pairs to randomly select out of all pairs (Default: n_simulated/2)
         -r <num_reps>    # number of repetitions for random NRRP generation (Default: 50)
+        -j <jobs>        # Number of parallel jobs to run (Default: None -> run sequentially)
 

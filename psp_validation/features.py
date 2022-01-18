@@ -10,7 +10,8 @@ from psp_validation import PSPError
 LOGGER = logging.getLogger(__name__)
 
 
-def _check_syn_type(syn_type):
+def check_syn_type(syn_type):
+    """Check that synapse type is valid."""
     if syn_type not in {'EXC', 'INH'}:
         raise AttributeError(f'syn_type must be one of EXC or INH, not: {syn_type}')
 
@@ -78,7 +79,7 @@ def get_peak_voltage(time, voltage, t_stim, syn_type):
             could result in silently returning the wrong value.
     """
     _check_numpy_ndarrays(time, voltage)
-    _check_syn_type(syn_type)
+    check_syn_type(syn_type)
     fun = np.max if syn_type == "EXC" else np.min
     return fun(voltage[time > t_stim])
 
@@ -105,7 +106,7 @@ def get_peak_amplitude(time, voltage, t_stim, syn_type):
     Return:
         Absolute difference between calculated mean v and peak v
     """
-    _check_syn_type(syn_type)
+    check_syn_type(syn_type)
 
     traces = efel_traces(time, voltage, t_stim)
     peak = 'maximum_voltage' if syn_type == 'EXC' else 'minimum_voltage'

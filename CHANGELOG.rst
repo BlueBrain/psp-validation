@@ -4,7 +4,7 @@ Changelog
 Version 0.5.0
 -------------
 
-- Add CV-validation
+- Add CV-validation (supports both voltage and current clamp modes)
 
 Version 0.4.1
 -------------

@@ -44,10 +44,10 @@ def test_get_peak_voltage_INH_with_timecut():
 
 
 def test__check_syntype():
-    test_module._check_syn_type("EXC")
-    test_module._check_syn_type("INH")
+    test_module.check_syn_type("EXC")
+    test_module.check_syn_type("INH")
     with pytest.raises(AttributeError):
-        test_module._check_syn_type("gloubi-boulga")
+        test_module.check_syn_type("gloubi-boulga")
 
 
 def test_get_peak_voltage_EXC_with_empty_input_raises():

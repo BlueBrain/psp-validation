@@ -37,7 +37,8 @@ def _test_simulation(folder):
                            ['-o', folder,
                             '-p', PATHWAY,
                             '-r', '2',
-                            '--nrrp', '1', '2'])
+                            '--nrrp', '1', '2',
+                            '-j', '4'])
 
     assert result.exit_code == 0, result.output
 
@@ -54,7 +55,8 @@ def _test_analysis(folder):
                             '-p', PATHWAY,
                             '-r', '10',
                             '-n', '1',
-                            '--nrrp', '1', '2'])
+                            '--nrrp', '1', '2',
+                            '-j', '2'])
 
     assert result.exit_code == 0, result.output
 
