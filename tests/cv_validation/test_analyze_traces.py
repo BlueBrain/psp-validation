@@ -1,6 +1,6 @@
 import numpy as np
 from unittest.mock import patch
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_allclose, assert_array_equal, assert_array_almost_equal
 import psp_validation.cv_validation.analyze_traces as test_module
 
 
@@ -56,8 +56,8 @@ def test_calc_cv(*_):
     with patch('psp_validation.cv_validation.analyze_traces._get_peak_amplitudes') as patched:
         patched.return_value = amplitudes
         expected = np.std(amplitudes) / np.mean(amplitudes)
-        assert test_module.calc_cv(None, None, None, None, 'current', False) == expected
+        assert_allclose(test_module.calc_cv(None, None, None, None, 'current', False), expected)
 
         # Since JK_var = (n-1)/n * SUM_SQUARES, and Var = 1/n * SUM_SQUARES
         expected = np.sqrt(len(amplitudes) - 1) * np.std(amplitudes) / np.mean(amplitudes)
-        assert test_module.calc_cv(None, None, None, None, 'current', True) == expected
+        assert_allclose(test_module.calc_cv(None, None, None, None, 'current', True), expected)

@@ -25,7 +25,7 @@ setup(
     author_email="bbp-ou-nse@groupes.epfl.ch",
     description="PSP analysis tools",
     license="BBP-internal-confidential",
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     entry_points={
         'console_scripts': ['psp=psp_validation.cli:cli',
                             'cv-validation=psp_validation.cv_validation.cli:cli']},
@@ -42,9 +42,9 @@ setup(
         "Intended Audience :: Science/Research",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
     ],
 )
