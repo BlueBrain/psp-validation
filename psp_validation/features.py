@@ -84,22 +84,24 @@ def get_peak_voltage(time, voltage, t_stim, syn_type):
     return fun(voltage[time > t_stim])
 
 
-def efel_traces(time, voltage, t_stim):
+def efel_traces(times, traces, t_stim):
     """Get traces in the format expected by efel.getFeatureValues."""
+    assert len(times) == len(traces), "array length mismatch"
+
     return [{
         'T': time,
-        'V': voltage,
+        'V': trace,
         'stim_start': [t_stim],
-        'stim_end': [np.max(time)],
-    }]
+        'stim_end': [np.max(times)],
+    } for time, trace in zip(times, traces)]
 
 
-def get_peak_amplitude(time, voltage, t_stim, syn_type):
-    """Get the peak amplitude in a time series.
+def get_peak_amplitudes(time, voltage, t_stim, syn_type):
+    """Get the peak amplitudes in time series.
 
     Parameters:
-        time: array holding T time measurements
-        voltage: array holding T voltage measurements
+        time: N x T array holding T time measurements for N traces
+        voltage: N x T array holding T voltage measurements for N traces
         t_stim: time of the stimulus
         syn_type: type of synapse ("EXC" or "INH")
 
@@ -111,8 +113,8 @@ def get_peak_amplitude(time, voltage, t_stim, syn_type):
     traces = efel_traces(time, voltage, t_stim)
     peak = 'maximum_voltage' if syn_type == 'EXC' else 'minimum_voltage'
     traces_results = efel.getFeatureValues(traces, [peak, 'voltage_base'])
-    amplitude = abs(traces_results[0][peak][0] - traces_results[0]['voltage_base'][0])
-    return amplitude
+    amplitudes = [abs(res[peak][0] - res['voltage_base'][0]) for res in traces_results]
+    return amplitudes
 
 
 def resting_potential(time, voltage, t_start, t_stim):

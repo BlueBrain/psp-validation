@@ -10,7 +10,7 @@ from bluepy.enums import Cell
 
 from psp_validation.features import (
     compute_scaling,
-    get_peak_amplitude,
+    get_peak_amplitudes,
     get_synapse_type,
     mean_pair_voltage_from_traces,
     old_school_trace,
@@ -307,7 +307,7 @@ class Pathway(object):
                 ampl = np.nan
             else:
                 average = np.stack([v_mean, t])
-                ampl = get_peak_amplitude(t, v_mean, self.t_stim, self.pre_syn_type)
+                ampl = get_peak_amplitudes([t], [v_mean], self.t_stim, self.pre_syn_type)[0]
                 if ampl < self.min_ampl:
                     LOGGER.warning(
                         "PSP amplitude below given threshold for a%d-a%d pair (%.3g < %.3g)",

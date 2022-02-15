@@ -13,7 +13,7 @@ from efel import getFeatureValues
 from tqdm import tqdm
 
 from psp_validation.cv_validation.OU_generator import add_ou_noise
-from psp_validation.features import check_syn_type, efel_traces, get_peak_amplitude
+from psp_validation.features import check_syn_type, efel_traces, get_peak_amplitudes
 
 
 SPIKE_TH = -30  # (mV) NEURON's built in spike threshold
@@ -101,10 +101,10 @@ def get_cvs_and_jk_cvs(pairs, h5_path, protocol, n_jobs=None):
     return [[value for value in group if value is not None] for group in zip(*results)]
 
 
-def _get_peak_amplitude_current(t, trace, t_stim, syn_type):
-    """Gets the peak PSC amplitude for a trial using efel.
+def _get_peak_amplitudes_current(t, trace, t_stim, syn_type):
+    """Gets the peak PSC amplitudes for trials using efel.
 
-    Similar to `psp-validation`'s `get_peak_amplitude`"""
+    Similar to `psp-validation`'s `get_peak_amplitudes`"""
     check_syn_type(syn_type)
     # There is no {minimum,maximum}_current in efel, so exploiting voltage here
     # efel "should" be ignorant about it.
@@ -116,8 +116,10 @@ def _get_peak_amplitude_current(t, trace, t_stim, syn_type):
 
 def _get_peak_amplitudes(t, traces, t_stim, syn_type, clamp):
     """Gets peak PSC/PSP amplitudes for all trials."""
-    func = get_peak_amplitude if clamp == 'current' else _get_peak_amplitude_current
-    return [func(t, trace, t_stim, syn_type) for trace in traces]
+    t = np.tile(t, (len(traces), 1))
+
+    func = get_peak_amplitudes if clamp == 'current' else _get_peak_amplitudes_current
+    return func(t, traces, t_stim, syn_type)
 
 
 def _get_jackknife_traces(traces):

@@ -4,6 +4,7 @@ Changelog
 Version 0.5.0
 -------------
 
+- Pass multiple traces to efel at the same time (see NSETM-1780)
 - Add CV-validation (supports both voltage and current clamp modes)
 
 Version 0.4.1

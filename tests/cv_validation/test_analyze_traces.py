@@ -23,20 +23,20 @@ def test__filter_traces():
     assert res is None
 
 
-def test__get_peak_amplitude_current():
-    t = np.arange(0, 100, .1)
+def test__get_peak_amplitudes_current():
+    t = [np.arange(0, 100, .1)]
     t_stim = 60
     base = -50.0
-    trace = np.full(len(t), base)
+    trace = [np.full(len(t[0]), base)]
 
     peak = -40.0
-    trace[-10] = peak
-    res = test_module._get_peak_amplitude_current(t, trace, t_stim, 'INH')
+    trace[0][-10] = peak
+    res = test_module._get_peak_amplitudes_current(t, trace, t_stim, 'INH')
     assert_array_almost_equal(res, [peak - base])
 
     peak = -60.0
-    trace[-10] = peak
-    res = test_module._get_peak_amplitude_current(t, trace, t_stim, 'EXC')
+    trace[0][-10] = peak
+    res = test_module._get_peak_amplitudes_current(t, trace, t_stim, 'EXC')
     assert_array_almost_equal(res, [base - peak])
 
 
@@ -50,7 +50,6 @@ def test__get_jackknife_traces():
 
 @patch('psp_validation.cv_validation.analyze_traces._get_jackknife_traces')
 def test_calc_cv(*_):
-    t = np.arange(0, 1, 0.1)
     np.random.seed(1)
     amplitudes = np.random.random(10)
     with patch('psp_validation.cv_validation.analyze_traces._get_peak_amplitudes') as patched:

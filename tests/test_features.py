@@ -101,21 +101,21 @@ def test_numpy_ndarray_checker_raises3():
         test_module._check_numpy_ndarrays(1, 2, 3, "Hello")
 
 
-def test_get_peak_amplitude():
+def test_get_peak_amplitudes():
     # Use numpy to read the trace data from the txt file
     data = np.loadtxt(os.path.join(os.path.dirname(__file__), 'input_data', 'example_trace.txt'))
 
-    actual = test_module.get_peak_amplitude(
-        time=data[:, 0],
-        voltage=data[:, 1],
+    actual = test_module.get_peak_amplitudes(
+        time=[data[:, 0], data[:, 0]],
+        voltage=[data[:, 1], data[:, 1]],
         t_stim=1400,
         syn_type='EXC',
     )
     assert_allclose(45.36493144290979, actual)
 
-    actual = test_module.get_peak_amplitude(
-        time=data[:, 0],
-        voltage=data[:, 1],
+    actual = test_module.get_peak_amplitudes(
+        time=[data[:, 0]],
+        voltage=[data[:, 1]],
         t_stim=1400,
         syn_type='INH',
     )

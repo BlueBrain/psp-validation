@@ -2,7 +2,7 @@
 import logging
 from abc import ABC, abstractmethod
 
-from psp_validation.features import get_peak_amplitude, get_peak_voltage
+from psp_validation.features import get_peak_amplitudes, get_peak_voltage
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,11 +85,19 @@ class AmplitudeFilter(BaseTraceFilter):
     def __call__(self, traces):
         if self.min_trace_amplitude <= 0:
             return traces
+        insufficient = []
         selected = []
-        for v_, t_ in traces:
-            amplitude = get_peak_amplitude(t_, v_, self.t_stim, self.syn_type)
+        voltages = [v for v, _ in traces]
+        times = [t for _, t in traces]
+
+        amplitudes = get_peak_amplitudes(times, voltages, self.t_stim, self.syn_type)
+        for trace, amplitude in zip(traces, amplitudes):
             if amplitude < self.min_trace_amplitude:
-                LOGGER.debug('Skip trace with insufficient amplitude: %s', amplitude)
-                continue
-            selected.append((v_, t_))
+                insufficient.append(amplitude)
+            else:
+                selected.append(trace)
+
+        if insufficient:
+            LOGGER.debug('Skip trace(s) with insufficient amplitude: %s',
+                         ', '.join(map(str, insufficient)))
         return selected
