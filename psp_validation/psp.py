@@ -22,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 @attr.s
-class ProtocolParameters(object):
+class ProtocolParameters:
     """Parameters that are the same for all pathways."""
     clamp = attr.ib(type=str)
     circuit = attr.ib(type=Circuit)

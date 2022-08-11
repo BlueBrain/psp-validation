@@ -57,7 +57,7 @@ def write_blue_config(output_dir, circuit, circuit_path, target, protocol):
 
     bc_template = read_blueconfig_template()
 
-    with open(write_path, "w") as f:
+    with open(write_path, "w", encoding='utf-8') as f:
         f.write(bc_template.format(
             circuit_path=circuit_path,
             nrn_path=circuit.config["connectome"],

@@ -23,7 +23,7 @@ from psp_validation.utils import load_config
 LOGGER = logging.getLogger(__name__)
 
 
-class ConnectionFilter(object):
+class ConnectionFilter:
     """Filter (pre_gid, post_gid, [nsyn]) tuples by different criteria.
 
     Args:
@@ -152,7 +152,7 @@ def _get_pathway_pairs(pathway, circuit, num_pairs, projection, targets):
         )
 
 
-class Pathway(object):
+class Pathway:
     """Pathway specific parameters.
 
     A pathway is all connections between given pre post cell types.
@@ -350,7 +350,7 @@ class Pathway(object):
 
         summary_path = os.path.join(self.protocol_params.output_dir,
                                     self.title + ".summary.yaml")
-        with open(summary_path, 'w') as f:
+        with open(summary_path, 'w', encoding='utf-8') as f:
             f.write(
                 f"pathway: {self.title}\n"
                 f"model:\n"

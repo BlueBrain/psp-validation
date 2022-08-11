@@ -8,6 +8,7 @@ import psp_validation.simulation as test_module
 
 DATA = Path(__file__).parent / 'cv_validation' / 'input_data'
 
+
 def test_run_pair_simulation_clamp_current():
     config = str(DATA / 'BlueConfig')
     pair_df = pd.read_csv(DATA / 'pairs.csv')
@@ -26,8 +27,9 @@ def test_run_pair_simulation_clamp_current():
     assert_almost_equal(time, np.arange(0.0, 1000.01, 0.025))
 
     # Check a few data points, acquired with supposedly working solution
-    assert_almost_equal(voltage[[0, 1000, 20000, -1]],
-                        [-73, -68.1933138, -69.9867907, -69.9858326])
+    # expected = [-73, -68.1933138, -69.9867907, -69.9858326]  # with bglibpy 4.7.15
+    expected = [-73, -68.1933138, -69.9867907, -69.9858781]  # with bglibpy 4.7.16
+    assert_almost_equal(voltage[[0, 1000, 20000, -1]], expected)
 
 
 def test_run_pair_simulation_clamp_voltage():

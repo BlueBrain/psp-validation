@@ -24,6 +24,8 @@ setup(
     author="BlueBrain NSE",
     author_email="bbp-ou-nse@groupes.epfl.ch",
     description="PSP analysis tools",
+    long_description="PSP analysis tools",
+    long_description_content_type="text/plain",
     license="BBP-internal-confidential",
     python_requires='>=3.7',
     entry_points={

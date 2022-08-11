@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 @attr.s
-class SimulationResult(object):
+class SimulationResult:
     """Parameters that are the same for all pathways."""
     params = attr.ib()
     time = attr.ib()
@@ -38,6 +38,17 @@ def _bglibpy(level):
         bglibpy.set_verbose(10)
 
     return bglibpy
+
+
+def _get_simulation_config(ssim):
+    try:
+        # bglibpy >= 4.7.16
+        # see https://bbpgitlab.epfl.ch/cells/bglibpy/-/merge_requests/63
+        # and https://bbpgitlab.epfl.ch/cells/bglibpy/-/jobs/306673
+        return ssim.circuit_access.bc
+    except AttributeError:
+        # bglibpy < 4.7.16
+        return ssim.bc
 
 
 def get_holding_current(log_level, hold_V, post_gid, blue_config, post_ttx):
@@ -101,12 +112,18 @@ def run_pair_simulation(
 
     bg = _bglibpy(log_level)
     ssim = bg.ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed, rng_mode='Random123')
+    simulation_config = _get_simulation_config(ssim)
 
     if nrrp is not None:
-        ssim.bc.add_section("Connection", "NrrpOverride",
-                            {"Source": "Mosaic",
-                             "Destination": "Mosaic",
-                             "SynapseConfigure": f"%s.Nrrp = {nrrp}"})
+        simulation_config.add_section(
+            "Connection",
+            "NrrpOverride",
+            {
+                "Source": "Mosaic",
+                "Destination": "Mosaic",
+                "SynapseConfigure": f"%s.Nrrp = {nrrp}",
+            }
+        )
 
     ssim.instantiate_gids(
         [post_gid],
@@ -147,7 +164,7 @@ def run_pair_simulation(
         # add pre-calculated current to set the holding potential
         post_cell.add_ramp(0, 10000, hold_I, hold_I)
 
-    if 'ForwardSkip' in ssim.bc.Run:
+    if 'ForwardSkip' in simulation_config.Run:
         warnings.warn('ForwardSkip found in config file but will disabled for this simulation.'
                       ' (SSCXDIS-229)')
 

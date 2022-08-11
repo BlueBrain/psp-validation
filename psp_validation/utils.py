@@ -8,7 +8,7 @@ import yaml
 
 def load_yaml(filepath):
     """Load YAML file."""
-    with open(filepath, 'r') as f:
+    with open(filepath, 'r', encoding='utf-8') as f:
         return yaml.load(f, Loader=yaml.FullLoader)
 
 
