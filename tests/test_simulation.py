@@ -28,7 +28,8 @@ def test_run_pair_simulation_clamp_current():
 
     # Check a few data points, acquired with supposedly working solution
     # expected = [-73, -68.1933138, -69.9867907, -69.9858326]  # with bglibpy 4.7.15
-    expected = [-73, -68.1933138, -69.9867907, -69.9858781]  # with bglibpy 4.7.16
+    # expected = [-73, -68.1933138, -69.9867907, -69.9858781]  # with bglibpy 4.7.16
+    expected = [-73, -68.1933134, -69.9867904, -69.9858778]  # with neuron 8.2.1 in a virtualenv
     assert_almost_equal(voltage[[0, 1000, 20000, -1]], expected)
 
 
