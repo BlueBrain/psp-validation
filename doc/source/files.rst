@@ -158,7 +158,7 @@ Putting it all together:
         t_stop: 900.0
         post_ttx: false
 
-Please refer to `usecases <https://bbpcode.epfl.ch/source/xref/nse/psp-validation/usecases/>`_ for more examples.
+Please refer to `usecases <https://bbpgitlab.epfl.ch/nse/psp-validation/-/tree/main/usecases/>`_ for more examples.
 
 
 .. _target-definitions:

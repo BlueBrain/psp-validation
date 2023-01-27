@@ -40,17 +40,6 @@ def _bglibpy(level):
     return bglibpy
 
 
-def _get_simulation_config(ssim):
-    try:
-        # bglibpy >= 4.7.16
-        # see https://bbpgitlab.epfl.ch/cells/bglibpy/-/merge_requests/63
-        # and https://bbpgitlab.epfl.ch/cells/bglibpy/-/jobs/306673
-        return ssim.circuit_access.bc
-    except AttributeError:
-        # bglibpy < 4.7.16
-        return ssim.bc
-
-
 def get_holding_current(log_level, hold_V, post_gid, blue_config, post_ttx):
     """Retrieve the holding current using bglibpy."""
     hold_I, _ = _bglibpy(log_level).holding_current(  # pylint: disable=no-member
@@ -111,9 +100,8 @@ def run_pair_simulation(
     LOGGER.info('sim_pair: a%d -> a%d (seed=%d)...', pre_gid, post_gid, base_seed)
 
     bg = _bglibpy(log_level)
-    ssim = bg.ssim.SSim(blue_config, record_dt=record_dt, base_seed=base_seed, rng_mode='Random123')
-    simulation_config = _get_simulation_config(ssim)
 
+    simulation_config = bg.circuit.config.SimulationConfig(blue_config)
     if nrrp is not None:
         simulation_config.add_section(
             "Connection",
@@ -125,6 +113,12 @@ def run_pair_simulation(
             }
         )
 
+    ssim = bg.ssim.SSim(
+        simulation_config,
+        record_dt=record_dt,
+        base_seed=base_seed,
+        rng_mode="Random123",
+    )
     ssim.instantiate_gids(
         [post_gid],
         add_replay=False,
@@ -164,7 +158,7 @@ def run_pair_simulation(
         # add pre-calculated current to set the holding potential
         post_cell.add_ramp(0, 10000, hold_I, hold_I)
 
-    if 'ForwardSkip' in simulation_config.Run:
+    if simulation_config.forward_skip is not None:
         warnings.warn('ForwardSkip found in config file but will disabled for this simulation.'
                       ' (SSCXDIS-229)')
 

@@ -1,10 +1,12 @@
 *.pyc
 *.swp
 coverage.xml
+*.egg
 *.egg-info
 .coverage
-doc/build
+build
 .tox
 venv
 .idea
 tmptestdir
+.vscode

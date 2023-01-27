@@ -67,8 +67,7 @@ def run(
     # pylint: disable=too-many-arguments
     from psp_validation import psp
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
     psp.run(pathway_files, blueconfig, targets, output_dir, num_pairs, num_trials,
             clamp, dump_traces, dump_amplitudes, seed, jobs)

@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.5.1
+-------------
+- [NSETM-2064] removed usage of blueconfig
+- bglibpy upgrade to 4.9.5
+
 Version 0.5.0
 -------------
 

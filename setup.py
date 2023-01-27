@@ -16,7 +16,7 @@ setup(
         'pandas>=1.3,<2',
         'tqdm>=4.0',
         'neuron>=7.8.0',
-        'bglibpy>=4.4.27,<5.0',
+        'bglibpy>=4.9.5,<5',
         'bluepy>=2.1,<3.0',
         'seaborn>=0.11,<1.0',
     ],
