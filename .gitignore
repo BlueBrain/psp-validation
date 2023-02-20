@@ -8,5 +8,4 @@ build
 .tox
 venv
 .idea
-tmptestdir
 .vscode
