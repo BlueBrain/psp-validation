@@ -101,7 +101,7 @@ def run_pair_simulation(
 
     bg = _bglibpy(log_level)
 
-    simulation_config = bg.circuit.config.SimulationConfig(blue_config)
+    simulation_config = bg.circuit.config.BluepySimulationConfig(blue_config)
     if nrrp is not None:
         simulation_config.add_section(
             "Connection",
@@ -131,7 +131,9 @@ def run_pair_simulation(
     )
     post_cell = ssim.cells[post_gid]
 
-    if _get_synapse_unique_value(post_cell, lambda synapse: synapse.is_inhibitory()):
+    if _get_synapse_unique_value(
+        post_cell, lambda synapse: isinstance(synapse, bg.synapse.GabaabSynapse)
+    ):
         first_synapse = next(iter(post_cell.synapses.values())).hsynapse
         if not hasattr(first_synapse, 'e_GABAA'):
             raise PSPError('Inhibitory reverse potential e_GABAA is expected to be under '
