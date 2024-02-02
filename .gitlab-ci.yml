@@ -1,4 +1,3 @@
 include:
   - project: nse/ci
-    ref: psp-validation-update
     file: /ci/pipelines/nse.psp-validation.yml
