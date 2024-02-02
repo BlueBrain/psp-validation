@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from psp_validation.features import get_peak_amplitudes, get_peak_voltage
 
-LOGGER = logging.getLogger(__name__)
+L = logging.getLogger(__name__)
 
 
 class BaseTraceFilter(ABC):
@@ -32,7 +32,7 @@ class NullFilter(BaseTraceFilter):
         selected = []
         for v_, t_ in traces:
             if v_ is None or len(v_) == 0:
-                LOGGER.debug('Skip empty or null trace')
+                L.debug('Skip empty or null trace')
                 continue
             selected.append((v_, t_))
         return selected
@@ -56,7 +56,7 @@ class SpikeFilter(BaseTraceFilter):
         selected = []
         for v_, t_ in traces:
             if get_peak_voltage(t_, v_, self.t0, 'EXC') > self.v_max:
-                LOGGER.debug('Skip trace containing spikes')
+                L.debug('Skip trace containing spikes')
                 continue
             selected.append((v_, t_))
         return selected
@@ -98,6 +98,6 @@ class AmplitudeFilter(BaseTraceFilter):
                 selected.append(trace)
 
         if insufficient:
-            LOGGER.debug('Skip trace(s) with insufficient amplitude: %s',
-                         ', '.join(map(str, insufficient)))
+            L.debug('Skip trace(s) with insufficient amplitude: %s',
+                    ', '.join(map(str, insufficient)))
         return selected

@@ -1,9 +1,7 @@
 """
-PSP analysis toolkit.
+CV validation analysis toolkit.
 
- * `psp run`     Run pair simulations for given pathway(s)
- * `psp summary` Collect `psp run` summary output
- * `psp plot`    Plot voltage / current traces obtained with `psp run`
+ * `cv-validation setup`
 """
 
 import os
@@ -13,7 +11,7 @@ import click
 import numpy as np
 
 from psp_validation import setup_logging
-from psp_validation.utils import load_yaml
+from psp_validation.utils import load_config, load_yaml
 from psp_validation.version import VERSION
 from psp_validation.cv_validation.calibrate_NRRP import run_calibration
 from psp_validation.cv_validation.setsim import setup_simulation
@@ -35,7 +33,7 @@ def cli(verbose=0):
 
 
 @cli.command()
-@click.option("-c", "--circuit-config", required=True, help="Path to circuit config")
+@click.option("-c", "--simulation-config", required=True, help="Path to SONATA simulation config")
 @click.option("-o", "--output-dir", required=True, help="Path to output folder")
 @click.option("-p", "--pathways", required=True, help="Path to pathway definitions")
 @click.option("-t", "--targets", required=True, help="Path to target definitions")
@@ -44,16 +42,15 @@ def cli(verbose=0):
               )
 @click.option("--seed", type=int, required=False, default=None,
               help="Seed used to initialize the Numpy random number generator.")
-def setup(circuit_config, output_dir, pathways, targets, num_pairs, seed):
-    """Set up the simulation with BlueConfig and pairs to simulate."""
+def setup(simulation_config, output_dir, pathways, targets, num_pairs, seed):
+    """Set up the simulation and pairs to simulate."""
     if seed is not None:
         np.random.seed(seed)
-    setup_simulation(circuit_config,
+    setup_simulation(simulation_config,
                      output_dir,
-                     load_yaml(pathways),
+                     load_config(pathways),
                      load_yaml(targets),
-                     num_pairs,
-                     'S1HL')
+                     num_pairs)
 
 
 @cli.command()
@@ -78,11 +75,11 @@ def run(output_dir, pathways, num_trials, nrrp, clamp, jobs):
     """Run the simulation with the data configured in setup."""
     simulation_dir = os.path.join(output_dir, 'simulations')
     pre_post_seeds = read_simulation_pairs(simulation_dir)
-    pathway = load_yaml(pathways)
+    config = load_config(pathways)
 
     for nrrp_ in range(nrrp[0], nrrp[1] + 1):
         for row in pre_post_seeds.itertuples():
-            run_simulation(row, num_trials, nrrp_, pathway['protocol'], simulation_dir, clamp, jobs)
+            run_simulation(row, num_trials, nrrp_, config['protocol'], simulation_dir, clamp, jobs)
 
 
 @cli.command()
@@ -103,7 +100,9 @@ def run(output_dir, pathways, num_trials, nrrp, clamp, jobs):
 )
 def calibrate(output_dir, pathways, nrrp, num_pairs, num_reps, jobs):
     """Analyse the simulation results."""
-    pathway = load_yaml(pathways)
-    pathway_name = f"{pathway['pathway']['pre']}-{pathway['pathway']['post']}"
-    run_calibration(output_dir, pathway, pathway_name, nrrp,
+    config = load_config(pathways)
+    pathway_name = (
+        f"{config['pathway']['pre']}_{config['pathway']['post']}"
+    ).replace(" ", "")
+    run_calibration(output_dir, config, pathway_name, nrrp,
                     n_pairs=num_pairs, n_reps=num_reps, n_jobs=jobs)

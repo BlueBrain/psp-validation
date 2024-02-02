@@ -2,11 +2,10 @@
 import itertools
 import logging
 import os
-from builtins import filter
+import pandas as pd
 
 import h5py
 import numpy as np
-from bluepy.enums import Cell
 
 from psp_validation.features import (
     compute_scaling,
@@ -20,14 +19,14 @@ from psp_validation.persistencyutils import dump_pair_traces
 from psp_validation.trace_filters import AmplitudeFilter, NullFilter, SpikeFilter
 from psp_validation.utils import load_config
 
-LOGGER = logging.getLogger(__name__)
+L = logging.getLogger(__name__)
 
 
 class ConnectionFilter:
     """Filter (pre_gid, post_gid, [nsyn]) tuples by different criteria.
 
     Args:
-        circuit: bluepy.Circuit instance
+        circuit: bluepysnap.Circuit instance
 
         unique_gids: use GIDs only once
         min_nsyn: min synapse count for connection
@@ -56,28 +55,37 @@ class ConnectionFilter:
         else:
             self.used_gids = None
 
-    def __call__(self, conn):
+    def apply(self, connections, properties):
+        """Apply filter to given connections."""
+        for connection in connections:
+            if self._apply_one(connection, properties):
+                yield connection
+
+    def _apply_one(self, connection, properties):
         # pylint: disable=too-many-return-statements,too-many-branches
-        pre_gid, post_gid = conn[:2]
+        pre_gid, post_gid = connection[:2]
         if self.used_gids is not None:
             if (pre_gid in self.used_gids) or (post_gid in self.used_gids):
                 return False
         if self.min_nsyn is not None:
-            if conn[2] < self.min_nsyn:
+            if connection[2] < self.min_nsyn:
                 return False
         if self.max_nsyn is not None:
-            if conn[2] > self.max_nsyn:
+            if connection[2] > self.max_nsyn:
                 return False
         if self.max_dist_x is not None:
-            x1, x2 = self.circuit.cells.get([pre_gid, post_gid])[Cell.X]
+            x1 = properties["x"][pre_gid]
+            x2 = properties["x"][post_gid]
             if abs(x1 - x2) > self.max_dist_x:
                 return False
         if self.max_dist_y is not None:
-            y1, y2 = self.circuit.cells.get([pre_gid, post_gid])[Cell.Y]
+            y1 = properties["y"][pre_gid]
+            y2 = properties["y"][post_gid]
             if abs(y1 - y2) > self.max_dist_y:
                 return False
         if self.max_dist_z is not None:
-            z1, z2 = self.circuit.cells.get([pre_gid, post_gid])[Cell.Z]
+            z1 = properties["z"][pre_gid]
+            z2 = properties["z"][post_gid]
             if abs(z1 - z2) > self.max_dist_z:
                 return False
         if self.used_gids is not None:
@@ -90,66 +98,60 @@ class ConnectionFilter:
         """ If filter uses synapse count. """
         return (self.min_nsyn is not None) or (self.max_nsyn is not None)
 
+    def required_properties(self):
+        """Returns required properties of the dataset."""
+        property_names = []
+        if self.max_dist_x is not None:
+            property_names.append("x")
+        if self.max_dist_y is not None:
+            property_names.append("y")
+        if self.max_dist_z is not None:
+            property_names.append("z")
+        return property_names
 
-def get_pairs(circuit, pre, post, n_pairs, constraints=None, projection=None):
+
+def get_pairs(circuit, pre, post, num_pairs, population=None, constraints=None):
     """Get 'n_pairs' connected pairs specified by `query` and optional `constraints`.
 
     Args:
-        circuit: bluepy.Circuit instance
-        pre: presynaptic cell group (BluePy query)
-        post: postsynaptic cell group (BluePy query)
-        n_pairs: number of pairs to return
+        circuit: bluepysnap.Circuit instance
+        pre: presynaptic nodeset
+        post: postsynaptic nodeset
+        num_pairs: number of pairs to return
+        population: edge population name
         constraints: dict passed as kwargs to `ConnectionFilter`
-        projection: projection name (None for main connectome)
 
     Returns:
         List of `n` (pre_gid, post_gid) pairs (or fewer if could not find enough)
     """
-    if projection is None:
-        connectome = circuit.connectome
+    if population is not None:
+        edges = circuit.edges[population]
     else:
-        connectome = circuit.projection(projection)
+        edges = circuit.edges
 
-    filt, return_synapse_count = None, False
     if constraints is not None:
-        filt = ConnectionFilter(circuit, **constraints)
-        return_synapse_count = filt.requires_synapse_count
+        connections_filter = ConnectionFilter(circuit, **constraints)
 
-    iter_connections = connectome.iter_connections(
-        pre=pre, post=post,
-        shuffle=True,
-        return_synapse_count=return_synapse_count
-    )
-    if filt is not None:
-        iter_connections = filter(filt, iter_connections)
+        iter_connections = list(edges.iter_connections(
+            pre,
+            post,
+            return_edge_count=connections_filter.requires_synapse_count,
+        ))
 
-    return [conn[:2] for conn in itertools.islice(iter_connections, n_pairs)]
+        node_ids = itertools.chain.from_iterable(connection[:2] for connection in iter_connections)
 
-
-def _get_pathway_pairs(pathway, circuit, num_pairs, projection, targets):
-    """Get 'num_pairs' of gids for the given pathway.
-
-    Returns:
-        List of (pre_gid, post_gid) pairs
-    """
-    if 'pairs' in pathway:
-        for item in pathway['pairs']:
-            assert isinstance(item, list) and len(item) == 2
-        return pathway['pairs']
-    else:
-        LOGGER.info("Querying pathway pairs...")
-
-        def get_target(name):
-            """Get target."""
-            return targets.get(name, name)
-
-        pre = get_target(pathway['pre'])
-        post = get_target(pathway['post'])
-        return get_pairs(
-            circuit, pre, post, num_pairs,
-            constraints=pathway.get('constraints'),
-            projection=projection
+        properties = pd.concat(
+            population_data for _, population_data in circuit.nodes.get(
+                group=node_ids, properties=connections_filter.required_properties()
+            )
         )
+
+        if connections_filter is not None:
+            iter_connections = connections_filter.apply(iter_connections, properties)
+    else:
+        iter_connections = edges.iter_connections(pre, post)
+
+    return [connection[:2] for connection in itertools.islice(iter_connections, num_pairs)]
 
 
 class Pathway:
@@ -189,22 +191,32 @@ class Pathway:
             trace_filters: list of filters to filter out voltage traces
             resting_potentials: the resting potentials
         """
-        self.title, self.config = load_config(pathway_config_path)
+        self.title = os.path.splitext(os.path.basename(pathway_config_path))[0]
+        self.config = load_config(pathway_config_path)
         self.sim_runner = sim_runner
         self.protocol_params = protocol_params
-        LOGGER.info("Processing '%s' pathway...", self.title)
+        L.info("Processing '%s' pathway...", self.title)
 
         self.pathway = self.config['pathway']
-        self.projection = self.pathway.get('projection')
+        self.population = self.pathway.get('edge_population')
 
-        self.pairs = _get_pathway_pairs(self.pathway, protocol_params.circuit,
-                                        protocol_params.num_pairs,
-                                        self.projection,
-                                        protocol_params.targets)
+        pre = self.protocol_params.targets.get(self.pathway["pre"], self.pathway["pre"])
+        post = self.protocol_params.targets.get(self.pathway["post"], self.pathway["post"])
 
-        if self.projection is None:
-            self.pre_syn_type = get_synapse_type(protocol_params.circuit,
-                                                 [p[0] for p in self.pairs])
+        self.pairs = get_pairs(
+            protocol_params.circuit,
+            pre,
+            post,
+            num_pairs=protocol_params.num_pairs,
+            population=self.population,
+            constraints=self.pathway.get('constraints'),
+        )
+
+        if self.population is None:
+            self.pre_syn_type = get_synapse_type(
+                protocol_params.circuit,
+                protocol_params.circuit.nodes.ids(pre),
+            )
         else:
             self.pre_syn_type = "EXC"
 
@@ -239,8 +251,8 @@ class Pathway:
             return
 
         all_amplitudes = []
-        for i_pair in range(len(self.pairs)):
-            params = self._run_one_pair(i_pair, all_amplitudes, traces_path)
+        for pair in self.pairs:
+            params = self._run_one_pair(pair, all_amplitudes, traces_path)
 
         if self.protocol_params.clamp != 'current':
             return
@@ -252,18 +264,18 @@ class Pathway:
 
         self._write_summary(params, all_amplitudes)
 
-    def _run_one_pair(self, i_pair, all_amplitudes, traces_path):
+    def _run_one_pair(self, pair, all_amplitudes, traces_path):
         """
         Runs the simulation for a given pair, extract the peak amplitude and
         write the trace to disk if protocol_params.dump_traces.
 
         Args:
-            i_pair (int): the pair index in the list of pairs
+            pair (int): a pair of node ids
             all_amplitudes: a list that will store all amplitudes
             traces_path: the trace path
         """
         # pylint: disable=too-many-locals
-        pre_gid, post_gid = self.pairs[i_pair]
+        pre_gid, post_gid = pair
         sim_results = self.sim_runner(
             pre_gid=pre_gid, post_gid=post_gid,
             add_projections=bool(self.config['pathway'].get('projection')),
@@ -295,22 +307,22 @@ class Pathway:
 
             filtered_count = len(sim_results.voltages) - len(v_used)
             if filtered_count > 0:
-                LOGGER.warning("%d out of %d traces filtered out for a%d-a%d"
-                               " simulation(s) due to spiking or synaptic failure",
-                               filtered_count, len(sim_results.voltages),
-                               pre_gid, post_gid
-                               )
+                L.warning("%d out of %d traces filtered out for %s-%s"
+                          " simulation(s) due to spiking or synaptic failure",
+                          filtered_count, len(sim_results.voltages),
+                          pre_gid, post_gid
+                          )
             if v_mean is None:
-                LOGGER.warning("Could not extract PSP amplitude for a%d-a%d pair due to spiking",
-                               pre_gid, post_gid)
+                L.warning("Could not extract PSP amplitude for %s-%s pair due to spiking",
+                          pre_gid, post_gid)
                 average = None
                 ampl = np.nan
             else:
                 average = np.stack([v_mean, t])
                 ampl = get_peak_amplitudes([t], [v_mean], self.t_stim, self.pre_syn_type)[0]
                 if ampl < self.min_ampl:
-                    LOGGER.warning(
-                        "PSP amplitude below given threshold for a%d-a%d pair (%.3g < %.3g)",
+                    L.warning(
+                        "PSP amplitude below given threshold for %s-%s pair (%.3g < %.3g)",
                         pre_gid, post_gid, ampl, self.min_ampl
                     )
                     ampl = np.nan

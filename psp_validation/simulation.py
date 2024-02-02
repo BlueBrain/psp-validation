@@ -1,16 +1,14 @@
 """Running pair simulations."""
 
 import logging
-import os
-import warnings
 
 import attr
 import joblib
 
-from psp_validation import setup_logging, PSPError
+from psp_validation import PSPError, setup_logging
 from psp_validation.utils import ensure_list, isolate
 
-LOGGER = logging.getLogger(__name__)
+L = logging.getLogger(__name__)
 
 
 @attr.s
@@ -22,30 +20,30 @@ class SimulationResult:
     voltages = attr.ib()
 
 
-def _bglibpy(level):
+def _bluecellulab(level):
     # pylint: disable=import-outside-toplevel
-    import bglibpy
-    if 'BGLIBPY_RNG_MODE' in os.environ:
-        bglibpy.rngsettings.default_rng_mode = os.environ['BGLIBPY_RNG_MODE']
+    import bluecellulab
 
-    #  mapping from https://bbpteam.epfl.ch/project/issues/browse/NSETM-548
-    #  16/Sep/19 2:15 PM
-    if level < logging.INFO:
-        bglibpy.set_verbose(0)
+    if level <= logging.CRITICAL:
+        bluecellulab.set_verbose(0)
+    elif level == logging.ERROR:
+        bluecellulab.set_verbose(1)
+    elif level == logging.WARNING:
+        bluecellulab.set_verbose(2)
     elif level == logging.INFO:
-        bglibpy.set_verbose(2)
+        bluecellulab.set_verbose(3)
     elif level == logging.DEBUG:
-        bglibpy.set_verbose(10)
+        bluecellulab.set_verbose(10)
 
-    return bglibpy
+    return bluecellulab
 
 
-def get_holding_current(log_level, hold_V, post_gid, blue_config, post_ttx):
-    """Retrieve the holding current using bglibpy."""
-    hold_I, _ = _bglibpy(log_level).holding_current(  # pylint: disable=no-member
-        hold_V, post_gid, blue_config, enable_ttx=post_ttx
+def get_holding_current(log_level, hold_V, post_gid, sonata_simulation_config, post_ttx):
+    """Retrieve the holding current using bluecellulab."""
+    hold_I, _ = _bluecellulab(log_level).holding_current(  # pylint: disable=no-member
+        hold_V, post_gid, sonata_simulation_config, enable_ttx=post_ttx
     )
-    # If the memory allocated by bglibpy for the simulation is not automatically freed,
+    # If the memory allocated by bluecellulab for the simulation is not automatically freed,
     # consider to call gc.collect() here. See NSETM-1356 and BGLPY-80 for more information.
     return hold_I
 
@@ -65,7 +63,7 @@ def _get_synapse_unique_value(cell, getter):
 
 
 def run_pair_simulation(
-    blue_config, pre_gid, post_gid,
+    sonata_simulation_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
     hold_I=None, hold_V=None, post_ttx=False,
     add_projections=False, nrrp=None, log_level=logging.WARNING
@@ -74,7 +72,7 @@ def run_pair_simulation(
     Run single pair simulation trial.
 
     Args:
-        blue_config: path to BlueConfig
+        sonata_simulation_config: path to Sonata simulation config
         pre_gid: presynaptic GID
         post_gid: postsynaptic GID
         t_stop: run simulation until `t_stop`
@@ -97,30 +95,30 @@ def run_pair_simulation(
     # pylint: disable=too-many-arguments,too-many-locals
     setup_logging(log_level)
 
-    LOGGER.info('sim_pair: a%d -> a%d (seed=%d)...', pre_gid, post_gid, base_seed)
+    L.info('sim_pair: %s -> %s (seed=%d)...', pre_gid, post_gid, base_seed)
 
-    bg = _bglibpy(log_level)
+    bluecellulab = _bluecellulab(log_level)
 
-    simulation_config = bg.circuit.config.BluepySimulationConfig(blue_config)
+    sonata_simulation_config = bluecellulab.circuit.config.SonataSimulationConfig(
+        str(sonata_simulation_config)
+    )
     if nrrp is not None:
-        simulation_config.add_section(
-            "Connection",
-            "NrrpOverride",
-            {
-                "Source": "Mosaic",
-                "Destination": "Mosaic",
-                "SynapseConfigure": f"%s.Nrrp = {nrrp}",
-            }
+        sonata_simulation_config.add_connection_override(
+            bluecellulab.circuit.config.sections.ConnectionOverrides(
+                source="All",
+                target="All",
+                synapse_configure=f"%s.Nrrp = {nrrp}",
+            )
         )
 
-    ssim = bg.ssim.SSim(
-        simulation_config,
+    ssim = bluecellulab.ssim.SSim(
+        sonata_simulation_config,
         record_dt=record_dt,
         base_seed=base_seed,
         rng_mode="Random123",
     )
     ssim.instantiate_gids(
-        [post_gid],
+        post_gid,
         add_replay=False,
         add_minis=False,
         add_stimuli=False,
@@ -132,8 +130,8 @@ def run_pair_simulation(
     post_cell = ssim.cells[post_gid]
 
     if _get_synapse_unique_value(
-        post_cell, lambda synapse: isinstance(synapse, bg.synapse.GabaabSynapse)
-    ):
+        post_cell, lambda synapse: isinstance(synapse, bluecellulab.synapse.GabaabSynapse)
+    ) == "INH":
         first_synapse = next(iter(post_cell.synapses.values())).hsynapse
         if not hasattr(first_synapse, 'e_GABAA'):
             raise PSPError('Inhibitory reverse potential e_GABAA is expected to be under '
@@ -141,10 +139,10 @@ def run_pair_simulation(
         params = {'e_GABAA': _get_synapse_unique_value(
             post_cell, lambda synapse: synapse.hsynapse.e_GABAA)}
     else:
-        if not hasattr(bg.neuron.h, 'e_ProbAMPANMDA_EMS'):
+        if not hasattr(bluecellulab.neuron.h, 'e_ProbAMPANMDA_EMS'):
             raise PSPError('Excitatory reverse potential e_AMPA is expected to be under '
                            '"e_ProbAMPANMDA_EMS" global NEURON variable')
-        params = {'e_AMPA': bg.neuron.h.e_ProbAMPANMDA_EMS}
+        params = {'e_AMPA': bluecellulab.neuron.h.e_ProbAMPANMDA_EMS}
 
     if post_ttx:
         post_cell.enable_ttx()
@@ -160,13 +158,9 @@ def run_pair_simulation(
         # add pre-calculated current to set the holding potential
         post_cell.add_ramp(0, 10000, hold_I, hold_I)
 
-    if simulation_config.forward_skip is not None:
-        warnings.warn('ForwardSkip found in config file but will disabled for this simulation.'
-                      ' (SSCXDIS-229)')
-
     ssim.run(t_stop=t_stop, dt=0.025, v_init=hold_V, forward_skip=False)
 
-    LOGGER.info('sim_pair: a%d -> a%d (seed=%d)... done', pre_gid, post_gid, base_seed)
+    L.info('sim_pair: %s -> %s (seed=%d)... done', pre_gid, post_gid, base_seed)
 
     return (params,
             post_cell.get_time(),
@@ -175,7 +169,7 @@ def run_pair_simulation(
 
 
 def run_pair_simulation_suite(
-    blue_config, pre_gid, post_gid,
+    sonata_simulation_config, pre_gid, post_gid,
     t_stop, t_stim, record_dt, base_seed,
     hold_V=None, post_ttx=False, clamp='current', add_projections=False,
     n_trials=1, n_jobs=None,
@@ -185,7 +179,7 @@ def run_pair_simulation_suite(
     Run single pair simulation suite (i.e. multiple trials).
 
     Args:
-        blue_config: path to BlueConfig
+        sonata_simulation_config: path to Sonata simulation config
         pre_gid: presynaptic GID
         post_gid: postsynaptic GID
         t_stop: run simulation until `t_stop`
@@ -195,7 +189,7 @@ def run_pair_simulation_suite(
         hold_V: holding voltage (mV)
         post_ttx: emulate TTX effect on postsynaptic cell (i.e. block Na channels)
         clamp: type of the clamp used ['current' | 'voltage']
-        add_projections: Whether to enable projections from BlueConfig. Default is False.
+        add_projections: Whether to enable projections. Default is False.
         n_trials: number of trials to run
         n_jobs: number of jobs to run in parallel (None for sequential runs)
         log_level: logging level
@@ -209,9 +203,11 @@ def run_pair_simulation_suite(
 
     assert clamp in ('current', 'voltage')
     if clamp == 'current':
-        LOGGER.info("Calculating a%d holding current...", post_gid)
-        hold_I = get_holding_current(log_level, hold_V, post_gid, blue_config, post_ttx)
-        LOGGER.info("a%d holding current: %.3f nA", post_gid, hold_I)
+        L.info("Calculating a%s holding current...", post_gid)
+        hold_I = get_holding_current(
+            log_level, hold_V, post_gid, sonata_simulation_config, post_ttx
+        )
+        L.info("a%s holding current: %.3f nA", post_gid, hold_I)
     else:
         hold_I = None
 
@@ -221,14 +217,14 @@ def run_pair_simulation_suite(
         n_jobs = -1
 
     # Isolate `run_pair_simulation` in its own process.
-    # Note: this is required because bglibpy uses NEURON, and the latter
+    # Note: this is required because bluecellulab uses NEURON, and the latter
     #   cannot be coerced to clean up its memory usage; thus causing out of
     #   memory problems as more simulations are run across multiple workers.
     # Note: for debugging purposes, run_pair_simulation should be called directly.
     worker = joblib.delayed(isolate(run_pair_simulation))
     results = joblib.Parallel(n_jobs=n_jobs, backend='loky')([
         worker(
-            blue_config=blue_config,
+            sonata_simulation_config=sonata_simulation_config,
             pre_gid=pre_gid,
             post_gid=post_gid,
             t_stop=t_stop,

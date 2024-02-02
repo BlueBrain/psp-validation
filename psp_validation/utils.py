@@ -1,7 +1,6 @@
 """The famous utils module."""
 from collections.abc import Iterable
 import multiprocessing
-import os
 
 import yaml
 
@@ -14,7 +13,6 @@ def load_yaml(filepath):
 
 def load_config(filepath):
     """Load YAML job config."""
-    title = os.path.splitext(os.path.basename(filepath))[0]
     config = load_yaml(filepath)
     assert 'hold_I' not in config['protocol'], ("`hold_I` parameter in protocol is deprecated. "
                                                 "Please remove it from '%s' pathway config",
@@ -26,8 +24,7 @@ def load_config(filepath):
         "For emulating voltage clamp, pass `--clamp voltage` to `psp run`.",
         filepath
     )
-
-    return title, config
+    return config
 
 
 def isolate(func):

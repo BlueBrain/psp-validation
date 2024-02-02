@@ -4,14 +4,14 @@ import logging
 from psp_validation.version import __version__
 
 
-LOGGER = logging.getLogger(__name__)
+L = logging.getLogger(__name__)
 
 
 def setup_logging(level):
     """ Setup application logger. """
     logformat = "%(asctime)s %(levelname)-8s %(name)s: %(message)s"
     logging.basicConfig(level=logging.WARNING, format=logformat)
-    LOGGER.setLevel(level=level)
+    L.setLevel(level=level)
 
 
 class PSPError(Exception):

@@ -1,33 +1,42 @@
 """
-Single cell sim in BGLibPy for NRRP calibaration
+Single cell sim in bluecellulab for NRRP calibaration
 author: Giuseppe Chindemi (03.2020)
-+ minor modifications by András Ecker for BGLibPy compatibility (02.2021)
++ minor modifications by András Ecker for bluecellulab compatibility (02.2021)
 """
 
-import os
 import logging
+import os
 import time
 
 import h5py
 import joblib
 import numpy as np
+from bluepysnap.circuit_ids import CircuitNodeId
+
 from psp_validation.simulation import get_holding_current, run_pair_simulation
 from psp_validation.utils import ensure_list, isolate
 
-LOGGER = logging.getLogger(__name__)
+L = logging.getLogger(__name__)
 
 
-def run_sim_handler(blue_config, input_params, nrrp, protocol, seeds, clamp, n_jobs=None):
+def run_sim_handler(
+    sonata_simulation_config, input_params, nrrp, protocol, seeds, clamp, n_jobs=None
+):
     """apply func to all items in it, using a process pool"""
     t_stim = protocol['t_stim']
     hold_V = protocol['hold_V']
 
     if clamp == 'current':
-        hold_I = get_holding_current(log_level=100,
-                                     hold_V=hold_V,
-                                     post_gid=input_params.post,
-                                     blue_config=blue_config,
-                                     post_ttx=False)
+        hold_I = get_holding_current(
+            log_level=100,
+            hold_V=hold_V,
+            post_gid=CircuitNodeId(
+                id=input_params.post_id,
+                population=input_params.post_population,
+            ),
+            sonata_simulation_config=sonata_simulation_config,
+            post_ttx=False
+        )
     else:
         hold_I = None
 
@@ -39,9 +48,15 @@ def run_sim_handler(blue_config, input_params, nrrp, protocol, seeds, clamp, n_j
     worker = joblib.delayed(isolate(run_pair_simulation))
     results = joblib.Parallel(n_jobs=n_jobs, backend='loky')([
         worker(
-            blue_config=blue_config,
-            pre_gid=input_params.pre,
-            post_gid=input_params.post,
+            sonata_simulation_config=sonata_simulation_config,
+            pre_gid=CircuitNodeId(
+                id=input_params.pre_id,
+                population=input_params.pre_population,
+            ),
+            post_gid=CircuitNodeId(
+                id=input_params.post_id,
+                population=input_params.post_population,
+            ),
             t_stop=t_stim + 200,
             t_stim=t_stim,
             hold_I=hold_I,
@@ -49,7 +64,7 @@ def run_sim_handler(blue_config, input_params, nrrp, protocol, seeds, clamp, n_j
             record_dt=None,
             base_seed=seed,
             nrrp=nrrp,
-            log_level=LOGGER.getEffectiveLevel()
+            log_level=L.getEffectiveLevel()
         )
         for seed in seeds
     ])
@@ -73,7 +88,7 @@ def run_simulation(input_params, num_trials, nrrp, protocol, out_dir, clamp='cur
     # TODO: Fix "too-many-locals" in the next iteration
     # pylint: disable=too-many-locals
     assert clamp in ('current', 'voltage')
-    LOGGER.info("Starting simulation")
+    L.info("Starting simulation")
 
     # Set base seed
     np.random.seed(input_params.seed)
@@ -84,13 +99,16 @@ def run_simulation(input_params, num_trials, nrrp, protocol, out_dir, clamp='cur
     # Create results HDF5 database
     with h5py.File(os.path.join(out_dir, f"simulation_nrrp{nrrp}.h5"), "a") as h5_file:
         h5_file.attrs.create('clamp', clamp)
-        pair_group = h5_file.create_group(f"{input_params.pre}_{input_params.post}")
+        pair_group = h5_file.create_group(
+            f"{input_params.pre_population}-{input_params.pre_id}"
+            f"_{input_params.post_population}-{input_params.post_id}"
+        )
         pair_group.attrs.create("base_seed", input_params.seed)
 
         # Run sweeps
         start_time = time.perf_counter()
-        LOGGER.debug("### DEBUG MODE ###")
-        time_current_voltage = run_sim_handler(os.path.join(out_dir, 'BlueConfig'),
+        L.debug("### DEBUG MODE ###")
+        time_current_voltage = run_sim_handler(os.path.join(out_dir, 'sonata_config.json'),
                                                input_params,
                                                nrrp,
                                                protocol,
@@ -105,6 +123,6 @@ def run_simulation(input_params, num_trials, nrrp, protocol, out_dir, clamp='cur
                                       compression="gzip", compression_opts=9)
             seed_group.create_dataset("soma_current", data=ensure_list(current), chunks=True,
                                       compression="gzip", compression_opts=9)
-        LOGGER.info("Elapsed time: %.2f", (time.perf_counter() - start_time))
+        L.info("Elapsed time: %.2f", (time.perf_counter() - start_time))
 
-    LOGGER.info("All done")
+    L.info("All done")

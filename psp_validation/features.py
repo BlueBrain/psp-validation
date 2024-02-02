@@ -1,13 +1,9 @@
 """Features extractions definitions."""
-import logging
-
 import efel
 import numpy as np
-from bluepy.enums import Cell
+import pandas as pd
 
 from psp_validation import PSPError
-
-LOGGER = logging.getLogger(__name__)
 
 
 def check_syn_type(syn_type):
@@ -147,15 +143,21 @@ def compute_scaling(psp1, psp2, v_holding, syn_type, params):
     return (psp2 * (1 - (psp1 / d))) / (psp1 * (1 - (psp2 / d)))
 
 
-def get_synapse_type(circuit, cell_group):
-    """Get synapse type for `cell_group` cells.
+def get_synapse_type(circuit, circuit_ids):
+    """Get synapse type for `circuit_ids` cells.
 
     Raise an Exception if there are cells of more than one synapse type.
     """
-    syn_types = circuit.cells.get(cell_group, Cell.SYNAPSE_CLASS).unique()
-    if len(syn_types) != 1:
+    synapse_types = pd.unique(
+        pd.concat(
+            population_data["synapse_class"] for _, population_data
+            in circuit.nodes.get(group=circuit_ids, properties="synapse_class")
+        )
+    )
+
+    if len(synapse_types) != 1:
         raise PSPError(
             f"Cell group should consist of cells with same synapse type, "
-            f"found: [{','.join(syn_types)}]"
+            f"found: [{','.join(synapse_types)}]"
         )
-    return syn_types[0]
+    return synapse_types[0]

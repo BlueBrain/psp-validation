@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Version 1.0.0
+-------------
+- support sonata configs
+
 Version 0.5.1
 -------------
 - [NSETM-2064] removed usage of blueconfig

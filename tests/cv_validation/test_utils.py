@@ -12,9 +12,3 @@ def test_ensure_file_exists():
         assert not os.path.exists(test_dir)
         test_module.ensure_dir_exists(test_dir)
         assert os.path.isdir(test_dir)
-
-
-def test_read_blueconfig_template():
-    assert importlib.resources.is_resource(templates,
-                                           test_module.BLUECONFIG_TEMPLATE_FILENAME)
-    assert test_module.read_blueconfig_template() != ""

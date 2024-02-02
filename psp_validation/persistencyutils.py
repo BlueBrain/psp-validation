@@ -38,12 +38,12 @@ def dump_raw_traces_to_HDF5(h5file, data):
         h5file[group_name].attrs['gid_post'] = post_gid
 
 
-def dump_pair_traces(h5f, traces, average, pre_gid, post_gid):
+def dump_pair_traces(h5file, traces, average, pre_gid, post_gid):
     """
     Dump a set of simulated psp traces to an HDF5 file.
 
     Args:
-        h5f: writable h5py.File
+        h5file: writable h5py.File
         traces: N x 2 x T numpy array with trials voltage (or current) traces (V_k (or I_k), t_k)
         average: 2 x T numpy array with averaged / filtered trace (V_mean, t)
         pre_gid: presynaptic GID
@@ -59,9 +59,13 @@ def dump_pair_traces(h5f, traces, average, pre_gid, post_gid):
 
     Each pair group has attributes 'pre_gid' and 'post_gid'.
     """
-    group = h5f.create_group(f'/traces/a{pre_gid}-a{post_gid}')
-    group.attrs['pre_gid'] = pre_gid
-    group.attrs['post_gid'] = post_gid
+    group = h5file.create_group(
+        f'/traces/{pre_gid.population}_{pre_gid.id}-{post_gid.population}_{post_gid.id}'
+    )
+    group.attrs['pre_id'] = pre_gid.id
+    group.attrs['pre_population'] = pre_gid.population
+    group.attrs['post_id'] = post_gid.id
+    group.attrs['post_population'] = post_gid.population
     group['trials'] = traces
     if average is not None:
         group['average'] = average

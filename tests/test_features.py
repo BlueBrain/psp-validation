@@ -193,10 +193,23 @@ def test_resting_potential():
 
 def test_get_synapse_type():
     circuit = MagicMock()
-    circuit.cells.get.return_value = pd.Series(['EXC', 'EXC', 'EXC'])
+    get = MagicMock()
+    circuit.nodes.get.return_value = [
+        ("population_name", {"synapse_class": pd.Series(['EXC', 'EXC', 'EXC'])}),
+        ("population_name02", {"synapse_class": pd.Series(['EXC', 'EXC'])}),
+    ]
     group = MagicMock()
-    test_module.get_synapse_type(circuit, group)
 
-    circuit.cells.get.return_value = pd.Series(['EXC', 'EXC', 'INH'])
+    assert "EXC" == test_module.get_synapse_type(circuit, group)
+
+    circuit = MagicMock()
+    get = MagicMock()
+    circuit.nodes.__getitem__.return_value = get
+    circuit.nodes.get.return_value = [
+        ("population_name", {"synapse_class": pd.Series(['EXC', 'EXC', 'INH'])}),
+        ("population_name02", {"synapse_class": pd.Series(['EXC', 'EXC'])}),
+    ]
+    group = MagicMock()
+    
     with pytest.raises(PSPError):
         test_module.get_synapse_type(circuit, group)

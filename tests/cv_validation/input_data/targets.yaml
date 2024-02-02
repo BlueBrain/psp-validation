@@ -1,2 +1,0 @@
-SP_PC: {'mtype': 'SP_PC', 'region': {'$regex':'mc2.*'}}
-SP_PVBC: {'mtype': 'SP_PVBC'}

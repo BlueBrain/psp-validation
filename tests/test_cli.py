@@ -5,36 +5,30 @@ from os.path import dirname
 from click.testing import CliRunner
 from psp_validation.cli import run, plot
 
-DATA = Path(__file__).parent / 'input_data'
+DATA = Path(__file__).parent / 'input_data' / "simple"
 
 
-def test_cli():
+def test_cli(tmp_path):
     runner = CliRunner()
-    input_folder = DATA / 'simple'
-    # go to BlueConfig dir to run the simu
-    orig_path = Path(os.curdir).resolve()
-    os.chdir(input_folder)
-    try:
-        with TemporaryDirectory('test-psp-cli') as folder:
-            result = runner.invoke(run,
-                                   ['-c', 'BlueConfig',
-                                    '-o', folder,
-                                    '-t', 'usecases/hippocampus/targets.yaml',
-                                    '-n', '1',
-                                    '-r', '1',
-                                    '-j', '1',
-                                    'usecases/hippocampus/pathways/SP_PVBC-SP_PC.yaml',
-                                    '--dump-traces',
-                                    '--dump-amplitudes'])
+    folder = tmp_path / "test-psp-cli"
+    
+    result = runner.invoke(run,
+                            ['-c', str(DATA / 'simulation_config.json'),
+                            '-o', folder,
+                            '-t', str(DATA / 'usecases/hippocampus/targets.yaml'),
+                            '-n', '1',
+                            '-r', '1',
+                            '-j', '1',
+                            str(DATA / 'usecases/hippocampus/pathways/SP_PVBC-SP_PC.yaml'),
+                            '--dump-traces',
+                            '--dump-amplitudes'])
 
-            assert result.exit_code == 0, result.exc_info
-            assert {path.name for path in Path(folder).iterdir()} == {
-                'SP_PVBC-SP_PC.traces.h5',
-                'SP_PVBC-SP_PC.summary.yaml',
-                'SP_PVBC-SP_PC.amplitudes.txt',
-            }
-    finally:
-        os.chdir(orig_path)
+    assert result.exit_code == 0, result.exc_info
+    assert {path.name for path in Path(folder).iterdir()} == {
+        'SP_PVBC-SP_PC.traces.h5',
+        'SP_PVBC-SP_PC.summary.yaml',
+        'SP_PVBC-SP_PC.amplitudes.txt',
+    }
 
 
 def test_plot_cli():
@@ -46,4 +40,4 @@ def test_plot_cli():
 
         assert os.listdir(folder) == ['small-traces']
         out_folder = os.path.join(folder, 'small-traces')
-        assert os.listdir(out_folder) == ['a11086-a10127.png']
+        assert os.listdir(out_folder) == ['hippocampus_neurons-0-hippocampus_neurons-2.png']

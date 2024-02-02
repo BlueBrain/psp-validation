@@ -1,0 +1,25 @@
+{{
+  "run": {{
+    "tstop": {duration},
+    "dt": 0.025,
+    "random_seed": 264118
+  }},
+  "target_simulator": "CORENEURON",
+  "network": "{network}",
+  "node_sets_file": "{node_sets_file}",
+  "inputs": {{}},
+  "output": {{}},
+  "reports": {{
+    "soma_report": {{
+      "type": "compartment",
+      "start_time": 0,
+      "end_time": {duration},
+      "cells": "CA1",
+      "variable_name": "v",
+      "sections": "soma",
+      "enabled": true,
+      "dt": 0.1,
+      "file_name": "soma"
+    }}
+  }}
+}}

@@ -34,7 +34,10 @@ def voltage_traces(traces_files, output_dir):
                 'voltage': 'V [mV]',
             }[content]
             for pair in tqdm(root.values(), total=len(root), desc=pathway):
-                title = f"a{pair.attrs['pre_gid']}-a{pair.attrs['post_gid']}"
+                title = (
+                    f"{pair.attrs['pre_population']}-{pair.attrs['pre_id']}"
+                    f"-{pair.attrs['post_population']}-{pair.attrs['post_id']}"
+                )
                 figure = plt.figure()
                 ax = figure.gca()
                 for k, trial in enumerate(pair['trials']):

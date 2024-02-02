@@ -10,7 +10,7 @@ import logging
 from functools import partial
 
 import attr
-from bluepy import Circuit
+from bluepysnap import Simulation, Circuit
 import numpy as np
 
 from psp_validation import PSPError
@@ -18,7 +18,7 @@ from psp_validation.pathways import Pathway
 from psp_validation.simulation import run_pair_simulation_suite
 from psp_validation.utils import load_yaml
 
-LOGGER = logging.getLogger(__name__)
+L = logging.getLogger(__name__)
 
 
 @attr.s
@@ -35,7 +35,7 @@ class ProtocolParameters:
 
 
 def run(
-    pathway_files, blueconfig, targets, output_dir, num_pairs, num_trials,
+    pathway_files, sonata_simulation_config, targets, output_dir, num_pairs, num_trials,
     clamp='current', dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
@@ -47,7 +47,7 @@ def run(
     np.random.seed(seed)
 
     protocol_params = ProtocolParameters(clamp,
-                                         Circuit(blueconfig),
+                                         Simulation(sonata_simulation_config).circuit,
                                          load_yaml(targets),
                                          num_pairs,
                                          num_trials,
@@ -57,12 +57,12 @@ def run(
 
     for pathway_config_path in pathway_files:
         sim_runner = partial(run_pair_simulation_suite,
-                             blue_config=blueconfig,
+                             sonata_simulation_config=sonata_simulation_config,
                              base_seed=seed,
                              n_trials=num_trials,
                              n_jobs=jobs,
                              clamp=clamp,
-                             log_level=LOGGER.getEffectiveLevel(),
+                             log_level=L.getEffectiveLevel(),
                              )
 
         Pathway(pathway_config_path, sim_runner, protocol_params).run()

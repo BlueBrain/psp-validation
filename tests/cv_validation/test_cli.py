@@ -1,23 +1,21 @@
-import os
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from click.testing import CliRunner
 
 import psp_validation.cv_validation.cli as test_module
 
 DATA = Path(__file__).parent / 'input_data'
-PATHWAY = DATA / 'SP_PVBC-SP_PC.yaml'
-TARGETS = DATA / 'targets.yaml'
-CIRCUIT = '/gpfs/bbp.cscs.ch/project/proj42/circuits/CA1.O1/20190306.syn/CircuitConfig'
+PATHWAY = (DATA / 'SP_PVBC-SP_PC.yaml').resolve()
+SIMULATION = (Path(__file__).parent.parent / 'input_data/simple/simulation_config.json').resolve()
+TARGETS = (Path(__file__).parent.parent / 'input_data/simple/usecases/hippocampus/targets.yaml').resolve()
 
 
 def _test_setup(folder):
     runner = CliRunner()
 
     result = runner.invoke(test_module.setup,
-                           ['-c', CIRCUIT,
-                            '-o', folder,
+                           ['-c', SIMULATION,
                             '-t', TARGETS,
+                            '-o', folder,
                             '-p', PATHWAY,
                             '-n', '2',
                             '--seed', '100'])
@@ -27,7 +25,7 @@ def _test_setup(folder):
     sim_dir = Path(folder) / 'simulations'
     assert sim_dir.exists()
     assert (sim_dir / 'pairs.csv').exists()
-    assert (sim_dir / 'BlueConfig').exists()
+    assert (sim_dir / 'sonata_config.json').exists()
 
 
 def _test_simulation(folder):
@@ -62,8 +60,8 @@ def _test_analysis(folder):
 
     fig_dir = Path(folder) / 'figures'
     assert fig_dir.exists()
-    assert (fig_dir / 'SP_PVBC-SP_PC_CV_regression.png').exists()
-    assert (fig_dir / 'SP_PVBC-SP_PC_lambdas.png').exists()
+    assert (fig_dir / 'CA1-Excitatory_CA1_CV_regression.png').exists()
+    assert (fig_dir / 'CA1-Excitatory_CA1_lambdas.png').exists()
 
 
 def test_workflow(tmp_path):

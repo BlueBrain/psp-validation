@@ -61,9 +61,10 @@ def get_noisy_traces(h5f, protocol, clamp):
 
 def _get_cvs_and_jk_cvs_worker(pre_post_syn_type, h5_path, protocol):
     """Worker function for getting the CVs and JK CVs for given pair."""
+    # pylint: disable=too-many-locals
     bad_pair = cv = jk_cv = None
-    pre, post, syn_type = pre_post_syn_type
-    pair = f'{pre}_{post}'
+    pre_population, pre_id, post_population, post_id, syn_type = pre_post_syn_type
+    pair = f'{pre_population}-{pre_id}_{post_population}-{post_id}'
 
     with h5py.File(h5_path, 'r') as h5:
         clamp = h5.attrs.get('clamp')
@@ -80,8 +81,9 @@ def _get_cvs_and_jk_cvs_worker(pre_post_syn_type, h5_path, protocol):
 
 def get_cvs_and_jk_cvs(pairs, h5_path, protocol, n_jobs=None):
     """Gets the CVs and Jackknife sampled CVs of the psp amplitudes for given pairs."""
-
-    pre_post_syn_type = pairs[['pre', 'post', 'synapse_type']].itertuples(index=False, name=None)
+    pre_post_syn_type = pairs[
+        ['pre_population', "pre_id", 'post_population', "post_id", 'synapse_type']
+    ].itertuples(index=False, name=None)
 
     if n_jobs is None:
         n_jobs = 1

@@ -10,14 +10,14 @@ DATA = Path(__file__).parent / 'input_data'
 def test_run():
     input_folder = DATA / 'simple'
 
-    # go to BlueConfig dir to run the simu
+    # go to data dir to run the simulation
     orig_path = Path(os.curdir).resolve()
     os.chdir(input_folder)
     try:
         with TemporaryDirectory('test-psp-run') as folder:
             psp.run(
                 ['usecases/hippocampus/pathways/SP_PVBC-SP_PC.yaml'],
-                'BlueConfig',
+                'simulation_config.json',
                 'usecases/hippocampus/targets.yaml',
                 folder,
                 num_pairs=1,

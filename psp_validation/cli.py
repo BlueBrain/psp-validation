@@ -35,7 +35,9 @@ def cli(verbose=0):
 
 @cli.command()
 @click.argument("pathway_files", nargs=-1, required=True)
-@click.option("-c", "--blueconfig", required=True, help="Path to BlueConfig")
+@click.option(
+    "-c", "--sonata_simulation_config", required=True, help="Path to Sonata simulation config"
+)
 @click.option("-t", "--targets", required=True, help="Path to neuron groups definitions (YAML)")
 @click.option("-o", "--output-dir", required=True, help="Path to output folder")
 @click.option(
@@ -60,7 +62,7 @@ def cli(verbose=0):
     )
 )
 def run(
-    pathway_files, blueconfig, targets, output_dir, num_pairs, num_trials,
+    pathway_files, sonata_simulation_config, targets, output_dir, num_pairs, num_trials,
     clamp='current', dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
@@ -69,7 +71,7 @@ def run(
 
     os.makedirs(output_dir, exist_ok=True)
 
-    psp.run(pathway_files, blueconfig, targets, output_dir, num_pairs, num_trials,
+    psp.run(pathway_files, sonata_simulation_config, targets, output_dir, num_pairs, num_trials,
             clamp, dump_traces, dump_amplitudes, seed, jobs)
 
 
