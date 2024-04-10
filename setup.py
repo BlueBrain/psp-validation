@@ -15,7 +15,7 @@ setup(
         'numpy>=1.10',
         'pandas>=1.3,<2',
         'tqdm>=4.0',
-        'bluecellulab>=1.3.13',
+        'bluecellulab>=2.5.7',
         'bluepysnap>=3.0.0,<4.0.0',
         'seaborn>=0.11,<1.0',
     ],

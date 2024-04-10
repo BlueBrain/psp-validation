@@ -23,6 +23,8 @@ class SimulationResult:
 def _bluecellulab(level):
     # pylint: disable=import-outside-toplevel
     import bluecellulab
+    # tools need to be imported to access bluecellulab.tools.holding_current
+    import bluecellulab.tools
 
     if level <= logging.CRITICAL:
         bluecellulab.set_verbose(0)
@@ -40,7 +42,7 @@ def _bluecellulab(level):
 
 def get_holding_current(log_level, hold_V, post_gid, sonata_simulation_config, post_ttx):
     """Retrieve the holding current using bluecellulab."""
-    hold_I, _ = _bluecellulab(log_level).holding_current(  # pylint: disable=no-member
+    hold_I, _ = _bluecellulab(log_level).tools.holding_current(  # pylint: disable=no-member
         hold_V, post_gid, sonata_simulation_config, enable_ttx=post_ttx
     )
     # If the memory allocated by bluecellulab for the simulation is not automatically freed,
@@ -111,13 +113,13 @@ def run_pair_simulation(
             )
         )
 
-    ssim = bluecellulab.ssim.SSim(
+    simulation = bluecellulab.circuit_simulation.CircuitSimulation(
         sonata_simulation_config,
         record_dt=record_dt,
         base_seed=base_seed,
         rng_mode="Random123",
     )
-    ssim.instantiate_gids(
+    simulation.instantiate_gids(
         post_gid,
         add_replay=False,
         add_minis=False,
@@ -127,7 +129,7 @@ def run_pair_simulation(
         intersect_pre_gids=[pre_gid],
         add_projections=add_projections
     )
-    post_cell = ssim.cells[post_gid]
+    post_cell = simulation.cells[post_gid]
 
     if _get_synapse_unique_value(
         post_cell, lambda synapse: isinstance(synapse, bluecellulab.synapse.GabaabSynapse)
@@ -158,7 +160,7 @@ def run_pair_simulation(
         # add pre-calculated current to set the holding potential
         post_cell.add_ramp(0, 10000, hold_I, hold_I)
 
-    ssim.run(t_stop=t_stop, dt=0.025, v_init=hold_V, forward_skip=False)
+    simulation.run(t_stop=t_stop, dt=0.025, v_init=hold_V, forward_skip=False)
 
     L.info('sim_pair: %s -> %s (seed=%d)... done', pre_gid, post_gid, base_seed)
 
