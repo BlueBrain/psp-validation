@@ -71,3 +71,40 @@ However, there are a few caveats:
 * if ``libsonata<0.1.25`` is used with SONATA configs, make sure ``celsius=34`` is passed to ``SSim.run``/``CircuitSimulation.run`` functions of ``bglibpy``/``bluecellulab``
 
 CV-validations transition has been verified in a similar fashion.
+=======
+    .. code:: 
+
+        mean: 0.5758531759392852
+        std: 0.5048845104283485
+
+* BlueConfig
+
+    .. code:: 
+
+        mean: 0.5760417780829513
+        std: 0.4978064245906366
+
+Finally these are the summary values for ``1000`` repetitions and with no adjustments to the code (the cell pairs are possibly different):
+
+* Sonata
+
+    .. code:: 
+
+        mean: 0.6876990851736935
+        std: 0.43105991059029075
+
+* BlueConfig
+
+    .. code:: 
+
+        mean: 0.571458741985596
+        std: 0.48709744084273227
+
+Acknowledgements
+================
+
+The development of this software was supported by funding to the Blue Brain Project, a research center of the École polytechnique fédérale de Lausanne (EPFL), from the Swiss government’s ETH Board of the Swiss Federal Institutes of Technology.
+
+For license and authors, see LICENSE.txt and AUTHORS.txt respectively.
+
+Copyright (c) 2022-2024 Blue Brain Project/EPFL
