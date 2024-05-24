@@ -11,11 +11,11 @@ setup(
         "efel>=3.0.39",
         "h5py>=3,<4",
         "joblib>=0.16",
-        "matplotlib<3.9",  # pin matplotlib<3.9; https://github.com/BlueBrain/BlueCelluLab/issues/183
+        "matplotlib",
         "numpy>=1.10",
         "pandas>=1.3,<2",
         "tqdm>=4.0",
-        "bluecellulab>=2.6.2",
+        "bluecellulab>=2.6.15",
         "bluepysnap>=3.0.0,<4.0.0",
         "seaborn>=0.11,<1.0",
     ],

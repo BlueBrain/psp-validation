@@ -37,7 +37,9 @@ def test_run_pair_simulation_clamp_current():
     # expected = [-73, -68.1933134, -69.9867904, -69.9856424]
 
     # with bluecellulab 2.6.2 using afferent_section_pos from h5
-    expected = [-73, -68.1933134, -69.9867904, -69.9856456]
+    # expected = [-73, -68.1933134, -69.9867904, -69.9856456]
+
+    expected = [-73, -68.1933134, -69.9867904, -69.9856424]  # with bluecellulab 2.6.15
 
     assert_almost_equal(voltage[[0, 1000, 20000, -1]], expected)
 
