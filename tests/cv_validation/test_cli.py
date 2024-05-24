@@ -2,11 +2,11 @@ from pathlib import Path
 from click.testing import CliRunner
 
 import psp_validation.cv_validation.cli as test_module
+from ..utils import TEST_DATA_DIR_CV, TEST_DATA_DIR_PSP
 
-DATA = Path(__file__).parent / 'input_data'
-PATHWAY = (DATA / 'SP_PVBC-SP_PC.yaml').resolve()
-SIMULATION = (Path(__file__).parent.parent / 'input_data/simple/simulation_config.json').resolve()
-TARGETS = (Path(__file__).parent.parent / 'input_data/simple/usecases/hippocampus/targets.yaml').resolve()
+PATHWAY = (TEST_DATA_DIR_CV / 'SP_PVBC-SP_PC.yaml').resolve()
+SIMULATION = (TEST_DATA_DIR_PSP / 'simple' / 'simulation_config.json').resolve()
+TARGETS = (TEST_DATA_DIR_CV / 'targets.yaml').resolve()
 
 
 def _test_setup(folder):
@@ -17,22 +17,23 @@ def _test_setup(folder):
                             '-t', TARGETS,
                             '-o', folder,
                             '-p', PATHWAY,
+                            '-e', 'default',
                             '-n', '2',
                             '--seed', '100'])
 
     assert result.exit_code == 0, result.output
 
-    sim_dir = Path(folder) / 'simulations'
+    sim_dir = folder / 'SP_PVBC-SP_PC'
     assert sim_dir.exists()
     assert (sim_dir / 'pairs.csv').exists()
-    assert (sim_dir / 'sonata_config.json').exists()
 
 
 def _test_simulation(folder):
     runner = CliRunner()
 
     result = runner.invoke(test_module.run,
-                           ['-o', folder,
+                           ['-c', SIMULATION,
+                            '-o', folder,
                             '-p', PATHWAY,
                             '-r', '2',
                             '--nrrp', '1', '2',
@@ -40,7 +41,7 @@ def _test_simulation(folder):
 
     assert result.exit_code == 0, result.output
 
-    sim_dir = Path(folder) / 'simulations'
+    sim_dir = folder / 'SP_PVBC-SP_PC'
     assert (sim_dir / 'simulation_nrrp1.h5').exists()
     assert (sim_dir / 'simulation_nrrp2.h5').exists()
 
@@ -58,10 +59,10 @@ def _test_analysis(folder):
 
     assert result.exit_code == 0, result.output
 
-    fig_dir = Path(folder) / 'figures'
+    fig_dir = folder / 'SP_PVBC-SP_PC'
     assert fig_dir.exists()
-    assert (fig_dir / 'CA1-Excitatory_CA1_CV_regression.png').exists()
-    assert (fig_dir / 'CA1-Excitatory_CA1_lambdas.png').exists()
+    assert (fig_dir / 'CV_regression.png').exists()
+    assert (fig_dir / 'lambdas.png').exists()
 
 
 def test_workflow(tmp_path):

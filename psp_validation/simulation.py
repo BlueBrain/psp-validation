@@ -131,16 +131,16 @@ def run_pair_simulation(
     )
     post_cell = simulation.cells[post_gid]
 
-    if _get_synapse_unique_value(
+    if _get_synapse_unique_value(  # True, if all synapses are GabaabSynapse
         post_cell, lambda synapse: isinstance(synapse, bluecellulab.synapse.GabaabSynapse)
-    ) == "INH":
+    ):
         first_synapse = next(iter(post_cell.synapses.values())).hsynapse
         if not hasattr(first_synapse, 'e_GABAA'):
             raise PSPError('Inhibitory reverse potential e_GABAA is expected to be under '
                            '"e_GABAA" synaptic range NEURON variable')
         params = {'e_GABAA': _get_synapse_unique_value(
             post_cell, lambda synapse: synapse.hsynapse.e_GABAA)}
-    else:
+    else:  # If none of the synapses are GabaabSynapse
         if not hasattr(bluecellulab.neuron.h, 'e_ProbAMPANMDA_EMS'):
             raise PSPError('Excitatory reverse potential e_AMPA is expected to be under '
                            '"e_ProbAMPANMDA_EMS" global NEURON variable')
@@ -205,11 +205,11 @@ def run_pair_simulation_suite(
 
     assert clamp in ('current', 'voltage')
     if clamp == 'current':
-        L.info("Calculating a%s holding current...", post_gid)
+        L.info("Calculating %s holding current...", post_gid)
         hold_I = get_holding_current(
             log_level, hold_V, post_gid, sonata_simulation_config, post_ttx
         )
-        L.info("a%s holding current: %.3f nA", post_gid, hold_I)
+        L.info("%s holding current: %.3f nA", post_gid, hold_I)
     else:
         hold_I = None
 

@@ -1,11 +1,3 @@
-pre_population,pre_id,post_population,post_id,seed,synapse_type
-hippocampus_neurons,20,hippocampus_neurons,0,67044891,INH
-hippocampus_neurons,9,hippocampus_neurons,1,55335772,INH
-hippocampus_neurons,0,hippocampus_neurons,2,90230111,INH
-hippocampus_neurons,5,hippocampus_neurons,4,83235286,INH
-hippocampus_neurons,7,hippocampus_neurons,4,18203969,INH
-hippocampus_neurons,0,hippocampus_neurons,5,41310401,INH
-hippocampus_neurons,4,hippocampus_neurons,5,81886291,INH
-hippocampus_neurons,9,hippocampus_neurons,5,49961,INH
-hippocampus_neurons,3,hippocampus_neurons,7,45746978,INH
-hippocampus_neurons,9,hippocampus_neurons,7,41807693,INH
+pre_population,post_population,pre_id,post_id,seed,synapse_type
+All,All,17091,4886,50914563,INH
+All,All,17082,4890,91167976,INH

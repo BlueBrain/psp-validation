@@ -2,7 +2,6 @@
 import itertools
 import logging
 import os
-import pandas as pd
 
 import h5py
 import numpy as np
@@ -26,7 +25,7 @@ class ConnectionFilter:
     """Filter (pre_gid, post_gid, [nsyn]) tuples by different criteria.
 
     Args:
-        circuit: bluepysnap.Circuit instance
+        edge_population: bluepysnap.edges.EdgePopulation instance
 
         unique_gids: use GIDs only once
         min_nsyn: min synapse count for connection
@@ -41,10 +40,10 @@ class ConnectionFilter:
     """
 
     def __init__(
-        self, circuit, unique_gids=False, min_nsyn=None, max_nsyn=None,
+        self, edge_population, unique_gids=False, min_nsyn=None, max_nsyn=None,
         max_dist_x=None, max_dist_y=None, max_dist_z=None
     ):
-        self.circuit = circuit
+        self.edge_population = edge_population
         self.min_nsyn = min_nsyn
         self.max_nsyn = max_nsyn
         self.max_dist_x = max_dist_x
@@ -55,13 +54,7 @@ class ConnectionFilter:
         else:
             self.used_gids = None
 
-    def apply(self, connections, properties):
-        """Apply filter to given connections."""
-        for connection in connections:
-            if self._apply_one(connection, properties):
-                yield connection
-
-    def _apply_one(self, connection, properties):
+    def __call__(self, connection):
         # pylint: disable=too-many-return-statements,too-many-branches
         pre_gid, post_gid = connection[:2]
         if self.used_gids is not None:
@@ -74,18 +67,18 @@ class ConnectionFilter:
             if connection[2] > self.max_nsyn:
                 return False
         if self.max_dist_x is not None:
-            x1 = properties["x"][pre_gid]
-            x2 = properties["x"][post_gid]
+            x1 = self.edge_population.source.get(pre_gid, 'x')
+            x2 = self.edge_population.target.get(post_gid, 'x')
             if abs(x1 - x2) > self.max_dist_x:
                 return False
         if self.max_dist_y is not None:
-            y1 = properties["y"][pre_gid]
-            y2 = properties["y"][post_gid]
+            y1 = self.edge_population.source.get(pre_gid, 'y')
+            y2 = self.edge_population.target.get(post_gid, 'y')
             if abs(y1 - y2) > self.max_dist_y:
                 return False
         if self.max_dist_z is not None:
-            z1 = properties["z"][pre_gid]
-            z2 = properties["z"][post_gid]
+            z1 = self.edge_population.source.get(pre_gid, 'z')
+            z2 = self.edge_population.target.get(post_gid, 'z')
             if abs(z1 - z2) > self.max_dist_z:
                 return False
         if self.used_gids is not None:
@@ -98,60 +91,35 @@ class ConnectionFilter:
         """ If filter uses synapse count. """
         return (self.min_nsyn is not None) or (self.max_nsyn is not None)
 
-    def required_properties(self):
-        """Returns required properties of the dataset."""
-        property_names = []
-        if self.max_dist_x is not None:
-            property_names.append("x")
-        if self.max_dist_y is not None:
-            property_names.append("y")
-        if self.max_dist_z is not None:
-            property_names.append("z")
-        return property_names
 
-
-def get_pairs(circuit, pre, post, num_pairs, population=None, constraints=None):
+def get_pairs(edge_population, pre, post, num_pairs, constraints=None):
     """Get 'n_pairs' connected pairs specified by `query` and optional `constraints`.
 
     Args:
-        circuit: bluepysnap.Circuit instance
+        edge_population: bluepysnap.edges.EdgePopulation instance
         pre: presynaptic nodeset
         post: postsynaptic nodeset
         num_pairs: number of pairs to return
-        population: edge population name
         constraints: dict passed as kwargs to `ConnectionFilter`
 
     Returns:
         List of `n` (pre_gid, post_gid) pairs (or fewer if could not find enough)
     """
-    if population is not None:
-        edges = circuit.edges[population]
-    else:
-        edges = circuit.edges
+    L.info("Sampling pairs for pathway...")
+    constraints = constraints or {}
+    connection_filter = ConnectionFilter(edge_population, **constraints)
 
-    if constraints is not None:
-        connections_filter = ConnectionFilter(circuit, **constraints)
+    iter_connections = edge_population.iter_connections(
+        pre, post, shuffle=True, return_edge_count=connection_filter.requires_synapse_count
+    )
 
-        iter_connections = list(edges.iter_connections(
-            pre,
-            post,
-            return_edge_count=connections_filter.requires_synapse_count,
-        ))
+    iter_connections = filter(connection_filter, iter_connections)
+    pairs = [connection[:2] for connection in itertools.islice(iter_connections, num_pairs)]
 
-        node_ids = itertools.chain.from_iterable(connection[:2] for connection in iter_connections)
+    if not pairs:
+        L.warning("Could not find pairs for the pathway")
 
-        properties = pd.concat(
-            population_data for _, population_data in circuit.nodes.get(
-                group=node_ids, properties=connections_filter.required_properties()
-            )
-        )
-
-        if connections_filter is not None:
-            iter_connections = connections_filter.apply(iter_connections, properties)
-    else:
-        iter_connections = edges.iter_connections(pre, post)
-
-    return [connection[:2] for connection in itertools.islice(iter_connections, num_pairs)]
+    return pairs
 
 
 class Pathway:
@@ -168,7 +136,7 @@ class Pathway:
     synapses
     """
 
-    def __init__(self, pathway_config_path, sim_runner, protocol_params):
+    def __init__(self, pathway_config_path, sim_runner, protocol_params, edge_population):
         """The pathway constructor.
 
         The simulation is run only when ``run`` method is called.
@@ -177,6 +145,7 @@ class Pathway:
             pathway_config_path (str): path to a pathway file
             sim_runner (function): a callable to run the simulation
             protocol_params (ProtocolParameters): the parameters to used
+            edge_population (str): edge population name
 
         Attrs:
             title: the pathway name, taken from the basename of the pathway file
@@ -184,7 +153,6 @@ class Pathway:
             sim_runner: a callable that will run the simulation and return traces
             protocol_params: the parameters describing the experimental protocol
             pathway: a dictionary with the pathway specific information
-            projection: projection
             pairs: the list of gid pairs
             t_stim: numeric scalar representing stimulation time.
             t_start: the simulation start time
@@ -198,27 +166,22 @@ class Pathway:
         L.info("Processing '%s' pathway...", self.title)
 
         self.pathway = self.config['pathway']
-        self.population = self.pathway.get('edge_population')
 
         pre = self.protocol_params.targets.get(self.pathway["pre"], self.pathway["pre"])
         post = self.protocol_params.targets.get(self.pathway["post"], self.pathway["post"])
+        circuit = protocol_params.circuit
+
+        self.edge_population = circuit.edges[edge_population]
 
         self.pairs = get_pairs(
-            protocol_params.circuit,
+            self.edge_population,
             pre,
             post,
             num_pairs=protocol_params.num_pairs,
-            population=self.population,
             constraints=self.pathway.get('constraints'),
         )
 
-        if self.population is None:
-            self.pre_syn_type = get_synapse_type(
-                protocol_params.circuit,
-                protocol_params.circuit.nodes.ids(pre),
-            )
-        else:
-            self.pre_syn_type = "EXC"
+        self.pre_syn_type = get_synapse_type(self.edge_population.source, pre)
 
         self.min_ampl = self.config.get('min_amplitude', 0.0)
         self.min_trace_ampl = self.config.get('min_trace_amplitude', 0.0)  # NSETM-1166
@@ -248,6 +211,7 @@ class Pathway:
             traces_path = None
 
         if not self.pairs:
+            L.warning("No pairs to run.")
             return
 
         all_amplitudes = []
@@ -264,6 +228,14 @@ class Pathway:
 
         self._write_summary(params, all_amplitudes)
 
+    def _has_projections(self):
+        """Check if the edge population of the pathway contains projections"""
+        edge_type = self.edge_population.type
+        pre_type = self.edge_population.source.type
+        post_type = self.edge_population.target.type
+
+        return (edge_type, pre_type, post_type) == ('chemical', 'virtual', 'biophysical')
+
     def _run_one_pair(self, pair, all_amplitudes, traces_path):
         """
         Runs the simulation for a given pair, extract the peak amplitude and
@@ -278,7 +250,7 @@ class Pathway:
         pre_gid, post_gid = pair
         sim_results = self.sim_runner(
             pre_gid=pre_gid, post_gid=post_gid,
-            add_projections=bool(self.config['pathway'].get('projection')),
+            add_projections=self._has_projections(),
             **self.config['protocol'])
 
         traces, average = self._post_run(pre_gid, post_gid, sim_results, all_amplitudes)

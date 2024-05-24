@@ -1,7 +1,7 @@
 Tutorial
 ========
 
-`psp` command available after installing ``psp-validation``, is the main interface for running pair simulations and analyzing their output.
+`psp` command (available after installing ``psp-validation``) is the main interface for running pair simulations and analyzing their output.
 
 Please refer to
 
@@ -11,6 +11,8 @@ Please refer to
 
 for a brief description of available subcommands and options.
 
+.. _Run_PSP:
+
 Running simulations
 -------------------
 
@@ -18,14 +20,23 @@ To run pair simulations for given pathway(s):
 
 .. code-block:: console
 
-    $ psp run -c <BlueConfig> -o <output-dir> -t <targets.yaml> -n NUM_PAIRS -r NUM_TRIALS --clamp <current|voltage> [<pathway.yaml>...]
+    $ psp run \
+        -c <simulation-config> \
+        -o <output-dir> -t <targets.yaml> \
+        -n NUM_PAIRS \
+        -r NUM_TRIALS \
+        -e EDGE_POPULATION \
+        --clamp <current|voltage> \
+        [<pathway.yaml>...]
 
 where
 
+- ``simulation-config`` is `simulation config <https://sonata-extension.readthedocs.io/en/latest/sonata_simulation.html>`__ file
 - ``<pathway.yaml>`` is :ref:`pathway config <pathway-config>` file
 - ``<targets.yaml>`` is :ref:`target definitions <target-definitions>` file
 - ``NUM_PAIRS`` is number of pairs to simulate
 - ``NUM_TRIALS`` is number of simulation trials per each pair
+- ``EDGE_POPULATION`` is the name of the concerned  `edge population <https://sonata-extension.readthedocs.io/en/latest/sonata_config.html#id4>`__
 - ``clamp`` allows to choose between voltage and current clamp mode (default: ``current``)
 
 
@@ -54,7 +65,7 @@ In particular:
 
 --dump-traces      dump voltage / current trace for each trial to ``X.traces.h5``
 --dump-amplitudes  dump PSP amplitude values to ``X.amplitudes.txt``
---jobs JOBS      use `multiprocessing <https://docs.python.org/2/library/multiprocessing.html>`_ to launch multiple simulation trials in parallel
+--jobs JOBS        use `joblib <https://joblib.readthedocs.io/en/stable/>`__ to launch multiple simulation trials in parallel
 
 | ``X.traces.h5`` is an HDF5 file with the layout described :ref:`here <trace-dump>`.
 | ``X.amplitudes.txt`` is a one-column text file with PSP amplitude value for each pair (``nan`` if amplitude could not be extracted).

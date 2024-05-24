@@ -4,6 +4,14 @@ Changelog
 Version 1.0.0
 -------------
 - support sonata configs
+- use ``$node_set`` instead of ``$target`` in target files
+- combine different ``get_peak_amplitudes`` functions
+- print warning if no pairs found
+- change CV-validation to be simulation-config driven
+- restrict ``bluecellulab>=2.6.2`` due to bugs in previous versions
+- edge population needs to be given as a commandline parameter
+
+  - ``projection`` is no longer used in pathway configs. To have the same behavior, pass the name of the edge population in commandline
 
 Version 0.5.1
 -------------

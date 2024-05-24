@@ -59,17 +59,7 @@ For example,
 | max_dist_z  | float | max distance along Z axis             |
 +-------------+-------+---------------------------------------+
 
-To query connections from a specific `projection` rather than main connectome, please add `projection` key:
-
-.. code-block:: yaml
-
-    pathway:
-        projection: Thalamocortical_input_VPM
-        pre: null
-        post: L4_EXC
-
-    ...
-
+Connections are queried from a specific `edge population` given as a commandline parameter (see: :ref:`Tutorial <Run_PSP>`).
 
 Simulation parameters
 ~~~~~~~~~~~~~~~~~~~~~
@@ -158,7 +148,7 @@ Putting it all together:
         t_stop: 900.0
         post_ttx: false
 
-Please refer to `usecases <https://bbpgitlab.epfl.ch/nse/psp-validation/-/tree/main/usecases/>`_ for more examples.
+Please refer to `usecases <https://github.com/BlueBrain/psp-validation/tree/main/usecases>`__ for more examples.
 
 
 .. _target-definitions:
@@ -166,21 +156,21 @@ Please refer to `usecases <https://bbpgitlab.epfl.ch/nse/psp-validation/-/tree/m
 Target definitions
 ------------------
 
-Additional targets defined as BluePy `cell groups <https://bbpteam.epfl.ch/documentation/projects/bluepy/latest/circuit.html#cells-get>`_.
+Additional targets defined as SNAP `node queries <https://github.com/BlueBrain/snap/blob/master/doc/source/notebooks/09_node_queries.ipynb>`__.
 
 For example,
 
 .. code-block:: console
 
     L4_EXC:
-        layer: 4
-        synapse_class: EXC
+        layer: "4"
+        synapse_class: "EXC"
 
 corresponds to BluePy cell group
 
 .. code-block:: python
 
-    {Cell.LAYER: 4, Cell.SYNAPSE_CLASS: 'EXC'}
+    {"layer": "4", "synapse_class": "EXC"}
 
 
 .. _summary-file:
@@ -188,7 +178,7 @@ corresponds to BluePy cell group
 Summary file
 ------------
 
-Main output of `\`psp run\``; YAML file storing obtained PSP amplitudes mean / std.
+Main output of ``psp run``; YAML file storing obtained PSP amplitudes mean / std.
 
 If source pathway config specifies reference PSP amplitude data, it is repeated here, along with conductance scaling factor based on the ratio between model and reference data.
 
@@ -208,7 +198,7 @@ If source pathway config specifies reference PSP amplitude data, it is repeated 
 Trace dump
 ----------
 
-On-request output of `\`psp run\``; HDF5 file storing voltage / current traces for each trial, as well as their average, for each simulated pair.
+On-request output of ``psp run``; HDF5 file storing voltage / current traces for each trial, as well as their average, for each simulated pair.
 For voltage, spiking trials are filtered out when calculating average.
 
 .. code-block:: none

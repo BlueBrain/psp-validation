@@ -1,8 +1,6 @@
-import os
-
 import numpy as np
 import pandas as pd
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from numpy.testing import assert_array_equal, assert_allclose
@@ -12,9 +10,7 @@ from psp_validation import PSPError
 from psp_validation.simulation import SimulationResult
 from psp_validation.trace_filters import NullFilter, SpikeFilter
 
-from .utils import mock_run_pair_simulation_suite
-
-_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_data")
+from .utils import mock_run_pair_simulation_suite, TEST_DATA_DIR_PSP
 
 
 def test_get_peak_voltage_INH():
@@ -103,7 +99,7 @@ def test_numpy_ndarray_checker_raises3():
 
 def test_get_peak_amplitudes():
     # Use numpy to read the trace data from the txt file
-    data = np.loadtxt(os.path.join(os.path.dirname(__file__), 'input_data', 'example_trace.txt'))
+    data = np.loadtxt(TEST_DATA_DIR_PSP / 'example_trace.txt')
 
     actual = test_module.get_peak_amplitudes(
         time=[data[:, 0], data[:, 0]],
@@ -185,31 +181,23 @@ def test_resting_potential():
     potential = test_module.resting_potential(result.time, result.voltages[0], 1000, 1400)
     assert_allclose(potential, -42.18599807850207)
 
-    with patch('psp_validation.features.efel.getFeatureValues') as instance:
+    with patch('psp_validation.features.efel.get_feature_values') as instance:
         instance.return_value = None
         with pytest.raises(PSPError):
             test_module.resting_potential(result.time, result.voltages[0], 1000, 1400)
 
 
 def test_get_synapse_type():
-    circuit = MagicMock()
-    get = MagicMock()
-    circuit.nodes.get.return_value = [
-        ("population_name", {"synapse_class": pd.Series(['EXC', 'EXC', 'EXC'])}),
-        ("population_name02", {"synapse_class": pd.Series(['EXC', 'EXC'])}),
-    ]
-    group = MagicMock()
+    get = Mock()
+    nodes = Mock(get=get, property_names=['synapse_class'])
+    get.return_value = pd.Series(['EXC', 'EXC', 'EXC'])
 
-    assert "EXC" == test_module.get_synapse_type(circuit, group)
+    assert "EXC" == test_module.get_synapse_type(nodes, None)
 
-    circuit = MagicMock()
-    get = MagicMock()
-    circuit.nodes.__getitem__.return_value = get
-    circuit.nodes.get.return_value = [
-        ("population_name", {"synapse_class": pd.Series(['EXC', 'EXC', 'INH'])}),
-        ("population_name02", {"synapse_class": pd.Series(['EXC', 'EXC'])}),
-    ]
-    group = MagicMock()
-    
+    get.return_value = pd.Series(['EXC', 'EXC', 'INH'])
+
     with pytest.raises(PSPError):
-        test_module.get_synapse_type(circuit, group)
+        test_module.get_synapse_type(nodes, None)
+
+    nodes.property_names.pop()
+    assert test_module.get_synapse_type(nodes, None) == "EXC"

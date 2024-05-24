@@ -36,7 +36,7 @@ class ProtocolParameters:
 
 def run(
     pathway_files, sonata_simulation_config, targets, output_dir, num_pairs, num_trials,
-    clamp='current', dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
+    edge_population, clamp='current', dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
     # pylint: disable=too-many-arguments
@@ -65,4 +65,4 @@ def run(
                              log_level=L.getEffectiveLevel(),
                              )
 
-        Pathway(pathway_config_path, sim_runner, protocol_params).run()
+        Pathway(pathway_config_path, sim_runner, protocol_params, edge_population).run()

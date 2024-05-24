@@ -14,22 +14,22 @@ The easiest way to get ``psp-validation`` package is by using a module:
     $ module load psp-validation
 
 Where ``$archive`` is either ``unstable`` for to get the latest, or a specific version.
-To ensure the result is reproducible, please consider using a specific `BBP archive S/W module <https://bbpteam.epfl.ch/project/spaces/display/BBPHPC/BBP+ARCHIVE+SOFTWARE+MODULES>`_.
+To ensure the result is reproducible, please consider using a specific `BBP archive S/W module <https://bbpteam.epfl.ch/project/spaces/display/BBPHPC/BBP+ARCHIVE+SOFTWARE+MODULES>`__.
 
-The ``$model_specific_neurodamus`` relates to ``NEURODAMUS Repository Reorganisation and Modules on BB5`` under `Loading Neurodamus <https://bbpteam.epfl.ch/project/spaces/display/BGLIB/NEURODAMUS+Repository+Reorganisation+and+Modules+on+BB5>`_.
+The ``$model_specific_neurodamus`` relates to ``NEURODAMUS Repository Reorganisation and Modules on BB5`` under `Loading Neurodamus <https://bbpteam.epfl.ch/project/spaces/display/BGLIB/NEURODAMUS+Repository+Reorganisation+and+Modules+on+BB5>`__.
 
-At this point, ``psp`` command should be available, as well as compatible ``BGLibPy``, ``BluePy`` and ``neuron``, as well as compiled MOD files.
+At this point, ``psp`` command should be available, as well as compatible ``BlueCelluLab``, ``SNAP`` and ``neuron``, as well as compiled MOD files.
 
 
 pip install
 -----------
 
-Alternatively, ``psp-validation`` is also distributed as a Python package available at BBP devpi server:
+Alternatively, ``psp-validation`` is also distributed as a Python package:
 
 .. code-block:: console
 
-    $ pip install -i https://bbpteam.epfl.ch/repository/devpi/simple/ psp-validation
+    $ pip install psp-validation
 
-Only Python 3.6+ is supported at the moment.
+Currently, Python 3.7+ is supported.
 
-Getting BGLibPy / Neuron dependencies configured might be not straightforward, please refer to BGLibPy `installation instructions <https://bbpteam.epfl.ch/documentation/projects/BGLibPy/latest/installation.html>`_ for the details.
+Getting BlueCelluLab / Neuron dependencies configured might be not straightforward, please refer to BlueCelluLab `installation instructions <https://bluecellulab.readthedocs.io/en/latest/>`__ for the details.

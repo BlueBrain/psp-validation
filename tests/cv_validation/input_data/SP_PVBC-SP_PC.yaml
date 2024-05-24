@@ -2,14 +2,13 @@ reference:
     cv: 0.1  # arbitrary value for testing
 
 pathway:
-    pre: CA1-Excitatory
-    post: CA1
-    edge_population: hippocampus_neurons__hippocampus_neurons__chemical
+    pre: SP_PVBC
+    post: SP_PC
     constraints:
         unique_gids: true
-        max_dist_x: 300.0
-        max_dist_y: 200.0
-        max_dist_z: 200.0
+        max_dist_x: 100.0
+        max_dist_y: 100.0
+        max_dist_z: 100.0
 
 protocol:
     record_dt: 0.1

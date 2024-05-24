@@ -9,11 +9,10 @@ import logging
 import h5py
 import joblib
 import numpy as np
-from efel import getFeatureValues
 from tqdm import tqdm
 
 from psp_validation.cv_validation.OU_generator import add_ou_noise
-from psp_validation.features import check_syn_type, efel_traces, get_peak_amplitudes
+from psp_validation.features import get_peak_amplitudes
 
 
 SPIKE_TH = -30  # (mV) NEURON's built in spike threshold
@@ -103,25 +102,11 @@ def get_cvs_and_jk_cvs(pairs, h5_path, protocol, n_jobs=None):
     return [[value for value in group if value is not None] for group in zip(*results)]
 
 
-def _get_peak_amplitudes_current(t, trace, t_stim, syn_type):
-    """Gets the peak PSC amplitudes for trials using efel.
-
-    Similar to `psp-validation`'s `get_peak_amplitudes`"""
-    check_syn_type(syn_type)
-    # There is no {minimum,maximum}_current in efel, so exploiting voltage here
-    # efel "should" be ignorant about it.
-    traces = efel_traces(t, trace, t_stim)
-    peak = 'minimum_voltage' if syn_type == 'EXC' else 'maximum_voltage'
-    feature_values = getFeatureValues(traces, ['voltage_base', peak])[0]
-    return np.abs(feature_values[peak] - feature_values['voltage_base'])
-
-
 def _get_peak_amplitudes(t, traces, t_stim, syn_type, clamp):
     """Gets peak PSC/PSP amplitudes for all trials."""
     t = np.tile(t, (len(traces), 1))
 
-    func = get_peak_amplitudes if clamp == 'current' else _get_peak_amplitudes_current
-    return func(t, traces, t_stim, syn_type)
+    return get_peak_amplitudes(t, traces, t_stim, syn_type, clamp)
 
 
 def _get_jackknife_traces(traces):
@@ -150,14 +135,13 @@ def calc_cv(t, noisy_traces, syn_type, t_stim, clamp, jk):
         return np.std(amplitudes) / np.mean(amplitudes)
 
 
-def get_all_cvs(pathway, out_dir, pairs, nrrp, protocol, n_jobs=None):
+def get_all_cvs(out_dir, pairs, nrrp, protocol, n_jobs=None):
     """Calculates CVs w/ and w/o Jackknife resampling for all pairs and all NRRP values"""
-    sims_dir = os.path.join(out_dir, "simulations")
     all_cvs = {}
     n_bad_pairs = 0
 
     for nrrp_ in tqdm(range(nrrp[0], nrrp[1] + 1), desc="Iterating over NRRP"):
-        h5_path = os.path.join(sims_dir, f"simulation_nrrp{nrrp_}.h5")
+        h5_path = os.path.join(out_dir, f"simulation_nrrp{nrrp_}.h5")
 
         cvs, jk_cvs, bad_pairs = get_cvs_and_jk_cvs(pairs,
                                                     h5_path,
@@ -167,11 +151,10 @@ def get_all_cvs(pathway, out_dir, pairs, nrrp, protocol, n_jobs=None):
                                    "JK_CV": np.asarray(jk_cvs)}
         if bad_pairs:
             n_bad_pairs += len(bad_pairs)
-            L.debug("%s NRRP:%i following pairs cannot be analyzed due to spiking: \n\t%s",
-                    pathway, nrrp_, "\n\t".join(bad_pairs))
+            L.debug("NRRP:%i following pairs cannot be analyzed due to spiking: \n\t%s",
+                    nrrp_, "\n\t".join(bad_pairs))
 
     if n_bad_pairs > 0:
-        L.info("For the %s pathway %i sims couldn't be analyzed due to spiking",
-               pathway, n_bad_pairs)
+        L.info("%i sims couldn't be analyzed due to spiking", n_bad_pairs)
 
     return all_cvs

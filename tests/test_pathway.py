@@ -11,11 +11,10 @@ from psp_validation.psp import ProtocolParameters
 from psp_validation.trace_filters import SpikeFilter
 from bluepysnap.circuit_ids import CircuitNodeId
 
-from .utils import mock_run_pair_simulation_suite
+from .utils import mock_run_pair_simulation_suite, TEST_DATA_DIR_PSP
 
-_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "input_data")
 
-_PATHWAY_PATH = os.path.join(_path, 'pathway.yaml')
+_PATHWAY_PATH = str(TEST_DATA_DIR_PSP / 'pathway.yaml')
 
 
 def _default_protocol(**kwargs):
@@ -39,7 +38,7 @@ def _default_protocol(**kwargs):
 def _dummy_pathway(protocol_kwargs, synapse_type_mock):
     protocol = _default_protocol(**protocol_kwargs)
     sim_runner = MagicMock(return_value=mock_run_pair_simulation_suite())
-    pathway = test_module.Pathway(_PATHWAY_PATH, sim_runner, protocol)
+    pathway = test_module.Pathway(_PATHWAY_PATH, sim_runner, protocol, 'hippocampus_neurons__hippocampus_neurons__chemical')
     pathway.pairs = [(CircuitNodeId(id=1, population="population"), CircuitNodeId(id=2, population="population"))]
     pathway.pre_syn_type = 'EXC'
     pathway.min_ampl = 12.3
@@ -72,8 +71,8 @@ def test__run_one_pair():
 
         h5_file = os.path.join(folder, 'dump.h5')
         pathway._run_one_pair(
-            (CircuitNodeId(id=1, population="population"), CircuitNodeId(id=2, population="population")), 
-            all_amplitudes, 
+            (CircuitNodeId(id=1, population="population"), CircuitNodeId(id=2, population="population")),
+            all_amplitudes,
             h5_file
         )
         assert_allclose(all_amplitudes, [94.0238021084036])

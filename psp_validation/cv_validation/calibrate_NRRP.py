@@ -13,7 +13,7 @@ from scipy.stats import poisson
 
 from psp_validation.cv_validation.analyze_traces import get_all_cvs
 from psp_validation.cv_validation.plots import plot_CV_regression, plot_lambdas
-from psp_validation.cv_validation.utils import ensure_dir_exists, read_simulation_pairs
+from psp_validation.cv_validation.utils import read_simulation_pairs
 
 N_REPS = 50  # number of repetitions for random NRRP generation
 logging.basicConfig(level=logging.INFO)
@@ -109,32 +109,28 @@ def regress_lambdas(lambdas, cvs, target_cv, jk_cvs, target_jk_cv):
     return best_lambda, best_jk_lambda
 
 
-def calibrate(fig_dir, pathway_name, all_cvs, target_cv, nrrp, n_pairs, n_reps):
+def calibrate(fig_dir, all_cvs, target_cv, nrrp, n_pairs, n_reps):
     """Calibrates the nrrp according to the target_cv and plots the results."""
-    # TODO: Fix "too-many-locals" in the next iteration
-    # pylint: disable=too-many-locals
     # regress CVs to get target JK CV
     cvs, jk_cvs = _flatten_cvs(all_cvs, nrrp)
     target_jk_cv, reg_x, reg_y = regress_cvs(cvs, jk_cvs, target_cv)
-    L.info("For the %s pathway_name the reported in vitro CV was: %.2f, while the JK CV is: %.2f",
-           pathway_name, target_cv, target_jk_cv)
+    L.info("The reported in vitro CV was: %.2f, while the JK CV is: %.2f", target_cv, target_jk_cv)
 
-    fig_name = os.path.join(fig_dir, f"{pathway_name}_CV_regression.png")
+    fig_name = os.path.join(fig_dir, "CV_regression.png")
     plot_CV_regression(cvs, jk_cvs, reg_x, reg_y, target_cv, target_jk_cv, fig_name)
 
     # scan lambdas and find the closest ones to the target CV and JK CV
     lambdas, cvs, jk_cvs = scan_lambdas(all_cvs, nrrp, n_pairs, n_reps=n_reps)
     best_lambda, best_jk_lambda = regress_lambdas(lambdas, cvs, target_cv, jk_cvs, target_jk_cv)
 
-    fig_name = os.path.join(fig_dir, f"{pathway_name}_lambdas.png")
+    fig_name = os.path.join(fig_dir, "lambdas.png")
     plot_lambdas(lambdas, cvs, target_cv, best_lambda, jk_cvs,
                  target_jk_cv, best_jk_lambda, nrrp, fig_name)
 
 
-def run_calibration(
-        output_dir, pathways, pathway_name, nrrp, n_pairs=None, n_reps=None, n_jobs=None):
+def run_calibration(output_dir, pathways, nrrp, n_pairs=None, n_reps=None, n_jobs=None):
     """Run the calibration for given nrrp range"""
-    pairs = read_simulation_pairs(os.path.join(output_dir, 'simulations'))
+    pairs = read_simulation_pairs(output_dir)
     n_simulated_pairs = len(pairs)
 
     if n_pairs is None:
@@ -145,9 +141,6 @@ def run_calibration(
 
     # precalculate CVs from all simulations
     target_cv = pathways['reference']['cv']
-    all_cvs = get_all_cvs(
-        pathway_name, output_dir, pairs, nrrp, pathways['protocol'], n_jobs=n_jobs)
+    all_cvs = get_all_cvs(output_dir, pairs, nrrp, pathways['protocol'], n_jobs=n_jobs)
 
-    fig_dir = os.path.join(os.path.realpath(output_dir), 'figures')
-    ensure_dir_exists(fig_dir)
-    calibrate(fig_dir, pathway_name, all_cvs, target_cv, nrrp, n_pairs, n_reps)
+    calibrate(output_dir, all_cvs, target_cv, nrrp, n_pairs, n_reps)

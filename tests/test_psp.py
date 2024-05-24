@@ -3,12 +3,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from psp_validation import psp
-
-DATA = Path(__file__).parent / 'input_data'
+from .utils import TEST_DATA_DIR_PSP
 
 
 def test_run():
-    input_folder = DATA / 'simple'
+    input_folder = TEST_DATA_DIR_PSP / 'simple'
 
     # go to data dir to run the simulation
     orig_path = Path(os.curdir).resolve()
@@ -22,6 +21,7 @@ def test_run():
                 folder,
                 num_pairs=1,
                 num_trials=1,
+                edge_population='default',
                 clamp='current',
                 dump_traces=True,
                 dump_amplitudes=True,

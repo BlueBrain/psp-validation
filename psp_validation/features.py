@@ -1,7 +1,6 @@
 """Features extractions definitions."""
 import efel
 import numpy as np
-import pandas as pd
 
 from psp_validation import PSPError
 
@@ -81,7 +80,7 @@ def get_peak_voltage(time, voltage, t_stim, syn_type):
 
 
 def efel_traces(times, traces, t_stim):
-    """Get traces in the format expected by efel.getFeatureValues."""
+    """Get traces in the format expected by efel.get_feature_values."""
     assert len(times) == len(traces), "array length mismatch"
 
     return [{
@@ -92,7 +91,26 @@ def efel_traces(times, traces, t_stim):
     } for time, trace in zip(times, traces)]
 
 
-def get_peak_amplitudes(time, voltage, t_stim, syn_type):
+def _get_peak(syn_type, clamp):
+    """Get peak feature name based on synapse type and clamp mode.
+
+    Peak is either at maximum or minimum based on synapse_type and clamping mode:
+    +---------+-----+-----+
+    |         | EXC | INH |
+    +---------+-----+-----+
+    | current | max | min |
+    | voltage | min | max |
+    +---------+-----+-----+
+    """
+    check_syn_type(syn_type)
+    xor_exc_current = (syn_type == "EXC") != (clamp == "current")
+
+    # There is no {minimum,maximum}_current in efel, so using 'voltage' for current and voltage
+    # efel "should" be ignorant about it.
+    return "minimum_voltage" if xor_exc_current else "maximum_voltage"
+
+
+def get_peak_amplitudes(time, voltage, t_stim, syn_type, clamp="current"):
     """Get the peak amplitudes in time series.
 
     Parameters:
@@ -100,17 +118,15 @@ def get_peak_amplitudes(time, voltage, t_stim, syn_type):
         voltage: N x T array holding T voltage measurements for N traces
         t_stim: time of the stimulus
         syn_type: type of synapse ("EXC" or "INH")
+        clamp: clamp mode ('current' or 'voltage')
 
     Return:
-        Absolute difference between calculated mean v and peak v
+        Absolute difference between calculated mean v/c and peak v/c (clamp: current/voltage)
     """
-    check_syn_type(syn_type)
-
+    peak = _get_peak(syn_type, clamp)
     traces = efel_traces(time, voltage, t_stim)
-    peak = 'maximum_voltage' if syn_type == 'EXC' else 'minimum_voltage'
-    traces_results = efel.getFeatureValues(traces, [peak, 'voltage_base'])
-    amplitudes = [abs(res[peak][0] - res['voltage_base'][0]) for res in traces_results]
-    return amplitudes
+    traces_results = efel.get_feature_values(traces, [peak, 'voltage_base'])
+    return [abs(res[peak][0] - res["voltage_base"][0]) for res in traces_results]
 
 
 def resting_potential(time, voltage, t_start, t_stim):
@@ -122,7 +138,7 @@ def resting_potential(time, voltage, t_start, t_stim):
         'stim_end': [t_stim],
     }]
 
-    feature_value = efel.getFeatureValues(traces, ['voltage_base'])
+    feature_value = efel.get_feature_values(traces, ['voltage_base'])
     if feature_value is None:
         raise PSPError('Something went wrong when computing efel voltage_base')
 
@@ -143,21 +159,19 @@ def compute_scaling(psp1, psp2, v_holding, syn_type, params):
     return (psp2 * (1 - (psp1 / d))) / (psp1 * (1 - (psp2 / d)))
 
 
-def get_synapse_type(circuit, circuit_ids):
-    """Get synapse type for `circuit_ids` cells.
+def get_synapse_type(node_population, node_group):
+    """Get synapse type for cells in `node_group`.
 
     Raise an Exception if there are cells of more than one synapse type.
     """
-    synapse_types = pd.unique(
-        pd.concat(
-            population_data["synapse_class"] for _, population_data
-            in circuit.nodes.get(group=circuit_ids, properties="synapse_class")
-        )
-    )
+    if (syn_class := "synapse_class") in node_population.property_names:
+        synapse_types = node_population.get(node_group, syn_class).unique()
 
-    if len(synapse_types) != 1:
-        raise PSPError(
-            f"Cell group should consist of cells with same synapse type, "
-            f"found: [{','.join(synapse_types)}]"
-        )
-    return synapse_types[0]
+        if len(synapse_types) != 1:
+            raise PSPError(
+                f"Cell group should consist of cells with same synapse type, "
+                f"found: [{','.join(synapse_types)}]"
+            )
+        return synapse_types[0]
+
+    return "EXC"

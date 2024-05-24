@@ -12,23 +12,21 @@
 #SBATCH --cpus-per-task=16
 
 module purge
-module load nix/hpc/neuron
-module load nix/hpc/neurodamus
-export BGLIBPY_MOD_LIBRARY_PATH=$BBP_HOME/lib/libnrnmech.so
-module load nix/nse/psp-validation
+module load unstable neurodamus-hippocampus psp-validation
 
 # --delay 0.2 prevents overloading the controlling node
 parallel="parallel --delay 0.2 -j $SLURM_NTASKS --joblog %LOGS_DIR%/runtask.log"
 
 EXEC_CMD="psp -vv run \
--c %CircuitConfig% \
--t %TARGETS% \
--o %OUTPUT_DIR% \
--n %NUM_PAIRS% \
--r %NUM_TRIALS% \
---dump-traces \
---dump-amplitudes \
---seed %SEED% \
---jobs $SLURM_CPUS_PER_TASK"
+    -c %SIMULATION_CONFIG% \
+    -t %TARGETS% \
+    -o %OUTPUT_DIR% \
+    -n %NUM_PAIRS% \
+    -r %NUM_TRIALS% \
+    -e %EDGE_POPULATION% \
+    --dump-traces \
+    --dump-amplitudes \
+    --seed %SEED% \
+    --jobs $SLURM_CPUS_PER_TASK"
 
 $parallel "srun --exclusive -N1 -n1 $EXEC_CMD {1} >& %LOGS_DIR%/job-{#}.log" ::: %PATHWAYS%

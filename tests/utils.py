@@ -1,8 +1,11 @@
-import os
+import pathlib
 import numpy as np
 from itertools import repeat
 
 from psp_validation.simulation import SimulationResult
+
+TEST_DATA_DIR_PSP = pathlib.Path(__file__).parent / "input_data"
+TEST_DATA_DIR_CV = pathlib.Path(__file__).parent / "cv_validation" / "input_data"
 
 
 def _make_traces(vss, ts):
@@ -10,7 +13,7 @@ def _make_traces(vss, ts):
 
 
 def mock_run_pair_simulation_suite(*args, **kwargs):
-    filename = os.path.join(os.path.dirname(__file__), 'input_data', 'example_trace.txt')
+    filename = TEST_DATA_DIR_PSP / 'example_trace.txt'
     data = np.loadtxt(filename)
     time = data[:, 0]
     voltage = data[:, 1]

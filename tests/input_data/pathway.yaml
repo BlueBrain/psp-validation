@@ -8,9 +8,8 @@ reference:
         std: null
 
 pathway:
-    pre: CA1
-    post: CA1
-    edge_population: hippocampus_neurons__hippocampus_neurons__chemical
+    pre: SP_PC
+    post: SP_PVBC
     constraints:
         max_dist_x: 100.0
         max_dist_y: 100.0

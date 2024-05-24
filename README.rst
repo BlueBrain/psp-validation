@@ -24,9 +24,10 @@ the test data:
 
 .. code:: bash
 
-    psp run 
+    psp run
         -c tests/input_data/simple/simulation_config.json \
         -t tests/input_data/simple/usecases/hippocampus/targets.yaml \
+        -e default \
         tests/input_data/pathway.yaml \
         -o out \
         -n 1 \
@@ -44,7 +45,7 @@ command. The main command is `psp`, the supplementary command is `run`.
 
 Testing
 ^^^^^^^
-It is highly suggested to use BB5 for running tests manually. 
+It is highly suggested to use BB5 for running tests manually.
 
 .. code:: bash
 
@@ -54,49 +55,19 @@ Transition from BlueConfig to Sonata
 ------------------------------------
 
 Simulations using BlueConfig and Sonata describing the same circuit have been run to validate
-the transition. To achieve identical results two adjustments are neccesary:
+the transition.
 
-* Seeds for individual simulations are based on node ids, edge ids and population names. 
-  These seeds need to be fixed to a constant value. In psp-validations and in BlueCelluLab.
+``psp-validation`` using ``BlueConfig`` + ``bglibpy`` returns the same exact results as when using ``SONATA`` + ``bluecellulab``.
+However, there are a few caveats:
 
-* Pair selection is not identical. Pairs returned in `pathways.py` need to be set to return
-  the same list of id pairs.
+* internal seeds of bluecellulab/bglibpy need to be manually fixed to same numbers
 
-With these two adjustments the results of BlueConfig and Sonata are identical.
+* same edges (pre-post pairs) need to be selected
 
-Sufficient number of repetitions (`-r`) diminishes the influence of seeds and so even
-without fixing the seed to a constant value the results are remarkably close.
+* ``bluecellulab`` needs to be tweaked to use ``afferent_section_pos`` from a ``h5`` file
 
-Using ``300`` repetitions and fixing the id pairs, these are the summary values:
+  * fix for this is pending (see: https://github.com/BlueBrain/BlueCelluLab/pull/168)
 
-* Sonata
+* if ``libsonata<0.1.25`` is used with SONATA configs, make sure ``celsius=34`` is passed to ``SSim.run``/``CircuitSimulation.run`` functions of ``bglibpy``/``bluecellulab``
 
-    .. code:: 
-
-        mean: 0.5758531759392852
-        std: 0.5048845104283485
-
-* BlueConfig
-
-    .. code:: 
-
-        mean: 0.5760417780829513
-        std: 0.4978064245906366
-
-Finally these are the summary values for ``1000`` repetitions and with no adjustments to the code (the cell pairs are possibly different):
-
-* Sonata
-
-    .. code:: 
-
-        mean: 0.6876990851736935
-        std: 0.43105991059029075
-
-* BlueConfig
-
-    .. code:: 
-
-        mean: 0.571458741985596
-        std: 0.48709744084273227
-
-CV-validations transition has been verified in a similar fassion. 
+CV-validations transition has been verified in a similar fashion.

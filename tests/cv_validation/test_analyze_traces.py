@@ -23,23 +23,6 @@ def test__filter_traces():
     assert res is None
 
 
-def test__get_peak_amplitudes_current():
-    t = [np.arange(0, 100, .1)]
-    t_stim = 60
-    base = -50.0
-    trace = [np.full(len(t[0]), base)]
-
-    peak = -40.0
-    trace[0][-10] = peak
-    res = test_module._get_peak_amplitudes_current(t, trace, t_stim, 'INH')
-    assert_array_almost_equal(res, [peak - base])
-
-    peak = -60.0
-    trace[0][-10] = peak
-    res = test_module._get_peak_amplitudes_current(t, trace, t_stim, 'EXC')
-    assert_array_almost_equal(res, [base - peak])
-
-
 def test__get_jackknife_traces():
     traces = np.hstack((np.eye(11), np.zeros((11, 1))))
     expected = np.hstack((np.full((11, 11), 0.1) - np.eye(11) * 0.1, np.full((11, 1), 0)))

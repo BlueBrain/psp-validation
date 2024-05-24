@@ -1,25 +1,16 @@
 """Utility functions common to cv-validation scripts."""
 import os
-from importlib_resources import files
 
 import numpy as np
 import pandas as pd
 
-from psp_validation.cv_validation import templates
 
-
-SONATA_TEMPLATE_FILENAME = 'sonata.json.tmpl'
 PAIRS_FILENAME = 'pairs.csv'
 
 
 def ensure_dir_exists(dirpath):
     """Creates a directory if it doesn't already exist."""
     os.makedirs(dirpath, exist_ok=True)
-
-
-def read_sonata_template():
-    """Reads and returns the contents of the Sonata template file."""
-    return files(templates).joinpath(SONATA_TEMPLATE_FILENAME).read_text(encoding="utf-8")
 
 
 def write_simulation_pairs(simulation_dir, pairs, seeds, synapse_type):
@@ -34,9 +25,17 @@ def write_simulation_pairs(simulation_dir, pairs, seeds, synapse_type):
                        'seed': seeds,
                        'synapse_type': np.full_like(seeds, synapse_type, dtype=object)})
 
+    ensure_dir_exists(simulation_dir)
     df.to_csv(os.path.join(simulation_dir, PAIRS_FILENAME), index=False)
 
 
 def read_simulation_pairs(simulation_dir):
     """Reads the saved pairs (and seeds) selected for the simulation."""
     return pd.read_csv(os.path.join(simulation_dir, PAIRS_FILENAME))
+
+
+def get_pathway_outdir(pathways, outdir):
+    """Get the output directory for the pathway"""
+    return os.path.join(
+        outdir, f"{pathways['pathway']['pre']}-{pathways['pathway']['post']}".replace(" ", "")
+    )

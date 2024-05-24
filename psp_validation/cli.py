@@ -47,14 +47,21 @@ def cli(verbose=0):
     "-r", "--num-trials", type=int, required=True, help="Run NUM_TRIALS simulations for each pair"
 )
 @click.option(
+    "-e", "--edge-population", type=str, required=True, help="Edge population for the pathway"
+)
+@click.option(
     "-m", "--clamp", type=click.Choice(['current', 'voltage']),
     help="Clamp type used", default='current', show_default=True
 )
-@click.option("--dump-traces", is_flag=True, help="Dump PSP traces", show_default=True)
-@click.option("--dump-amplitudes", is_flag=True, help="Dump PSP amplitudes", show_default=True)
+@click.option(
+    "--dump-traces", is_flag=True, default=False, help="Dump PSP traces", show_default=True
+)
+@click.option(
+    "--dump-amplitudes", is_flag=True, default=False, help="Dump PSP amplitudes", show_default=True
+)
 @click.option("--seed", type=int, help="Pseudo-random generator seed", default=0, show_default=True)
 @click.option(
-    "-j", "--jobs", type=int,
+    "-j", "--jobs", type=int, default=None,
     help=(
         "Number of trials to run in parallel"
         "(if not specified, trials are run sequentially; "
@@ -63,7 +70,7 @@ def cli(verbose=0):
 )
 def run(
     pathway_files, sonata_simulation_config, targets, output_dir, num_pairs, num_trials,
-    clamp='current', dump_traces=False, dump_amplitudes=False, seed=None, jobs=None
+    edge_population, clamp, dump_traces, dump_amplitudes, seed, jobs
 ):
     """ Obtain PSP amplitudes; derive scaling factors """
     # pylint: disable=too-many-arguments
@@ -72,7 +79,7 @@ def run(
     os.makedirs(output_dir, exist_ok=True)
 
     psp.run(pathway_files, sonata_simulation_config, targets, output_dir, num_pairs, num_trials,
-            clamp, dump_traces, dump_amplitudes, seed, jobs)
+            edge_population, clamp, dump_traces, dump_amplitudes, seed, jobs)
 
 
 @cli.command()

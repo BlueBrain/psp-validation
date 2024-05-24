@@ -73,10 +73,13 @@ def run_sim_handler(
     return [r[1:] for r in results]
 
 
-def run_simulation(input_params, num_trials, nrrp, protocol, out_dir, clamp='current', n_jobs=None):
+def run_simulation(
+        simulation, input_params, num_trials, nrrp, protocol, out_dir, clamp='current', n_jobs=None
+):
     """Run the simulation with the provided arguments.
 
     Args:
+        simulation: path to Sonata simulation config
         input_params: one row in pandas DF containing seed, pre, post
         num_trials: number of repetitions per pair
         nrrp: nrrp value to simulate
@@ -108,7 +111,7 @@ def run_simulation(input_params, num_trials, nrrp, protocol, out_dir, clamp='cur
         # Run sweeps
         start_time = time.perf_counter()
         L.debug("### DEBUG MODE ###")
-        time_current_voltage = run_sim_handler(os.path.join(out_dir, 'sonata_config.json'),
+        time_current_voltage = run_sim_handler(simulation,
                                                input_params,
                                                nrrp,
                                                protocol,

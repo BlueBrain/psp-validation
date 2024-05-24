@@ -18,7 +18,6 @@ SP_Ivy: {'mtype': 'SP_Ivy'}
 SP_PC: {'mtype': 'SP_PC'}
 SP_PVBC: {'mtype': 'SP_PVBC'}
 SR_SCA: {'mtype': 'SR_SCA'}
-CA1-Inhibitory: {"population": "hippocampus_neurons", "synapse_class": "INH"}
 
 # selected PCs with apical trunk DSC synapses for SC g_syn tuning:
 #SP_PC_SC: [4799, 4807, 5234, 5715, 6496, 6526, 6685, 7129, 7586, 7741, 7792, 7983, 8010, 8082, 8523, 8737, 8839, 8895, 9046, 9683, 10193, 10326, 10494]
