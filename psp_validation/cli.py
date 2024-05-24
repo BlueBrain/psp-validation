@@ -1,45 +1,45 @@
-# -*- coding: utf-8 -*-
+"""PSP analysis toolkit.
 
-"""
-PSP analysis toolkit.
-
- * `psp run`     Run pair simulations for given pathway(s)
- * `psp summary` Collect `psp run` summary output
- * `psp plot`    Plot voltage / current traces obtained with `psp run`
+* `psp run`     Run pair simulations for given pathway(s)
+* `psp summary` Collect `psp run` summary output
+* `psp plot`    Plot voltage / current traces obtained with `psp run`
 """
 
-import os
 import logging
 
 import click
 
 from psp_validation import setup_logging
-from psp_validation.utils import load_yaml
+from psp_validation.utils import CLICK_DIR, CLICK_FILE, load_yaml
 from psp_validation.version import VERSION
-
-# pylint: disable=import-outside-toplevel
 
 
 @click.group()
 @click.version_option(version=VERSION)
 @click.option("-v", "--verbose", count=True, help="-v for INFO, -vv for DEBUG")
 def cli(verbose=0):
-    """ PSP analysis tool """
-    level = {
-        0: logging.WARNING,
-        1: logging.INFO,
-        2: logging.DEBUG
-    }[verbose]
+    """PSP analysis tool"""
+    level = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}[verbose]
     setup_logging(level)
 
 
 @cli.command()
-@click.argument("pathway_files", nargs=-1, required=True)
+@click.argument("pathway_files", nargs=-1, type=CLICK_FILE, required=True)
 @click.option(
-    "-c", "--sonata_simulation_config", required=True, help="Path to Sonata simulation config"
+    "-c",
+    "--sonata_simulation_config",
+    type=CLICK_FILE,
+    required=True,
+    help="Path to Sonata simulation config",
 )
-@click.option("-t", "--targets", required=True, help="Path to neuron groups definitions (YAML)")
-@click.option("-o", "--output-dir", required=True, help="Path to output folder")
+@click.option(
+    "-t",
+    "--targets",
+    type=CLICK_FILE,
+    required=True,
+    help="Path to neuron groups definitions (YAML)",
+)
+@click.option("-o", "--output-dir", type=CLICK_DIR, required=True, help="Path to output folder")
 @click.option(
     "-n", "--num-pairs", type=int, required=True, help="Sample NUM_PAIRS pairs from each pathway"
 )
@@ -50,8 +50,12 @@ def cli(verbose=0):
     "-e", "--edge-population", type=str, required=True, help="Edge population for the pathway"
 )
 @click.option(
-    "-m", "--clamp", type=click.Choice(['current', 'voltage']),
-    help="Clamp type used", default='current', show_default=True
+    "-m",
+    "--clamp",
+    type=click.Choice(["current", "voltage"]),
+    help="Clamp type used",
+    default="current",
+    show_default=True,
 )
 @click.option(
     "--dump-traces", is_flag=True, default=False, help="Dump PSP traces", show_default=True
@@ -61,52 +65,71 @@ def cli(verbose=0):
 )
 @click.option("--seed", type=int, help="Pseudo-random generator seed", default=0, show_default=True)
 @click.option(
-    "-j", "--jobs", type=int, default=None,
+    "-j",
+    "--jobs",
+    type=int,
+    default=None,
     help=(
         "Number of trials to run in parallel"
         "(if not specified, trials are run sequentially; "
         "setting to 0 would use all available CPUs)"
-    )
+    ),
 )
-def run(
-    pathway_files, sonata_simulation_config, targets, output_dir, num_pairs, num_trials,
-    edge_population, clamp, dump_traces, dump_amplitudes, seed, jobs
+def run(  # noqa: PLR0913,PLR0917 too many args / positional args
+    pathway_files,
+    sonata_simulation_config,
+    targets,
+    output_dir,
+    num_pairs,
+    num_trials,
+    edge_population,
+    clamp,
+    dump_traces,
+    dump_amplitudes,
+    seed,
+    jobs,
 ):
-    """ Obtain PSP amplitudes; derive scaling factors """
-    # pylint: disable=too-many-arguments
+    """Obtain PSP amplitudes; derive scaling factors"""
     from psp_validation import psp
 
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    psp.run(pathway_files, sonata_simulation_config, targets, output_dir, num_pairs, num_trials,
-            edge_population, clamp, dump_traces, dump_amplitudes, seed, jobs)
+    psp.run(
+        pathway_files,
+        sonata_simulation_config,
+        targets,
+        output_dir,
+        num_pairs,
+        num_trials,
+        edge_population,
+        clamp,
+        dump_traces,
+        dump_amplitudes,
+        seed,
+        jobs,
+    )
 
 
 @cli.command()
-@click.argument("summary_files", nargs=-1)
-@click.option("-s", "--style", type=click.Choice(['default', 'jira']), help="Table style")
+@click.argument("summary_files", nargs=-1, type=CLICK_FILE)
+@click.option("-s", "--style", type=click.Choice(["default", "jira"]), help="Table style")
 @click.option("--with-scaling", is_flag=True, help="Include 'scaling' column")
-def summary(summary_files, with_scaling=False, style='default'):
-    """ Print table with `psp run` output summary """
+def summary(summary_files, with_scaling=False, style="default"):
+    """Print table with `psp run` output summary"""
+
     def _format_value(value):
-        if value is None:
-            return "N/A"
-        else:
-            return f"{value:.6g}"
+        return "N/A" if value is None else f"{value:.6g}"
 
     def _format_value_mean_std(value):
-        if value is None:
-            return "N/A"
-        else:
-            return f"{value['mean']:.6g}±{value['std']:.6g}"
+        return "N/A" if value is None else f"{value['mean']:.6g}±{value['std']:.6g}"
 
     def _add_borders(values):
-        return [''] + values + ['']
+        return ["", values, ""]
 
-    headers = ['pathway', 'reference', 'model']
+    headers = ["pathway", "reference", "model"]
     if with_scaling:
-        headers.append('scaling')
-    if style == 'jira':
+        headers.append("scaling")
+    if style == "jira":
         print(*_add_borders(headers), sep="||")
     else:
         print(*headers, sep="\t")
@@ -114,24 +137,23 @@ def summary(summary_files, with_scaling=False, style='default'):
     for filepath in summary_files:
         data = load_yaml(filepath)
         row = [
-            data['pathway'],
-            _format_value_mean_std(data.get('reference')),
-            _format_value_mean_std(data.get('model'))
+            data["pathway"],
+            _format_value_mean_std(data.get("reference")),
+            _format_value_mean_std(data.get("model")),
         ]
         if with_scaling:
-            row.append(
-                _format_value(data.get('scaling'))
-            )
-        if style == 'jira':
+            row.append(_format_value(data.get("scaling")))
+        if style == "jira":
             print(*_add_borders(row), sep="|")
         else:
             print(*row, sep="\t")
 
 
 @cli.command()
-@click.argument("traces_files", nargs=-1)
-@click.option("-o", "--output-dir", required=True, help="Path to output folder")
+@click.argument("traces_files", type=CLICK_FILE, nargs=-1)
+@click.option("-o", "--output-dir", type=CLICK_DIR, required=True, help="Path to output folder")
 def plot(traces_files, output_dir):
-    """ Plot voltage traces stored in .h5 dump """
+    """Plot voltage traces stored in .h5 dump"""
     from psp_validation.plot import voltage_traces
+
     voltage_traces(traces_files, output_dir)

@@ -1,24 +1,23 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 from psp_validation.version import __version__
-
 
 setup(
     name="psp-validation",
     version=__version__,
     install_requires=[
-        'attrs>=20.3.0',
-        'click>=7.0',
-        'efel>=3.0.39',
-        'h5py>=3,<4',
-        'joblib>=0.16',
-        'matplotlib<3.9',  # pin matplotlib<3.9; https://github.com/BlueBrain/BlueCelluLab/issues/183
-        'numpy>=1.10',
-        'pandas>=1.3,<2',
-        'tqdm>=4.0',
-        'bluecellulab>=2.6.2',
-        'bluepysnap>=3.0.0,<4.0.0',
-        'seaborn>=0.11,<1.0',
+        "attrs>=20.3.0",
+        "click>=7.0",
+        "efel>=3.0.39",
+        "h5py>=3,<4",
+        "joblib>=0.16",
+        "matplotlib<3.9",  # pin matplotlib<3.9; https://github.com/BlueBrain/BlueCelluLab/issues/183
+        "numpy>=1.10",
+        "pandas>=1.3,<2",
+        "tqdm>=4.0",
+        "bluecellulab>=2.6.2",
+        "bluepysnap>=3.0.0,<4.0.0",
+        "seaborn>=0.11,<1.0",
     ],
     extras_require={"docs": ["sphinx", "sphinx-bluebrain-theme"]},
     packages=find_packages(),
@@ -28,10 +27,13 @@ setup(
     long_description="PSP analysis tools",
     long_description_content_type="text/plain",
     license="BBP-internal-confidential",
-    python_requires='>=3.7',
+    python_requires=">=3.7",
     entry_points={
-        'console_scripts': ['psp=psp_validation.cli:cli',
-                            'cv-validation=psp_validation.cv_validation.cli:cli']},
+        "console_scripts": [
+            "psp=psp_validation.cli:cli",
+            "cv-validation=psp_validation.cv_validation.cli:cli",
+        ]
+    },
     url="https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
     download_url="git@bbpgitlab.epfl.ch:nse/psp-validation.git",
     project_urls={

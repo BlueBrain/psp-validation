@@ -1,7 +1,7 @@
 """Repository for pathway queries."""
+
 import itertools
 import logging
-import os
 
 import h5py
 import numpy as np
@@ -22,27 +22,34 @@ L = logging.getLogger(__name__)
 
 
 class ConnectionFilter:
-    """Filter (pre_gid, post_gid, [nsyn]) tuples by different criteria.
-
-    Args:
-        edge_population: bluepysnap.edges.EdgePopulation instance
-
-        unique_gids: use GIDs only once
-        min_nsyn: min synapse count for connection
-        max_nsyn: max synapse count for connection
-        max_dist_x: max distance along X axis between pre- and post- synaptic soma
-        max_dist_y: max distance along Y axis between pre- and post- synaptic soma
-        max_dist_z: max distance along Z axis between pre- and post- synaptic soma
-
-    NB:
-        * using `unique_gids` makes ConnectionFilter stateful
-        * using `min_syn` or `max_syn` requires (pre_gid, post_gid, nsyn) input tuples
-    """
+    """Filter (pre_gid, post_gid, [nsyn]) tuples by different criteria."""
 
     def __init__(
-        self, edge_population, unique_gids=False, min_nsyn=None, max_nsyn=None,
-        max_dist_x=None, max_dist_y=None, max_dist_z=None
+        self,
+        edge_population,
+        unique_gids=False,
+        min_nsyn=None,
+        max_nsyn=None,
+        max_dist_x=None,
+        max_dist_y=None,
+        max_dist_z=None,
     ):
+        """The ConnectionFilter constructor.
+
+        Args:
+            edge_population: bluepysnap.edges.EdgePopulation instance
+
+            unique_gids: use GIDs only once
+            min_nsyn: min synapse count for connection
+            max_nsyn: max synapse count for connection
+            max_dist_x: max distance along X axis between pre- and post- synaptic soma
+            max_dist_y: max distance along Y axis between pre- and post- synaptic soma
+            max_dist_z: max distance along Z axis between pre- and post- synaptic soma
+
+        NB:
+            * using `unique_gids` makes ConnectionFilter stateful
+            * using `min_syn` or `max_syn` requires (pre_gid, post_gid, nsyn) input tuples
+        """
         self.edge_population = edge_population
         self.min_nsyn = min_nsyn
         self.max_nsyn = max_nsyn
@@ -54,31 +61,30 @@ class ConnectionFilter:
         else:
             self.used_gids = None
 
-    def __call__(self, connection):
-        # pylint: disable=too-many-return-statements,too-many-branches
+    def __call__(self, connection):  # noqa: C901,PLR0911 too-complex,too-many-returns
+        """Apply filtering"""
         pre_gid, post_gid = connection[:2]
-        if self.used_gids is not None:
-            if (pre_gid in self.used_gids) or (post_gid in self.used_gids):
-                return False
-        if self.min_nsyn is not None:
-            if connection[2] < self.min_nsyn:
-                return False
-        if self.max_nsyn is not None:
-            if connection[2] > self.max_nsyn:
-                return False
+        if self.used_gids is not None and (
+            (pre_gid in self.used_gids) or (post_gid in self.used_gids)
+        ):
+            return False
+        if self.min_nsyn is not None and (connection[2] < self.min_nsyn):
+            return False
+        if self.max_nsyn is not None and (connection[2] > self.max_nsyn):
+            return False
         if self.max_dist_x is not None:
-            x1 = self.edge_population.source.get(pre_gid, 'x')
-            x2 = self.edge_population.target.get(post_gid, 'x')
+            x1 = self.edge_population.source.get(pre_gid, "x")
+            x2 = self.edge_population.target.get(post_gid, "x")
             if abs(x1 - x2) > self.max_dist_x:
                 return False
         if self.max_dist_y is not None:
-            y1 = self.edge_population.source.get(pre_gid, 'y')
-            y2 = self.edge_population.target.get(post_gid, 'y')
+            y1 = self.edge_population.source.get(pre_gid, "y")
+            y2 = self.edge_population.target.get(post_gid, "y")
             if abs(y1 - y2) > self.max_dist_y:
                 return False
         if self.max_dist_z is not None:
-            z1 = self.edge_population.source.get(pre_gid, 'z')
-            z2 = self.edge_population.target.get(post_gid, 'z')
+            z1 = self.edge_population.source.get(pre_gid, "z")
+            z2 = self.edge_population.target.get(post_gid, "z")
             if abs(z1 - z2) > self.max_dist_z:
                 return False
         if self.used_gids is not None:
@@ -88,7 +94,7 @@ class ConnectionFilter:
 
     @property
     def requires_synapse_count(self):
-        """ If filter uses synapse count. """
+        """If filter uses synapse count."""
         return (self.min_nsyn is not None) or (self.max_nsyn is not None)
 
 
@@ -97,8 +103,8 @@ def get_pairs(edge_population, pre, post, num_pairs, constraints=None):
 
     Args:
         edge_population: bluepysnap.edges.EdgePopulation instance
-        pre: presynaptic nodeset
-        post: postsynaptic nodeset
+        pre: presynaptic node set
+        post: postsynaptic node set
         num_pairs: number of pairs to return
         constraints: dict passed as kwargs to `ConnectionFilter`
 
@@ -126,7 +132,7 @@ class Pathway:
     """Pathway specific parameters.
 
     A pathway is all connections between given pre post cell types.
-    When doing psp-validation we sample from this pathway (we dont use all connection),
+    When doing psp-validation we sample from this pathway (we don't use all connection),
     but that's how we use the term: "pathway".
 
     A connection is a sample from the pathway, or all synapses between given pre and post single
@@ -142,7 +148,7 @@ class Pathway:
         The simulation is run only when ``run`` method is called.
 
         Args:
-            pathway_config_path (str): path to a pathway file
+            pathway_config_path (pathlib.Path): path to a pathway file
             sim_runner (function): a callable to run the simulation
             protocol_params (ProtocolParameters): the parameters to used
             edge_population (str): edge population name
@@ -159,13 +165,13 @@ class Pathway:
             trace_filters: list of filters to filter out voltage traces
             resting_potentials: the resting potentials
         """
-        self.title = os.path.splitext(os.path.basename(pathway_config_path))[0]
+        self.title = pathway_config_path.stem
         self.config = load_config(pathway_config_path)
         self.sim_runner = sim_runner
         self.protocol_params = protocol_params
         L.info("Processing '%s' pathway...", self.title)
 
-        self.pathway = self.config['pathway']
+        self.pathway = self.config["pathway"]
 
         pre = self.protocol_params.targets.get(self.pathway["pre"], self.pathway["pre"])
         post = self.protocol_params.targets.get(self.pathway["post"], self.pathway["post"])
@@ -178,20 +184,20 @@ class Pathway:
             pre,
             post,
             num_pairs=protocol_params.num_pairs,
-            constraints=self.pathway.get('constraints'),
+            constraints=self.pathway.get("constraints"),
         )
 
         self.pre_syn_type = get_synapse_type(self.edge_population.source, pre)
 
-        self.min_ampl = self.config.get('min_amplitude', 0.0)
-        self.min_trace_ampl = self.config.get('min_trace_amplitude', 0.0)  # NSETM-1166
+        self.min_ampl = self.config.get("min_amplitude", 0.0)
+        self.min_trace_ampl = self.config.get("min_trace_amplitude", 0.0)  # NSETM-1166
 
-        self.t_stim = self.config['protocol']['t_stim']
+        self.t_stim = self.config["protocol"]["t_stim"]
         if isinstance(self.t_stim, list):
             # in case of input spike train, use first spike time as split point
             self.t_stim = min(self.t_stim)
 
-        self.t_start = self.t_stim - 10.
+        self.t_start = self.t_stim - 10.0
         self.trace_filters = [
             NullFilter(),
             SpikeFilter(t_start=self.t_start, v_max=-20),
@@ -205,10 +211,7 @@ class Pathway:
 
     def run(self):
         """Run the simulation for the given pathway."""
-        if self.protocol_params.dump_traces:
-            traces_path = self._init_traces_dump()
-        else:
-            traces_path = None
+        traces_path = self._init_traces_dump() if self.protocol_params.dump_traces else None
 
         if not self.pairs:
             L.warning("No pairs to run.")
@@ -218,13 +221,15 @@ class Pathway:
         for pair in self.pairs:
             params = self._run_one_pair(pair, all_amplitudes, traces_path)
 
-        if self.protocol_params.clamp != 'current':
+        if self.protocol_params.clamp != "current":
             return
 
         if self.protocol_params.dump_amplitudes:
-            np.savetxt(os.path.join(self.protocol_params.output_dir,
-                                    self.title + ".amplitudes.txt"),
-                       all_amplitudes, fmt="%.9f")
+            np.savetxt(
+                self.protocol_params.output_dir / f"{self.title}.amplitudes.txt",
+                all_amplitudes,
+                fmt="%.9f",
+            )
 
         self._write_summary(params, all_amplitudes)
 
@@ -234,29 +239,30 @@ class Pathway:
         pre_type = self.edge_population.source.type
         post_type = self.edge_population.target.type
 
-        return (edge_type, pre_type, post_type) == ('chemical', 'virtual', 'biophysical')
+        return (edge_type, pre_type, post_type) == ("chemical", "virtual", "biophysical")
 
     def _run_one_pair(self, pair, all_amplitudes, traces_path):
-        """
-        Runs the simulation for a given pair, extract the peak amplitude and
-        write the trace to disk if protocol_params.dump_traces.
+        """Run the simulation for a given pair.
+
+        Also, extract the peak amplitude and write the trace to disk if protocol_params.dump_traces.
 
         Args:
             pair (int): a pair of node ids
             all_amplitudes: a list that will store all amplitudes
             traces_path: the trace path
         """
-        # pylint: disable=too-many-locals
         pre_gid, post_gid = pair
         sim_results = self.sim_runner(
-            pre_gid=pre_gid, post_gid=post_gid,
+            pre_gid=pre_gid,
+            post_gid=post_gid,
             add_projections=self._has_projections(),
-            **self.config['protocol'])
+            **self.config["protocol"],
+        )
 
         traces, average = self._post_run(pre_gid, post_gid, sim_results, all_amplitudes)
 
         if self.protocol_params.dump_traces:
-            with h5py.File(traces_path, 'a') as h5f:
+            with h5py.File(traces_path, "a") as h5f:
                 dump_pair_traces(h5f, traces, average, pre_gid, post_gid)
 
         return sim_results.params
@@ -273,20 +279,26 @@ class Pathway:
         In case of voltage traces, they are filtered to calculate the average,
         but the returned traces are not filtered.
         """
-        if self.protocol_params.clamp == 'current':
+        if self.protocol_params.clamp == "current":
             traces = old_school_trace(sim_results)
             v_mean, t, v_used = mean_pair_voltage_from_traces(traces, self.trace_filters)
 
             filtered_count = len(sim_results.voltages) - len(v_used)
             if filtered_count > 0:
-                L.warning("%d out of %d traces filtered out for %s-%s"
-                          " simulation(s) due to spiking or synaptic failure",
-                          filtered_count, len(sim_results.voltages),
-                          pre_gid, post_gid
-                          )
+                L.warning(
+                    "%d out of %d traces filtered out for %s-%s"
+                    " simulation(s) due to spiking or synaptic failure",
+                    filtered_count,
+                    len(sim_results.voltages),
+                    pre_gid,
+                    post_gid,
+                )
             if v_mean is None:
-                L.warning("Could not extract PSP amplitude for %s-%s pair due to spiking",
-                          pre_gid, post_gid)
+                L.warning(
+                    "Could not extract PSP amplitude for %s-%s pair due to spiking",
+                    pre_gid,
+                    post_gid,
+                )
                 average = None
                 ampl = np.nan
             else:
@@ -295,34 +307,36 @@ class Pathway:
                 if ampl < self.min_ampl:
                     L.warning(
                         "PSP amplitude below given threshold for %s-%s pair (%.3g < %.3g)",
-                        pre_gid, post_gid, ampl, self.min_ampl
+                        pre_gid,
+                        post_gid,
+                        ampl,
+                        self.min_ampl,
                     )
                     ampl = np.nan
 
                 # Use resting potential instead of hold_V when the later is None for the
                 # scaling computation: see NSETM-637
-                if 'reference' in self.config and self.config['protocol']['hold_V'] is None:
-                    self.resting_potentials.append(resting_potential(
-                        t, v_mean, self.t_start, self.t_stim))
+                if "reference" in self.config and self.config["protocol"]["hold_V"] is None:
+                    self.resting_potentials.append(
+                        resting_potential(t, v_mean, self.t_start, self.t_stim),
+                    )
 
             all_amplitudes.append(ampl)
         else:
-            average = np.stack([np.mean(sim_results.currents, axis=0),
-                                sim_results.time])
+            average = np.stack([np.mean(sim_results.currents, axis=0), sim_results.time])
             traces = sim_results.currents
 
         return traces, average
 
     def _init_traces_dump(self):
         """Create empty H5 dump or overwrite existing one."""
-        traces_path = os.path.join(self.protocol_params.output_dir,
-                                   self.title + ".traces.h5")
-        with h5py.File(traces_path, 'w') as h5f:
-            h5f.attrs['version'] = '1.1'
+        traces_path = self.protocol_params.output_dir / f"{self.title}.traces.h5"
+        with h5py.File(traces_path, "w") as h5f:
+            h5f.attrs["version"] = "1.1"
             # we store voltage traces for current clamp and vice-versa
-            h5f.attrs['data'] = {
-                'current': 'voltage',
-                'voltage': 'current',
+            h5f.attrs["data"] = {
+                "current": "voltage",
+                "voltage": "current",
             }[self.protocol_params.clamp]
         return traces_path
 
@@ -332,32 +346,30 @@ class Pathway:
 
         reference, scaling = self._get_reference_and_scaling(model_mean, params)
 
-        summary_path = os.path.join(self.protocol_params.output_dir,
-                                    self.title + ".summary.yaml")
-        with open(summary_path, 'w', encoding='utf-8') as f:
-            f.write(
-                f"pathway: {self.title}\n"
-                f"model:\n"
-                f"    mean: {model_mean}\n"
-                f"    std: {model_std}\n"
-            )
-            if reference is not None:
-                f.write(
-                    f"reference:\n"
-                    f"    mean: {reference['mean']}\n"
-                    f"    std: {reference['std']}\n"
-                )
-            if scaling is not None:
-                f.write(f"scaling: {scaling}\n")
+        summary_path = self.protocol_params.output_dir / f"{self.title}.summary.yaml"
+        summary = (
+            f"pathway: {self.title}\n"
+            "model:\n"
+            f"    mean: {model_mean}\n"
+            f"    std: {model_std}\n"
+        )
+        if reference is not None:
+            summary += f"reference:\n    mean: {reference['mean']}\n    std: {reference['std']}\n"
+
+        if scaling is not None:
+            summary += f"scaling: {scaling}\n"
+
+        summary_path.write_text(summary)
 
     def _get_reference_and_scaling(self, model_mean, params):
-        if 'reference' in self.config:
-            reference = self.config['reference']['psp_amplitude']
-            v_holding = self.config['protocol']['hold_V']
+        if "reference" in self.config:
+            reference = self.config["reference"]["psp_amplitude"]
+            v_holding = self.config["protocol"]["hold_V"]
             if v_holding is None:
                 v_holding = np.mean(self.resting_potentials)
-            scaling = compute_scaling(model_mean, reference['mean'], v_holding, self.pre_syn_type,
-                                      params)
+            scaling = compute_scaling(
+                model_mean, reference["mean"], v_holding, self.pre_syn_type, params
+            )
         else:
             reference = None
             scaling = None

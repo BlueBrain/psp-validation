@@ -1,4 +1,5 @@
 """Trace filters."""
+
 import logging
 from abc import ABC, abstractmethod
 
@@ -29,10 +30,11 @@ class NullFilter(BaseTraceFilter):
     """Filter out empty or null traces."""
 
     def __call__(self, traces):
+        """Apply the filter."""
         selected = []
         for v_, t_ in traces:
             if v_ is None or len(v_) == 0:
-                L.debug('Skip empty or null trace')
+                L.debug("Skip empty or null trace")
                 continue
             selected.append((v_, t_))
         return selected
@@ -53,10 +55,11 @@ class SpikeFilter(BaseTraceFilter):
         self.v_max = v_max
 
     def __call__(self, traces):
+        """Apply the filter."""
         selected = []
         for v_, t_ in traces:
-            if get_peak_voltage(t_, v_, self.t0, 'EXC') > self.v_max:
-                L.debug('Skip trace containing spikes')
+            if get_peak_voltage(t_, v_, self.t0, "EXC") > self.v_max:
+                L.debug("Skip trace containing spikes")
                 continue
             selected.append((v_, t_))
         return selected
@@ -83,6 +86,7 @@ class AmplitudeFilter(BaseTraceFilter):
         self.syn_type = syn_type
 
     def __call__(self, traces):
+        """Apply the filter."""
         if self.min_trace_amplitude <= 0:
             return traces
         insufficient = []
@@ -98,6 +102,7 @@ class AmplitudeFilter(BaseTraceFilter):
                 selected.append(trace)
 
         if insufficient:
-            L.debug('Skip trace(s) with insufficient amplitude: %s',
-                    ', '.join(map(str, insufficient)))
+            L.debug(
+                "Skip trace(s) with insufficient amplitude: %s", ", ".join(map(str, insufficient))
+            )
         return selected

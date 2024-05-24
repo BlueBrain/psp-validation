@@ -1,20 +1,21 @@
-"""
-Adds Ornstein-Uhlenbeck (OU) noise to current/voltage traces.
+"""Adds Ornstein-Uhlenbeck (OU) noise to current/voltage traces.
+
 For BBP references see Barros-Zulaica et al. 2019 and Ecker et al. 2020
-author: András Ecker, last update: 03.2021
+
+author: András Ecker
 """
 
 import numpy as np
 
 
 def ou_generator(time, tau, sigma, initial_noise=0):
-    """
-    Generates OU noise using forward Euler
-    :param time: numpy array - representing time
-    :param tau: float - tau parameter of OU noise (extracted from in vitro traces)
-    :param sigma: float - sigma parameter of OU noise (extracted from in vitro traces)
-    :param inital_noise: float - mean/initial value of the noise
-    :return: noise: numpy array (same size as `t` and `rngs`) - generated (OU) noise
+    """Generates OU noise using forward Euler
+
+    Args:
+        time: numpy array - representing time
+        tau: float - tau parameter of OU noise (extracted from in vitro traces)
+        sigma: float - sigma parameter of OU noise (extracted from in vitro traces)
+        initial_noise: float - mean/initial value of the noise
     """
     datalen = time.shape[0]
     dt = time[1] - time[0]

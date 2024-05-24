@@ -1,11 +1,13 @@
+from unittest.mock import Mock, patch
+
 import numpy as np
-from unittest.mock import patch
-from numpy.testing import assert_allclose, assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_allclose, assert_array_equal
+
 import psp_validation.cv_validation.analyze_traces as test_module
 
 
 def test__filter_traces():
-    t = np.arange(0, 100, .1)
+    t = np.arange(0, 100, 0.1)
     t_stim = 60
     traces = np.random.random((2, len(t))) * 30 - 70
     spike = test_module.SPIKE_TH + np.random.random()
@@ -14,7 +16,7 @@ def test__filter_traces():
 
     # check that the trace with a late spike is filtered out
     res = test_module._filter_traces(t, traces, t_stim)
-    assert res.shape==(1, len(t))
+    assert res.shape == (1, len(t))
     assert_array_equal(res, [traces[1]])
 
     # check that None is return if all traces filtered out
@@ -31,15 +33,16 @@ def test__get_jackknife_traces():
     assert_array_equal(res, expected)
 
 
-@patch('psp_validation.cv_validation.analyze_traces._get_jackknife_traces')
-def test_calc_cv(*_):
+@patch.object(test_module, "_get_jackknife_traces", new=Mock())
+@patch.object(test_module, "_get_peak_amplitudes")
+def test_calc_cv(mock_get_amplitudes):
     np.random.seed(1)
     amplitudes = np.random.random(10)
-    with patch('psp_validation.cv_validation.analyze_traces._get_peak_amplitudes') as patched:
-        patched.return_value = amplitudes
-        expected = np.std(amplitudes) / np.mean(amplitudes)
-        assert_allclose(test_module.calc_cv(None, None, None, None, 'current', False), expected)
+    mock_get_amplitudes.return_value = amplitudes
 
-        # Since JK_var = (n-1)/n * SUM_SQUARES, and Var = 1/n * SUM_SQUARES
-        expected = np.sqrt(len(amplitudes) - 1) * np.std(amplitudes) / np.mean(amplitudes)
-        assert_allclose(test_module.calc_cv(None, None, None, None, 'current', True), expected)
+    expected = np.std(amplitudes) / np.mean(amplitudes)
+    assert_allclose(test_module.calc_cv(None, None, None, None, "current", jk=False), expected)
+
+    # Since JK_var = (n-1)/n * SUM_SQUARES, and Var = 1/n * SUM_SQUARES
+    expected = np.sqrt(len(amplitudes) - 1) * np.std(amplitudes) / np.mean(amplitudes)
+    assert_allclose(test_module.calc_cv(None, None, None, None, "current", jk=True), expected)

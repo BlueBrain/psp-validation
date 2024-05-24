@@ -1,0 +1,58 @@
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:nptyping",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ['ALL']
+preview = true
+ignore = [
+    'ANN',     # No annotations
+    'EM',      # Error message linting
+    'TD',      # Allow TODO:
+    'CPY',     # Don't lint on missing copyright (should be added later)
+    'TRY003',  # Avoid long messages outside the exception class
+    'NPY002',  # Legacy np.random used
+    'S101',    # Use of 'assert' detected
+    'D415',    # First line of docstrings should end with ./?/!
+    'FBT002',  # Boolean default for function arguments
+    'COM812',  # Trailing comma (to have similar behavior to black)
+    'ISC001',  # single line implicit string concatenation (disabling suggested by ruff formatter)
+]
+
+[tool.ruff.lint.isort]
+known-local-folder = ['tests']
+combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"psp_validation/cli.py" = [
+    "T201",     # print found
+    "PLC0415",  # import outside top-level
+]
+"tests/*.py" = [
+    'D',      # pydocstyle
+    'ERA',    # commented out code
+    'SLF001', # private member access
+    'N802',   # function name should be lowercase
+    'PLR2004' # magic value (constant) used in comparison (i.e. expected == 3)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pylint]
+# Maximum number of arguments for function / method
+max-args = 8
+# Maximum number of locals for function / method body
+max-locals = 15
+# Maximum number of return / yield for function / method body
+max-returns = 6
+# Maximum number of branch for function / method body
+max-branches = 12
+# Maximum number of statements in function / method body
+max-statements = 50
+# Maximum number of public methods for a class (see R0904).
+max-public-methods = 60

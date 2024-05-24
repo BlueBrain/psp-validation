@@ -1,12 +1,12 @@
 """Bundle of tools to help with persistifying data."""
 
-import numpy
+import numpy as np
 
 
-def dump_raw_traces_to_HDF5(h5file, data):
+def dump_raw_traces_to_HDF5(h5file, data):  # noqa: N802 (function-lowercase)
     """Dump a set of simulated psp traces to an HDF5 file.
 
-    Parameters:
+    Args:
     h5file: an h5py.File writable object
     data: array containing all the trace raw data
 
@@ -32,15 +32,14 @@ def dump_raw_traces_to_HDF5(h5file, data):
     for pair in data:
         traces = [(t[0], t[1]) for t in pair]  # strip out gids
         pre_gid, post_gid = pair[0][2]
-        group_name = f'/traces/a{pre_gid}-a{post_gid}'
-        h5file[group_name] = numpy.array(traces)
-        h5file[group_name].attrs['gid_pre'] = pre_gid
-        h5file[group_name].attrs['gid_post'] = post_gid
+        group_name = f"/traces/a{pre_gid}-a{post_gid}"
+        h5file[group_name] = np.array(traces)
+        h5file[group_name].attrs["gid_pre"] = pre_gid
+        h5file[group_name].attrs["gid_post"] = post_gid
 
 
 def dump_pair_traces(h5file, traces, average, pre_gid, post_gid):
-    """
-    Dump a set of simulated psp traces to an HDF5 file.
+    """Dump a set of simulated psp traces to an HDF5 file.
 
     Args:
         h5file: writable h5py.File
@@ -60,12 +59,12 @@ def dump_pair_traces(h5file, traces, average, pre_gid, post_gid):
     Each pair group has attributes 'pre_gid' and 'post_gid'.
     """
     group = h5file.create_group(
-        f'/traces/{pre_gid.population}_{pre_gid.id}-{post_gid.population}_{post_gid.id}'
+        f"/traces/{pre_gid.population}_{pre_gid.id}-{post_gid.population}_{post_gid.id}",
     )
-    group.attrs['pre_id'] = pre_gid.id
-    group.attrs['pre_population'] = pre_gid.population
-    group.attrs['post_id'] = post_gid.id
-    group.attrs['post_population'] = post_gid.population
-    group['trials'] = traces
+    group.attrs["pre_id"] = pre_gid.id
+    group.attrs["pre_population"] = pre_gid.population
+    group.attrs["post_id"] = post_gid.id
+    group.attrs["post_population"] = post_gid.population
+    group["trials"] = traces
     if average is not None:
-        group['average'] = average
+        group["average"] = average

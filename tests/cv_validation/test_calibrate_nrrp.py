@@ -1,27 +1,25 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
 import numpy as np
-from numpy.testing import assert_array_equal, assert_almost_equal
-import psp_validation.cv_validation.calibrate_NRRP as test_module
+from numpy.testing import assert_almost_equal, assert_array_equal
+
+import psp_validation.cv_validation.calibrate_nrrp as test_module
 
 
 def test__sample_cvs():
     np.random.seed(1)
     nrrps = [1, 2]
     counts = [2, 3]
-    cvs = {f'nrrp{i}': {
-        'CV': np.arange(5),
-        'JK_CV': np.arange(5)
-    } for i in range(1, 3)}
+    cvs = {f"nrrp{i}": {"CV": np.arange(5), "JK_CV": np.arange(5)} for i in range(1, 3)}
 
     res = test_module._sample_cvs(nrrps, counts, cvs)
     assert_array_equal(res, [1.8, 1.2])
 
 
+@patch.object(test_module, "_sample_cvs", new=Mock(return_value=(0, 1)))
 def test_scan_lambdas():
     np.random.seed(1)
-    with patch('psp_validation.cv_validation.calibrate_NRRP._sample_cvs') as patched:
-        patched.return_value = (0, 1)
-        res = test_module.scan_lambdas(None, [1, 2], 1, 1)
+    res = test_module.scan_lambdas(None, [1, 2], 1, 1)
 
     # These values are just simply copied from the original output before changes
     assert_array_equal(res[0], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2])
@@ -30,7 +28,7 @@ def test_scan_lambdas():
 
 
 def test__flatten_cvs():
-    cvs = {f'nrrp{i}': {'CV': [i], 'JK_CV': [-i]} for i in range(1, 10)}
+    cvs = {f"nrrp{i}": {"CV": [i], "JK_CV": [-i]} for i in range(1, 10)}
     res = test_module._flatten_cvs(cvs, [1, 9])
 
     assert_array_equal(res[0], range(1, 10))

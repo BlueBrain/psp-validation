@@ -1,28 +1,35 @@
 """The famous utils module."""
-from collections.abc import Iterable
-import multiprocessing
 
+import multiprocessing
+import pathlib
+from collections.abc import Iterable
+
+import click
 import yaml
+
+CLICK_DIR = click.Path(file_okay=False, path_type=pathlib.Path, resolve_path=True, writable=True)
+CLICK_FILE = click.Path(exists=True, dir_okay=False, path_type=pathlib.Path, resolve_path=True)
 
 
 def load_yaml(filepath):
     """Load YAML file."""
-    with open(filepath, 'r', encoding='utf-8') as f:
-        return yaml.load(f, Loader=yaml.FullLoader)
+    return yaml.safe_load(filepath.read_text())
 
 
 def load_config(filepath):
     """Load YAML job config."""
     config = load_yaml(filepath)
-    assert 'hold_I' not in config['protocol'], ("`hold_I` parameter in protocol is deprecated. "
-                                                "Please remove it from '%s' pathway config",
-                                                filepath)
+    assert "hold_I" not in config["protocol"], (
+        "`hold_I` parameter in protocol is deprecated. "
+        "Please remove it from '%s' pathway config",
+        filepath,
+    )
 
-    assert 'v_clamp' not in config['protocol'], (
+    assert "v_clamp" not in config["protocol"], (
         "`v_clamp` parameter in protocol is now deprecated. "
         "Please remove it from '%s' pathway config.\n"
         "For emulating voltage clamp, pass `--clamp voltage` to `psp run`.",
-        filepath
+        filepath,
     )
     return config
 
@@ -39,6 +46,7 @@ def isolate(func):
     Returns:
         the isolated function
     """
+
     def func_isolated(*args, **kwargs):
         with multiprocessing.Pool(1, maxtasksperchild=1) as pool:
             return pool.apply(func, args, kwargs)
@@ -48,7 +56,4 @@ def isolate(func):
 
 def ensure_list(v):
     """Convert iterable / wrap scalar/str into list."""
-    if isinstance(v, Iterable) and not isinstance(v, str):
-        return list(v)
-    else:
-        return [v]
+    return list(v) if isinstance(v, Iterable) and not isinstance(v, str) else [v]

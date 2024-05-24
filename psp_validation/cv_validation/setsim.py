@@ -1,25 +1,20 @@
-"""
-Sets up NRRP simulations in bluecellulab
-by András Ecker based on Giuseppe Chindemi's code
-last modified: 02.2021
-"""
+"""Sets up NRRP simulations in bluecellulab by András Ecker based on Giuseppe Chindemi's code"""
 
 import logging
 
 import numpy as np
-
 from bluepysnap import Simulation
 
+from psp_validation.cv_validation.utils import write_simulation_pairs
 from psp_validation.features import get_synapse_type
 from psp_validation.pathways import get_pairs
-from psp_validation.cv_validation.utils import write_simulation_pairs
 
 L = logging.getLogger(__name__)
 
 
 def write_pairs_and_seeds(pathway, targets, edge_population, n_pairs, output_dir):
     """Gets desired number of pairs and seeds for the pathway and saves them to a file."""
-    L.info('Setting pairs and seeds for simulation...')
+    L.info("Setting pairs and seeds for simulation...")
 
     pre = targets.get(pathway["pre"], pathway["pre"])
     post = targets.get(pathway["post"], pathway["post"])
@@ -37,5 +32,5 @@ def setup_simulation(simulation_config, edge_population, output_dir, pathway, ta
     """Entry point for setting up the simulation directory, pairs etc."""
     L.info("Setting up directories and files for simulation...")
     edge_population = Simulation(simulation_config).circuit.edges[edge_population]
-    write_pairs_and_seeds(pathway['pathway'], targets, edge_population, num_pairs, output_dir)
+    write_pairs_and_seeds(pathway["pathway"], targets, edge_population, num_pairs, output_dir)
     L.info("Done")

@@ -5,7 +5,7 @@ from numpy.testing import assert_array_equal
 
 import psp_validation.trace_filters as test_module
 
-from .utils import _make_traces
+from tests.utils import _make_traces
 
 
 def test_NullFilter_no_filter():
@@ -78,11 +78,11 @@ def test_SpikeFilter_filter():
 
 
 def test_AmplitudeFilter_members():
-    tf = test_module.AmplitudeFilter(2345, 0.12, 'EXC')
+    tf = test_module.AmplitudeFilter(2345, 0.12, "EXC")
 
     assert tf.t_stim == 2345
     assert tf.min_trace_amplitude == 0.12
-    assert tf.syn_type == 'EXC'
+    assert tf.syn_type == "EXC"
 
 
 def test_AmplitudeFilter_no_filter_with_zero_amplitude():
@@ -90,7 +90,7 @@ def test_AmplitudeFilter_no_filter_with_zero_amplitude():
     v = np.full(100, -70)
     traces = _make_traces(repeat(v, 5), t)
 
-    tf = test_module.AmplitudeFilter(2, 0, 'EXC')
+    tf = test_module.AmplitudeFilter(2, 0, "EXC")
     filtered = np.array(tf(traces))
 
     assert filtered.shape == (5, 2, 100)
@@ -103,7 +103,7 @@ def test_AmplitudeFilter_no_filter_exc():
     v[30:40] += 10  # perturbation
     traces = _make_traces(repeat(v, 5), t)
 
-    tf = test_module.AmplitudeFilter(2, 9, 'EXC')
+    tf = test_module.AmplitudeFilter(2, 9, "EXC")
     filtered = np.array(tf(traces))
 
     assert filtered.shape == (5, 2, 100)
@@ -116,7 +116,7 @@ def test_AmplitudeFilter_no_filter_inh():
     v[30:40] -= 10  # perturbation
     traces = _make_traces(repeat(v, 5), t)
 
-    tf = test_module.AmplitudeFilter(2, 9, 'INH')
+    tf = test_module.AmplitudeFilter(2, 9, "INH")
     filtered = np.array(tf(traces))
 
     assert filtered.shape == (5, 2, 100)
@@ -129,7 +129,7 @@ def test_AmplitudeFilter_filter_all_exc():
     v[30:40] -= 10  # perturbation
     traces = _make_traces(repeat(v, 5), t)
 
-    tf = test_module.AmplitudeFilter(2, 9, 'EXC')
+    tf = test_module.AmplitudeFilter(2, 9, "EXC")
     filtered = np.array(tf(traces))
 
     assert filtered.shape == (0,)
@@ -142,7 +142,7 @@ def test_AmplitudeFilter_filter_all_inh():
     v[30:40] += 10  # perturbation
     traces = _make_traces(repeat(v, 5), t)
 
-    tf = test_module.AmplitudeFilter(2, 9, 'INH')
+    tf = test_module.AmplitudeFilter(2, 9, "INH")
     filtered = np.array(tf(traces))
 
     assert filtered.shape == (0,)
@@ -154,7 +154,7 @@ def test_AmplitudeFilter_filter_all_flat_exc():
     v = np.full(100, -70)
     traces = _make_traces(repeat(v, 5), t)
 
-    tf = test_module.AmplitudeFilter(2, 9, 'EXC')
+    tf = test_module.AmplitudeFilter(2, 9, "EXC")
     filtered = np.array(tf(traces))
 
     assert filtered.shape == (0,)
@@ -166,7 +166,7 @@ def test_AmplitudeFilter_filter_all_flat_inh():
     v = np.full(100, -70)
     traces = _make_traces(repeat(v, 5), t)
 
-    tf = test_module.AmplitudeFilter(2, 9, 'INH')
+    tf = test_module.AmplitudeFilter(2, 9, "INH")
     filtered = np.array(tf(traces))
 
     assert filtered.shape == (0,)
@@ -183,7 +183,7 @@ def test_AmplitudeFilter_filter():
     vs[4][30:40] -= 10  # negative perturbation (ignored in EXC)
     traces = _make_traces(vs, t)
 
-    tf = test_module.AmplitudeFilter(2, 4, 'EXC')
+    tf = test_module.AmplitudeFilter(2, 4, "EXC")
     filtered = np.array(tf(traces))
 
     assert filtered.shape == (3, 2, 100)
