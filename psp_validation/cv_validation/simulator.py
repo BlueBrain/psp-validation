@@ -12,10 +12,50 @@ import joblib
 import numpy as np
 from bluepysnap.circuit_ids import CircuitNodeId
 
+from psp_validation import PSPError
 from psp_validation.simulation import get_holding_current, run_pair_simulation
 from psp_validation.utils import ensure_list, isolate
 
 L = logging.getLogger(__name__)
+DOC_REF = (
+    "https://bbpteam.epfl.ch/documentation/projects/psp-validation/latest/"
+    "files.html#simulation-parameters"
+)
+
+
+def _resolve_holding_current(hold_v, post_gid, simulation_config, post_ttx):
+    if hold_v is None:
+        L.warning(f"'hold_V' is None. 'hold_I' will be set to 0. See: {DOC_REF}")
+        return 0
+
+    return get_holding_current(
+        log_level=100,
+        hold_V=hold_v,
+        post_gid=post_gid,
+        sonata_simulation_config=simulation_config,
+        post_ttx=post_ttx,
+    )
+
+
+def resolve_holding_current_and_voltage(
+    protocol, clamp, post_gid, simulation_config, post_ttx=None
+):
+    """Resolve the holding current and voltage based on the config."""
+    if ("hold_V" in protocol) == ("hold_I" in protocol):
+        raise PSPError(f"Either 'hold_V' or 'hold_I' should be specified. See: {DOC_REF}")
+
+    if clamp == "current":
+        if "hold_I" in protocol:
+            hold_i = protocol["hold_I"]
+            hold_v = None
+        else:
+            hold_v = protocol["hold_V"]
+            hold_i = _resolve_holding_current(hold_v, post_gid, simulation_config, post_ttx)
+    else:
+        hold_i = None
+        hold_v = protocol["hold_V"]
+
+    return hold_i, hold_v
 
 
 def run_sim_handler(
@@ -23,21 +63,11 @@ def run_sim_handler(
 ):
     """Apply func to all items in it, using a process pool"""
     t_stim = protocol["t_stim"]
-    hold_v = protocol["hold_V"]
+    post_gid = CircuitNodeId(id=input_params.post_id, population=input_params.post_population)
 
-    if clamp == "current":
-        hold_i = get_holding_current(
-            log_level=100,
-            hold_V=hold_v,
-            post_gid=CircuitNodeId(
-                id=input_params.post_id,
-                population=input_params.post_population,
-            ),
-            sonata_simulation_config=sonata_simulation_config,
-            post_ttx=False,
-        )
-    else:
-        hold_i = None
+    hold_i, hold_v = resolve_holding_current_and_voltage(
+        protocol, clamp, post_gid, sonata_simulation_config
+    )
 
     if n_jobs is None:
         n_jobs = 1
@@ -53,10 +83,7 @@ def run_sim_handler(
                     id=input_params.pre_id,
                     population=input_params.pre_population,
                 ),
-                post_gid=CircuitNodeId(
-                    id=input_params.post_id,
-                    population=input_params.post_population,
-                ),
+                post_gid=post_gid,
                 t_stop=t_stim + 200,
                 t_stim=t_stim,
                 hold_I=hold_i,

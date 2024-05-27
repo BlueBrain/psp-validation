@@ -13,6 +13,10 @@ Version 1.0.0
 
   - ``projection`` is no longer used in pathway configs. To have the same behavior, pass the name of the edge population in commandline
 
+- allow ``hold_V: null`` in pathway configs
+
+  - if not given and clamping mode is ``current``, skip calculation of holding current and set ``hold_I = 0``
+
 Version 0.5.1
 -------------
 - [NSETM-2064] removed usage of blueconfig

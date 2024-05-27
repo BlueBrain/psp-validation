@@ -78,9 +78,16 @@ Simulation parameters
 +-----------+----------+-------------------------------------------+
 | hold_V    | float    | holding voltage [mV]                      |
 +-----------+----------+-------------------------------------------+
+| hold_I    | float    | holding current [mA]                      |
++-----------+----------+-------------------------------------------+
 | post_ttx  | bool     | block Na channels of postsynaptic cell    |
 |           |          | (optional; False if omitted)              |
 +-----------+----------+-------------------------------------------+
+
+.. warning::
+   Setting both the ``hold_V`` and ``hold_I`` in current clamping mode is not supported:
+   If ``hold_V: null``, holding current calculation will be skipped and ``hold_I`` will resolve to 0.
+   As this might change in the future, it is better to set ``hold_I`` explicitly as 0 and not set ``hold_V`` at all.
 
 Reference biological data
 ~~~~~~~~~~~~~~~~~~~~~~~~~
