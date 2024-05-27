@@ -1,5 +1,5 @@
 reference:
-    author: "Feldmeyer 2002"
+    author: "Feldmeyer et al. 2002"
     psp_amplitude:
         mean: 0.7
         std: 0.6
@@ -14,8 +14,9 @@ pathway:
         unique_gids: true
         min_nsyn: 4
         max_nsyn: 5
-        max_dist_x: 100.0
-        max_dist_z: 100.0
+        max_dist_x: 150.0
+        max_dist_y: 150.0
+        max_dist_z: 50.0
 
 protocol:
     record_dt: 0.1

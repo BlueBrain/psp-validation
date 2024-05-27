@@ -13,9 +13,9 @@ pathway:
     constraints:
         unique_gids: true
         min_nsyn: 12
-        max_nsyn: 15
-        max_dist_x: 100.0
-        max_dist_z: 100.0
+        max_dist_x: 150
+        max_dist_y: 150
+        max_dist_z: 50
 
 protocol:
     record_dt: 0.1

@@ -1,21 +1,26 @@
 reference:
-    author: "Reyes and Sakmann 1999"
+    author: "Qi and Feldmeyer 2016"
     psp_amplitude:
-        mean: 0.3
-        std: 0.3
+        mean: 0.29
+        std: 0.16
+    synapse_count:
+        mean: 2.3
+        std: 1.4
 
 pathway:
-    pre: L23_PC
-    post: L5_TTPC
+    pre: L4_SS
+    post: L6_PC
     constraints:
         unique_gids: true
+        min_nsyn: 1
+        max_nsyn: 4
         max_dist_x: 200
         max_dist_y: 200
         max_dist_z: 750
 
 protocol:
     record_dt: 0.1
-    hold_V: -74.0
+    hold_V: -85.1
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false

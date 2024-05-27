@@ -1,5 +1,5 @@
 reference:
-    author: "Angulo 1999"
+    author: "Angulo et al. 1999"
     psp_amplitude:
         mean: 2.1
         std: 1.3
@@ -12,8 +12,9 @@ pathway:
     post: L5_FS_sel_etypes
     constraints:
         unique_gids: true
-        max_dist_x: 100.0
-        max_dist_z: 100.0
+        max_dist_x: 150.0
+        max_dist_x: 150.0
+        max_dist_z: 50.0
 
 protocol:
     record_dt: 0.1

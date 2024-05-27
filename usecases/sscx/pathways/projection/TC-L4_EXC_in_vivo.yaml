@@ -1,8 +1,8 @@
 reference:
-    author: "Beierlein et al. 2003 (extracellular minimal stimulation)"
+    author: "Bruno and Sakmann 2006"
     psp_amplitude:
-        mean: 2.4
-        std: 2.0
+        mean: 0.95
+        std: 1.1
 
 pathway:
     projection: Thalamocortical_input_VPM
@@ -13,7 +13,7 @@ pathway:
 
 protocol:
     record_dt: 0.1
-    hold_V: -77.75
+    hold_V: -73.5
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false

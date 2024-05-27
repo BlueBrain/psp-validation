@@ -1,13 +1,13 @@
 reference:
     author: "Beierlein et al. 2003 (extracellular minimal stimulation)"
     psp_amplitude:
-        mean: 2.4
-        std: 2.0
+        mean: 4.1
+        std: 3.2
 
 pathway:
     projection: Thalamocortical_input_VPM
     pre: null
-    post: L4_EXC
+    post: L4_FS
     constraints:
         unique_gids: true
 

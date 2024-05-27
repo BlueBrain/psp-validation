@@ -9,7 +9,8 @@ pathway:
     post: L6_BC
     constraints:
         unique_gids: true
-        max_dist_x: 100.0
+        max_dist_x: 150.0
+        max_dist_y: 150.0
         max_dist_z: 100.0
 
 protocol:
