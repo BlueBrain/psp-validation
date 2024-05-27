@@ -1,0 +1,21 @@
+reference:
+  author: "Barros-Zulaica et al. 2019"
+  cv: 0.31
+
+pathway:
+  pre: L5_TTPC
+  post: L5_TTPC
+  constraints:
+    unique_gids: true
+    min_nsyn: 4
+    max_nsyn: 7
+    max_dist_x: 150
+    max_dist_y: 150
+    max_dist_z: 50
+
+protocol:
+  t_stim: 800.0
+  hold_V: null
+  tau: 28.2
+  sigma: 0.22
+  min_good_trials: 5

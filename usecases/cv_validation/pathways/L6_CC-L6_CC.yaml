@@ -1,4 +1,3 @@
-# Values taken from the cv-validation code
 reference:
   author: "Yang et al. 2021"
   cv: 0.68
@@ -7,12 +6,14 @@ pathway:
   pre: L6_CC
   post: L6_CC
   constraints:
+    unique_gids: true
     max_dist_x: 150
     max_dist_y: 150
     max_dist_z: 50
 
 protocol:
   t_stim: 800.0
+  hold_V: null
   # 28.2+/-3.5 ms from Barros-Zulaica et al. 2019 (mean of 33 in vitro L5_TTPC voltage traces)
   tau: 28.2
   # 0.22+/-0.1 ms from Barros-Zulaica et al. 2019 (mean of 33 in vitro L5_TTPC voltage traces)
