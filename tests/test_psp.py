@@ -1,10 +1,13 @@
 import os
 
+import pytest
+
 from psp_validation import psp
 
-from tests.utils import TEST_DATA_DIR_PSP
+from tests.utils import PROJ12_ACCESS, TEST_DATA_DIR_PSP
 
 
+@pytest.mark.skipif(not PROJ12_ACCESS, reason="No access to proj12")
 def test_run(tmp_path):
     input_folder = TEST_DATA_DIR_PSP / "simple"
 

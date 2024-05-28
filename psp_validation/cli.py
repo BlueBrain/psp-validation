@@ -11,11 +11,11 @@ import click
 
 from psp_validation import setup_logging
 from psp_validation.utils import CLICK_DIR, CLICK_FILE, load_yaml
-from psp_validation.version import VERSION
+from psp_validation.version import __version__
 
 
 @click.group()
-@click.version_option(version=VERSION)
+@click.version_option(version=__version__)
 @click.option("-v", "--verbose", count=True, help="-v for INFO, -vv for DEBUG")
 def cli(verbose=0):
     """PSP analysis tool"""

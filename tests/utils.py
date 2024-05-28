@@ -7,6 +7,7 @@ from psp_validation.simulation import SimulationResult
 
 TEST_DATA_DIR_PSP = pathlib.Path(__file__).parent / "input_data"
 TEST_DATA_DIR_CV = pathlib.Path(__file__).parent / "cv_validation" / "input_data"
+PROJ12_ACCESS = pathlib.Path("/gpfs/bbp.cscs.ch/project/proj12/NSE/psp-tests/").exists()
 
 
 def _make_traces(vss, ts):
