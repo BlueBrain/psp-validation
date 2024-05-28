@@ -32,6 +32,9 @@ combine-as-imports = true
     "T201",     # print found
     "PLC0415",  # import outside top-level
 ]
+"psp_validation/version.py" = [
+    'D',      # pydocstyle
+]
 "tests/*.py" = [
     'D',      # pydocstyle
     'ERA',    # commented out code
