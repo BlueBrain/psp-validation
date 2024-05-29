@@ -11,7 +11,7 @@ from psp_validation.cv_validation.setsim import setup_simulation
 from psp_validation.cv_validation.simulator import run_simulation
 from psp_validation.cv_validation.utils import get_pathway_outdir, read_simulation_pairs
 from psp_validation.utils import CLICK_DIR, CLICK_FILE, load_config, load_yaml
-from psp_validation.version import VERSION
+from psp_validation.version import __version__
 
 
 def _parse_pathways_and_output_dir(pathways, outdir):
@@ -20,7 +20,7 @@ def _parse_pathways_and_output_dir(pathways, outdir):
 
 
 @click.group()
-@click.version_option(version=VERSION)
+@click.version_option(version=__version__)
 @click.option("-v", "--verbose", count=True, help="-v for INFO, -vv for DEBUG")
 def cli(verbose=0):
     """CV analysis tool"""

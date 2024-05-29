@@ -1,14 +1,16 @@
 import os
 
+import pytest
 from click.testing import CliRunner
 
 from psp_validation.cli import plot, run
 
-from tests.utils import TEST_DATA_DIR_PSP
+from tests.utils import PROJ12_ACCESS, TEST_DATA_DIR_PSP
 
 DATA = TEST_DATA_DIR_PSP / "simple"
 
 
+@pytest.mark.skipif(not PROJ12_ACCESS, reason="No access to proj12")
 def test_cli(tmp_path):
     runner = CliRunner()
     folder = tmp_path / "test-psp-cli"

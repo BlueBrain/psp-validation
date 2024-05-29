@@ -1,8 +1,9 @@
+import pytest
 from click.testing import CliRunner
 
 import psp_validation.cv_validation.cli as test_module
 
-from tests.utils import TEST_DATA_DIR_CV, TEST_DATA_DIR_PSP
+from tests.utils import PROJ12_ACCESS, TEST_DATA_DIR_CV, TEST_DATA_DIR_PSP
 
 PATHWAY = (TEST_DATA_DIR_CV / "SP_PVBC-SP_PC.yaml").resolve()
 SIMULATION = (TEST_DATA_DIR_PSP / "simple" / "simulation_config.json").resolve()
@@ -70,6 +71,7 @@ def _test_analysis(folder):
     assert (fig_dir / "lambdas.png").exists()
 
 
+@pytest.mark.skipif(not PROJ12_ACCESS, reason="No access to proj12")
 def test_workflow(tmp_path):
     # Run the whole workflow to not have to store data in GitLab
     _test_setup(tmp_path)

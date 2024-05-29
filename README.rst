@@ -51,23 +51,11 @@ It is highly suggested to use BB5 for running tests manually.
 
     tox -e py310
 
-Transition from BlueConfig to Sonata
-------------------------------------
+Acknowledgements
+================
 
-Simulations using BlueConfig and Sonata describing the same circuit have been run to validate
-the transition.
+The development of this software was supported by funding to the Blue Brain Project, a research center of the École polytechnique fédérale de Lausanne (EPFL), from the Swiss government’s ETH Board of the Swiss Federal Institutes of Technology.
 
-``psp-validation`` using ``BlueConfig`` + ``bglibpy`` returns the same exact results as when using ``SONATA`` + ``bluecellulab``.
-However, there are a few caveats:
+For license and authors, see LICENSE.txt and AUTHORS.txt respectively.
 
-* internal seeds of bluecellulab/bglibpy need to be manually fixed to same numbers
-
-* same edges (pre-post pairs) need to be selected
-
-* ``bluecellulab`` needs to be tweaked to use ``afferent_section_pos`` from a ``h5`` file
-
-  * fix for this is pending (see: https://github.com/BlueBrain/BlueCelluLab/pull/168)
-
-* if ``libsonata<0.1.25`` is used with SONATA configs, make sure ``celsius=34`` is passed to ``SSim.run``/``CircuitSimulation.run`` functions of ``bglibpy``/``bluecellulab``
-
-CV-validations transition has been verified in a similar fashion.
+Copyright (c) 2022-2024 Blue Brain Project/EPFL

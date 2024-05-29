@@ -1,16 +1,18 @@
 import numpy as np
 import pandas as pd
+import pytest
 from bluepysnap.circuit_ids import CircuitNodeId
 from numpy.testing import assert_almost_equal
 
 import psp_validation.simulation as test_module
 
-from tests.utils import TEST_DATA_DIR_CV, TEST_DATA_DIR_PSP
+from tests.utils import PROJ12_ACCESS, TEST_DATA_DIR_CV, TEST_DATA_DIR_PSP
 
 SIMULATION_CONFIG = str(TEST_DATA_DIR_PSP / "simple" / "simulation_config.json")
 PAIRS = str(TEST_DATA_DIR_CV / "pairs.csv")
 
 
+@pytest.mark.skipif(not PROJ12_ACCESS, reason="No access to proj12")
 def test_run_pair_simulation_clamp_current():
     pair_df = pd.read_csv(PAIRS)
     _, time, _, voltage = test_module.run_pair_simulation(
@@ -44,6 +46,7 @@ def test_run_pair_simulation_clamp_current():
     assert_almost_equal(voltage[[0, 1000, 20000, -1]], expected)
 
 
+@pytest.mark.skipif(not PROJ12_ACCESS, reason="No access to proj12")
 def test_run_pair_simulation_clamp_voltage():
     pair_df = pd.read_csv(PAIRS)
     _, time, current, _ = test_module.run_pair_simulation(
