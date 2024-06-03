@@ -36,6 +36,7 @@ To run simulations of psp with the test data:
 
 ``-vv`` options stands for verbosity of log output.
 There are 3 different values for it:
+
 - ``-v`` is for showing only warnings and errors
 - ``-vv`` additionally to ``-v`` shows info messages
 - ``-vvv`` additionally shows debug messages.
