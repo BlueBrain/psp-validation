@@ -32,9 +32,6 @@ Simulations can be set up as follows:
 
 .. code-block:: bash
 
-    module purge
-    module load unstable neurodamus-neocortex psp-validation
-
     cv-validation [-v/-vv] setup \  # -v/-vv to add verbosity
         -c <simulation_config> \    # SONATA simulation config file
         -t <target_file> \          # Target File (see usecases/cv_validation/targets.yaml)
@@ -80,9 +77,6 @@ A few parameters are given to the simulation
 To run the simulation:
 
 .. code-block:: bash
-
-    module purge
-    module load unstable neurodamus-neocortex psp-validation
 
     cv-validation [-v/-vv] run \  # -v/-vv to add verbosity
         -c <simulation_config> \  # SONATA simulation config file
@@ -134,9 +128,6 @@ Parameters passed to the analysis script:
 Analysis/calibration can be run with:
 
 .. code-block:: bash
-
-    module purge
-    module load unstable neurodamus-neocortex psp-validation
 
     cv-validation [-v/-vv] calibrate \  # -v/-vv to add verbosity
         -p <pathway_file> \             # Pathway File (see usecases/cv_validation/pathways)

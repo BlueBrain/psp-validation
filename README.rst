@@ -7,20 +7,17 @@ Validation of post synaptic potential.
 Installation
 ------------
 
-The project is available as a module.
-
 .. code:: bash
 
-    module load unstable neurodamus-hippocampus psp-validation
+    $ pip install psp-validation
 
 Usage
 -----
-It is recommended to run the project only on BB5.
 
 Cli
 ^^^
-The recommended usage is via the command line interface API. To run simulations of psp with
-the test data:
+The recommended usage is via the command line interface.
+To run simulations of psp with the test data:
 
 .. code:: bash
 
@@ -37,15 +34,17 @@ the test data:
         --dump-amplitudes \
         --seed 400
 
-`-vv` options stands for verbosity of log output. There are 3 different values for it: `-v`, `-vv`,
-`-vvv`. `-v` is for showing only warnings and errors. `-vv` additionally to `-v` shows info
-messages. `-vvv` additionally shows debug messages. By default `-v` is used. This flag is common to
-all NSE projects, and is usually used right after the main command and before the supplementary
-command. The main command is `psp`, the supplementary command is `run`.
+``-vv`` options stands for verbosity of log output.
+There are 3 different values for it:
+
+- ``-v`` is for showing only warnings and errors
+- ``-vv`` additionally to ``-v`` shows info messages
+- ``-vvv`` additionally shows debug messages.
+
+By default ``-v`` is used.
 
 Testing
 ^^^^^^^
-It is highly suggested to use BB5 for running tests manually.
 
 .. code:: bash
 
@@ -55,6 +54,8 @@ Acknowledgements
 ================
 
 The development of this software was supported by funding to the Blue Brain Project, a research center of the École polytechnique fédérale de Lausanne (EPFL), from the Swiss government’s ETH Board of the Swiss Federal Institutes of Technology.
+
+This project/research received funding from the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Framework Partnership Agreement No. 650003 (HBP FPA).
 
 For license and authors, see LICENSE.txt and AUTHORS.txt respectively.
 
