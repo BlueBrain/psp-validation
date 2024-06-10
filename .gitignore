@@ -9,3 +9,4 @@ build
 venv
 .idea
 .vscode
+psp_validation/version.py
