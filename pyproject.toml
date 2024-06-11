@@ -5,6 +5,9 @@ filterwarnings = [
 
 [tool.ruff]
 line-length = 100
+exclude = [
+    'psp_validation/version.py',
+]
 
 [tool.ruff.lint]
 select = ['ALL']
@@ -31,9 +34,6 @@ combine-as-imports = true
 "psp_validation/cli.py" = [
     "T201",     # print found
     "PLC0415",  # import outside top-level
-]
-"psp_validation/version.py" = [
-    'D',      # pydocstyle
 ]
 "tests/*.py" = [
     'D',      # pydocstyle

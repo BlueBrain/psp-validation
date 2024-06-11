@@ -49,20 +49,29 @@ def get_holding_current(log_level, hold_V, post_gid, sonata_simulation_config, p
     return hold_i
 
 
-def _get_synapse_unique_value(cell, getter):
-    """Return a value that is supposed to be the same across all synapses.
-
-    Args:
-        cell: a cell
-        getter: the getter function to be applied to each synapse
-    """
-    values = {getter(synapse) for synapse in cell.synapses.values()}
+def _get_unique_or_raise(values, error_message):
+    """If values are identical, return the value, raise otherwise."""
+    values = set(values)
     if not len(values) == 1:
-        raise PSPError(
-            "Synaptic value is expected to be uniform among all synapses"
-            f" but there are multiple values: {values}",
-        )
+        raise PSPError(error_message)
+
     return values.pop()
+
+
+def _get_e_gabaa_value(synapses):
+    """Get e_GABAA value of synapses and check that it is same across synapses."""
+    return _get_unique_or_raise(
+        [syn.hsynapse.e_GABAA for syn in synapses],
+        "Multiple e_GABAA values found across synapses",
+    )
+
+
+def _all_gabaab(synapses, bluecellulab):
+    """Check that either all or none of the synapses are GabaabSynapses."""
+    return _get_unique_or_raise(
+        [isinstance(syn, bluecellulab.synapse.GabaabSynapse) for syn in synapses],
+        "Either all or none of the synapses should be Gabaab synapses",
+    )
 
 
 def run_pair_simulation(  # noqa: PLR0913,PLR0917 too many args / positional args
@@ -139,21 +148,15 @@ def run_pair_simulation(  # noqa: PLR0913,PLR0917 too many args / positional arg
     )
     post_cell = simulation.cells[post_gid]
 
-    if _get_synapse_unique_value(  # True, if all synapses are GabaabSynapse
-        post_cell, lambda synapse: isinstance(synapse, bluecellulab.synapse.GabaabSynapse)
-    ):
+    if _all_gabaab(post_cell.synapses.values(), bluecellulab):
         first_synapse = next(iter(post_cell.synapses.values())).hsynapse
         if not hasattr(first_synapse, "e_GABAA"):
             raise PSPError(
                 "Inhibitory reverse potential e_GABAA is expected to be under "
                 '"e_GABAA" synaptic range NEURON variable',
             )
-        params = {
-            "e_GABAA": _get_synapse_unique_value(
-                post_cell, lambda synapse: synapse.hsynapse.e_GABAA
-            ),
-        }
-    else:  # If none of the synapses are GabaabSynapse
+        params = {"e_GABAA": _get_e_gabaa_value(post_cell.synapses.values())}
+    else:
         if not hasattr(bluecellulab.neuron.h, "e_ProbAMPANMDA_EMS"):
             raise PSPError(
                 "Excitatory reverse potential e_AMPA is expected to be under "
