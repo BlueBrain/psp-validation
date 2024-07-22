@@ -1,7 +1,7 @@
 psp-validation
 ================
 
-Validation of post synaptic potential.
+Validation of Post Synaptic Potentials (PSPs)
 
 
 Installation
@@ -43,12 +43,61 @@ There are 3 different values for it:
 
 By default ``-v`` is used.
 
+Somatosensory cortex (SSCx) example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After downloading the circuit model from `Zenodo <https://zenodo.org/records/8155899>`_ and creating `out` for simulation outputs
+
+edit `usecases/sscx/simulation_config.json` and run:
+
+.. code:: bash
+
+    psp -vv run
+        -c usecases/sscx/simulation_config.json
+        -t usecases/sscx/targets_v6.yaml
+        -e S1nonbarrel_neurons__S1nonbarrel_neurons__chemical
+        -o out/
+        -n 50
+        -r 35
+        -j 35 usecases/sscx/pathways/primary/L5_TTPC-L5_TTPC.yaml.yaml
+        --dump-traces
+        --dump-amplitudes
+
+which will sample 50 pairs of connected L5 thick thufted pyramidal cells from the circuit, trigger a single presynaptic spike from the presynaptic ones
+
+and record the PSP on the postsynaptic ones. The process will be repeated 35 times (as synapses are stochastic and thus PSP varry in amplitude)
+
+on 35 CPUs in parallel. It will saved the postsynaptic traces (to `.h5`), mean PSP amplitudes (to `.txt`) and a summary with a calculated conductance (g_syn)
+
+scaling factor (to `.yaml`).
+
 Testing
 ^^^^^^^
 
 .. code:: bash
 
     tox -e py310
+
+
+Citation
+--------
+
+If you use this software, kindly use the following BibTeX entry for citation:
+
+.. code:: bash
+
+    @article{Ecker2020,
+    author = {Ecker, Andr{\'{a}}s and Romani, Armando and S{\'{a}}ray, S{\'{a}}ra and K{\'{a}}li, Szabolcs and Migliore, Michele and Falck, Joanne and Lange, Sigrun and Mercer, Audrey and Thomson, Alex M. and Muller, Eilif and Reimann, Michael W. and Ramaswamy, Srikanth},
+    doi = {10.1002/hipo.23220},
+    journal = {Hippocampus},
+    number = {11},
+    pages = {1129--1145},
+    pmid = {32520422},
+    title = {{Data-driven integration of hippocampal CA1 synaptic physiology in silico}},
+    volume = {30},
+    year = {2020}
+    }
+
 
 Acknowledgements
 ================
