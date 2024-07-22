@@ -1,5 +1,5 @@
 reference:
-    author: Wang et al. 2002 (not sure of hold_V...), nsysn - Markram et al. 2004
+    author: "Wang et al. 2002 (not sure of hold_V...), nsysn - Markram et al. 2004"
     psp_amplitude:
         mean: 2.86
         std: 1.17
