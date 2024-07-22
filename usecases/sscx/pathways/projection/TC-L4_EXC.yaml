@@ -5,7 +5,7 @@ reference:
         std: 2.0
 
 pathway:
-    projection: Thalamocortical_input_VPM
+    projection: VPM
     pre: null
     post: L4_EXC
     constraints:
