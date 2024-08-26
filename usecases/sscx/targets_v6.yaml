@@ -1,4 +1,3 @@
-# General
 EXC:
   synapse_class: EXC
 INH:
@@ -11,7 +10,7 @@ L1_nonNGC:
 
 L23_PC:
   synapse_class: EXC
-  layer: [2, 3]
+  layer: ["2", "3"]
 L23_BC:
   mtype: {"$regex": "L23_(LBC|NBC|SBC)"}
 L23_NLBC:
@@ -19,13 +18,13 @@ L23_NLBC:
 
 L234_PC:
   synapse_class: EXC
-  layer: [2, 3, 4]
+  layer: ["2", "3", "4"]
 L234_NBC:
   mtype: ["L23_NBC", "L4_NBC"]
   etype: dNAC
 
 L4_EXC:
-  layer: 4
+  layer: "4"
   synapse_class: EXC
 L4_SS:
   mtype: L4_SSC
@@ -41,59 +40,23 @@ L5_FS:
 L5_FS_sel_etypes:
   mtype: {"$regex": "L5_(SBC|LBC|NBC|CHC)"}
   etype: [bAC, bNAC, cNAC, dNAC, cACint]
+L5_PVBC_sel_etypes:
+  mtype: {"$regex": "L5_(L|N)BC"}
+  etype: [cNAC, dSTUT, cSTUT, bSTUT]
+
+
 L5_MC_sel_etypes:
   mtype: L5_MC
   etype: [bAC, cNAC, dNAC, cACint]
 
 L6_EXC:
   synapse_class: EXC
-  layer: 6
+  layer: "6"
 L6_BC:
   mtype: {"$regex": "L6_(SBC|LBC|NBC)"}
+L6_FS:
+  mtype: {"$regex": "L6_(SBC|LBC|NBC|CHC)"}
 L6_TPC:
   mtype: L6_TPC:A
 L6_NPC:
   mtype: L6_TPC:C
-
-# L*_DBC|BTC cACint supposed to belong to L*_Sst (but we can't specify that here... so L*_Sst is just L*_MC)
-L1_5HT3aR:
-  layer: 1
-L2_EXC:
-  synapse_class: EXC
-  layer: 2
-L2_PV:
-  mtype: {"$regex": "L23_(LBC|NBC|CHC)"}
-  layer: 2
-L2_Sst:
-  mtype: "L23_MC"
-  layer: 2
-L2_5HT3aR:
-  mtype: {"$regex": "L23_(SBC|BP|NGC|DBC|BTC)"}
-  layer: 2
-L3_EXC:
-  synapse_class: EXC
-  layer: 3
-L3_PV:
-  mtype: {"$regex": "L23_(LBC|NBC|CHC)"}
-  layer: 3
-L3_Sst:
-  mtype: "L23_MC"
-  layer: 3
-L3_5HT3aR:
-  mtype: {"$regex": "L23_(SBC|BP|NGC|DBC|BTC)"}
-  layer: 3
-L4_PV:
-  mtype: {"$regex": "L4_(LBC|NBC|CHC)"}
-L4_5HT3aR:
-  mtype: {"$regex": "L4_(SBC|BP|NGC|DBC|BTC)"}
-L5_EXC:
-  synapse_class: EXC
-  layer: 5
-L5_PV:
-  mtype: {"$regex": "L5_(LBC|NBC|CHC)"}
-L5_5HT3aR:
-  mtype: {"$regex": "L5_(SBC|BP|NGC|DBC|BTC)"}
-L6_PV:
-  mtype: {"$regex": "L6_(LBC|NBC|CHC)"}
-L6_5HT3aR:
-  mtype: {"$regex": "L6_(SBC|BP|NGC|DBC|BTC)"}

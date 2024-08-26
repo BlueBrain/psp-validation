@@ -13,7 +13,7 @@ pathway:
     constraints:
         unique_gids: true
         max_dist_x: 150.0
-        max_dist_x: 150.0
+        max_dist_y: 150.0
         max_dist_z: 50.0
 
 protocol:

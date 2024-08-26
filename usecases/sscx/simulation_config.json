@@ -1,0 +1,33 @@
+{
+    "manifest": {
+        "$CURRENT_DIR": "."
+    },
+    "run": {
+        "dt": 0.025,
+        "tstop": 2000.0,
+        "random_seed": 12345
+    },
+    "conditions": {
+        "extracellular_calcium": 2.0
+    },
+    "target_simulator": "NEURON",
+    "network": "<PATH-TO-ZENODO-DOWNLOAD>/circuit_config.json",
+    "node_set": "hex_O1",
+    "output": {
+        "output_dir": "<PATH-TO-OUTPUT-DIR>"
+    },
+    "connection_overrides": [
+        {
+            "name": "GABAA_Erev_L1",
+            "source": "Layer1",
+            "target": "hex_O1",
+            "synapse_configure": "%s.e_GABAA = -95.0"
+        },
+        {
+            "name": "GABAB_Erev_L1",
+            "source": "Layer1",
+            "target": "hex_O1",
+            "synapse_configure": "%s.e_GABAB = -83.0"
+        }
+    ]
+}

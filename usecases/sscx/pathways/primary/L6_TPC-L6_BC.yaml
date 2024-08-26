@@ -1,5 +1,5 @@
 reference:
-    author: Thomas K Berger's thesis, nsysn - avg from Markram et al. 2004
+    author: "Thomas K Berger's thesis, nsysn - avg from Markram et al. 2004"
     psp_amplitude:
         mean: 2.2
         std: 3.28

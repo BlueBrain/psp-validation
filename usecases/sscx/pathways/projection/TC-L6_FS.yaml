@@ -1,19 +1,19 @@
 reference:
-    author: "Beierlein et al. 2003 (extracellular minimal stimulation)"
+    author: "Beierlein and Connors 2002 (extracellular minimal stimulation)"
     psp_amplitude:
-        mean: 2.4
-        std: 2.0
+        mean: 3.9
+        std: 3.5
 
 pathway:
     projection: VPM
     pre: null
-    post: L4_EXC
+    post: L6_FS
     constraints:
         unique_gids: true
 
 protocol:
     record_dt: 0.1
-    hold_V: -77.75
+    hold_V: -80.75
     t_stim: 800.0
     t_stop: 900.0
     post_ttx: false

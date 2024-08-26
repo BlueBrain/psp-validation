@@ -1,5 +1,5 @@
 reference:
-    author: Thomas K Berger's thesis
+    author: "Thomas K Berger's thesis"
     psp_amplitude:
         mean: 0.43
         std: 0.22
