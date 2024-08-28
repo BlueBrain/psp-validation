@@ -24,6 +24,8 @@ ignore = [
     'FBT002',  # Boolean default for function arguments
     'COM812',  # Trailing comma (to have similar behavior to black)
     'ISC001',  # single line implicit string concatenation (disabling suggested by ruff formatter)
+    'DOC201',  # ignore when return value isn't described in docstring
+    'DOC501',  # ignore when exception isn't described in docstring
 ]
 
 [tool.ruff.lint.isort]
